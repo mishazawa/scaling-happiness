@@ -6,21 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is currently the unmodified Vite + TypeScript starter scaffold (`npm create vite`) despite the `shooter-game` name — there is no game logic yet. `src/main.ts` renders the default Vite landing markup and `src/counter.ts` is the stock click-counter demo. Expect to replace both as the actual game is built. Not a git repository yet.
 
-## Git workflow
-
-- Never switch, create, or checkout branches. Always work on the currently checked-out branch.
-- Do not run `git checkout`, `git switch`, or `git branch` commands unless I explicitly ask.
-
-## Commands
-
-```bash
-npm run dev       # start Vite dev server with HMR
-npm run build     # type-check (tsc, no emit) then production build via vite build
-npm run preview   # serve the production build locally
-```
-
-There is no test runner, linter, or formatter configured. `tsc` type-checking runs only as part of `npm run build` (`tsconfig.json` has `"noEmit": true`); run `npx tsc` directly for a standalone type-check.
-
 ## Architecture
 
 - Plain TypeScript + Vite, no framework — `index.html` is the entry point and loads `src/main.ts` as an ES module.
