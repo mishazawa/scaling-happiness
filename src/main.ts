@@ -3,11 +3,19 @@ import {
   OrthographicCamera,
   Scene,
   Timer,
+  Vector3,
   WebGLRenderer,
 } from "three";
 import "./style.css";
-import { CAMERA_FRUSTUM_SIZE, CAMERA_POSITION } from "./constants";
+import {
+  BLOCK_SIZE,
+  CAMERA_FRUSTUM_SIZE,
+  CAMERA_POSITION,
+  GRID_COLUMNS,
+  GRID_ROWS,
+} from "./constants";
 import { setupLight } from "./setup/light";
+import { makeGrid } from "./setup/grid";
 import { createWorld } from "./core/World";
 import type { Entity } from "./core/Entity";
 import { renderSystem } from "./systems/render";
@@ -51,6 +59,13 @@ function main() {
 
   const world = createWorld();
   const renderables = new Map<Entity, Object3D>();
+
+  makeGrid(world, renderables, scene, {
+    columns: GRID_COLUMNS,
+    rows: GRID_ROWS,
+    cellSize: BLOCK_SIZE,
+    center: new Vector3(0, 0, 0),
+  });
 
   function animate() {
     requestAnimationFrame(animate);
