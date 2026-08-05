@@ -20,6 +20,7 @@ import { makeGrid } from "./setup/grid";
 import { createWorld } from "./core/World";
 import type { Entity } from "./core/Entity";
 import { renderSystem } from "./systems/render";
+import { DEBUG_pathVisualizer, makePathAroundTheGrid } from "./utils/path";
 
 function updateCameraFrustum(camera: OrthographicCamera) {
   const aspect = window.innerWidth / window.innerHeight;
@@ -62,12 +63,17 @@ function main() {
   const world = createWorld();
   const renderables = new Map<Entity, Object3D>();
 
-  makeGrid(world, renderables, scene, {
+  const GRID_PARAMETERS = {
     columns: GRID_COLUMNS,
     rows: GRID_ROWS,
     cellSize: BLOCK_SIZE,
     center: new Vector3(0, 0, 0),
-  });
+  };
+
+  makeGrid(world, renderables, scene, GRID_PARAMETERS);
+  const pd = makePathAroundTheGrid(GRID_PARAMETERS, 1);
+
+  DEBUG_pathVisualizer(pd, renderables, scene);
 
   function animate() {
     requestAnimationFrame(animate);
