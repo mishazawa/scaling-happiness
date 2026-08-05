@@ -1,6 +1,4 @@
-import { Vector3 } from "three";
 import type { World } from "../core/World";
-import type { PathData } from "../core/Path";
 import { pushEvent } from "../core/Event";
 import { markDestroyed } from "../setup/destroy";
 import { TRACK_END_T } from "../constants";

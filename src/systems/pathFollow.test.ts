@@ -6,6 +6,7 @@ import { Position } from "../core/Position";
 import { Path, PathFollower } from "../core/Path";
 import { hasTag } from "../core/Tag";
 import { pathFollowSystem } from "./pathFollow";
+import { TRACK_END_T, TRACK_START_T } from "../constants";
 
 function makeSquarePath() {
   return Path([
@@ -17,7 +18,7 @@ function makeSquarePath() {
 }
 
 describe("pathFollowSystem", () => {
-  it("advances a follower's t and moves its position partway along the first segment", () => {
+  it("advances a follower's t (from TRACK_START_T) and moves its position partway along the first segment", () => {
     const world = createWorld();
     const pathEntity = createEntity();
     world.paths.set(pathEntity, makeSquarePath());
@@ -29,16 +30,16 @@ describe("pathFollowSystem", () => {
     pathFollowSystem(world, 0.5);
 
     const data = world.pathFollowers.get(follower)!;
-    expect(data.t).toBeCloseTo(0.125);
+    expect(data.t).toBeCloseTo(TRACK_START_T + 0.125);
     expect(data.done).toBe(false);
 
     const pos = world.positions.get(follower)!;
-    expect(pos.x).toBeCloseTo(0.5);
+    expect(pos.x).toBeCloseTo(0.9);
     expect(pos.y).toBeCloseTo(0);
     expect(pos.z).toBeCloseTo(0);
   });
 
-  it("lands exactly on a path vertex when t reaches a segment boundary", () => {
+  it("lands on a path vertex when t reaches a segment boundary", () => {
     const world = createWorld();
     const pathEntity = createEntity();
     world.paths.set(pathEntity, makeSquarePath());
@@ -47,10 +48,16 @@ describe("pathFollowSystem", () => {
     world.pathFollowers.set(follower, PathFollower(pathEntity, 2));
     world.positions.set(follower, Position(0, 0, 0));
 
-    pathFollowSystem(world, 0.5);
+    // increment = (2 * 0.3) / 4 = 0.15, so t = TRACK_START_T + 0.15 = 0.25 -> vertex 1
+    pathFollowSystem(world, 0.3);
+
+    const data = world.pathFollowers.get(follower)!;
+    expect(data.t).toBeCloseTo(0.25);
 
     const pos = world.positions.get(follower)!;
-    expect(pos.equals(new Vector3(1, 0, 0))).toBe(true);
+    expect(pos.x).toBeCloseTo(1);
+    expect(pos.y).toBeCloseTo(0);
+    expect(pos.z).toBeCloseTo(0);
   });
 
   it("continues sampling correctly across multiple ticks and segments", () => {
@@ -62,17 +69,20 @@ describe("pathFollowSystem", () => {
     world.pathFollowers.set(follower, PathFollower(pathEntity, 2));
     world.positions.set(follower, Position(0, 0, 0));
 
-    pathFollowSystem(world, 0.5); // t = 0.25 -> at (1, 0, 0)
-    pathFollowSystem(world, 0.5); // t = 0.5 -> at (1, 0, 1)
+    // each tick: increment = (2 * 0.4) / 4 = 0.2; t = TRACK_START_T + 0.2 + 0.2 = 0.5 -> vertex 2
+    pathFollowSystem(world, 0.4);
+    pathFollowSystem(world, 0.4);
 
     const data = world.pathFollowers.get(follower)!;
     expect(data.t).toBeCloseTo(0.5);
 
     const pos = world.positions.get(follower)!;
-    expect(pos.equals(new Vector3(1, 0, 1))).toBe(true);
+    expect(pos.x).toBeCloseTo(1);
+    expect(pos.y).toBeCloseTo(0);
+    expect(pos.z).toBeCloseTo(1);
   });
 
-  it("clamps t to 1, marks the follower done, and stops moving it further", () => {
+  it("clamps t to TRACK_END_T, marks the follower done, and stops moving it further", () => {
     const world = createWorld();
     const pathEntity = createEntity();
     world.paths.set(pathEntity, makeSquarePath());
@@ -84,16 +94,18 @@ describe("pathFollowSystem", () => {
     pathFollowSystem(world, 1);
 
     const data = world.pathFollowers.get(follower)!;
-    expect(data.t).toBe(1);
+    expect(data.t).toBe(TRACK_END_T);
     expect(data.done).toBe(true);
 
     const pos = world.positions.get(follower)!;
-    expect(pos.equals(new Vector3(0, 0, 0))).toBe(true);
+    expect(pos.x).toBeCloseTo(0);
+    expect(pos.y).toBeCloseTo(0);
+    expect(pos.z).toBeCloseTo(0.4);
 
     const posBefore = pos.clone();
     pathFollowSystem(world, 1);
     expect(world.positions.get(follower)!.equals(posBefore)).toBe(true);
-    expect(world.pathFollowers.get(follower)!.t).toBe(1);
+    expect(world.pathFollowers.get(follower)!.t).toBe(TRACK_END_T);
   });
 
   it("marks the follower destroyed and emits exactly one pawn-resolved event when it completes the loop", () => {
@@ -132,11 +144,18 @@ describe("pathFollowSystem", () => {
 
     pathFollowSystem(world, 0.5);
 
-    expect(world.pathFollowers.get(slow)!.t).toBeCloseTo(0.125);
-    expect(world.pathFollowers.get(fast)!.t).toBeCloseTo(0.5);
+    expect(world.pathFollowers.get(slow)!.t).toBeCloseTo(TRACK_START_T + 0.125);
+    expect(world.pathFollowers.get(fast)!.t).toBeCloseTo(TRACK_START_T + 0.5);
 
-    expect(world.positions.get(slow)!.equals(new Vector3(0.5, 0, 0))).toBe(true);
-    expect(world.positions.get(fast)!.equals(new Vector3(1, 0, 1))).toBe(true);
+    const slowPos = world.positions.get(slow)!;
+    expect(slowPos.x).toBeCloseTo(0.9);
+    expect(slowPos.y).toBeCloseTo(0);
+    expect(slowPos.z).toBeCloseTo(0);
+
+    const fastPos = world.positions.get(fast)!;
+    expect(fastPos.x).toBeCloseTo(0.6);
+    expect(fastPos.y).toBeCloseTo(0);
+    expect(fastPos.z).toBeCloseTo(1);
   });
 
   it("does not throw and leaves state untouched when the referenced path is missing", () => {
