@@ -2,11 +2,11 @@ export function shootingSystem(world, dt) {
 
   const position = new Vector3(some data);
 
-type Side = 0 | 1 | 2 | 3; // counter clock wise
+type Side = 0 | 1 | 2 | 3; // counter clock wise bottom right top left
 
-const side: Side = getSizeFromPosition(position); 
+const side: Side = getSideFromPosition(position); 
 
-const spacing = [1, 1]; 
+const spacing = [1, 1];  // from constants
 
 const origin = [
  -spacing[0] * (columnCount - 1) / 2,
