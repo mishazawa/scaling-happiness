@@ -8,7 +8,7 @@ export const GROUND_SIZE = 20;
 export const GROUND_COLOR = "#444";
 
 export const PAWN_RADIUS = 0.35;
-export const PAWN_SPEED = 2;
+export const PAWN_SPEED = 20;
 
 export const QUEUE_POSITION: [number, number, number] = [-7, 0, -5];
 export const QUEUE_DIRECTION: [number, number, number] = [-1, 0, 0];

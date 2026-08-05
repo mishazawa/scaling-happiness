@@ -1,4 +1,10 @@
-import { OrthographicCamera, Scene, Timer, Vector3, WebGLRenderer } from "three";
+import {
+  OrthographicCamera,
+  Scene,
+  Timer,
+  Vector3,
+  WebGLRenderer,
+} from "three";
 import "./style.css";
 import {
   BLOCK_SIZE,
@@ -79,14 +85,21 @@ function main() {
   const queueId = spawnQueue(world, new Vector3(...QUEUE_POSITION));
   for (let i = 0; i < QUEUE_INITIAL_SIZE; i++) {
     const pawn = spawnPawn(world, scene, {
-      color: "#e63946",
+      color: Math.random() > 0.5 ? "#FFF" : "#000",
       position: new Vector3(...QUEUE_POSITION),
     });
     addPawnToQueue(world, queueId, pawn);
   }
 
   renderer.domElement.addEventListener("click", (event) => {
-    handlePointerClick(world, camera, renderer.domElement, event, pathEntity, PAWN_SPEED);
+    handlePointerClick(
+      world,
+      camera,
+      renderer.domElement,
+      event,
+      pathEntity,
+      PAWN_SPEED,
+    );
   });
 
   function animate() {

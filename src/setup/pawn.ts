@@ -11,19 +11,18 @@ import { Position } from "../core/Position";
 import type { World } from "../core/World";
 import { addTag } from "../core/Tag";
 import { addRenderable } from "../systems/render";
-
-export type PawnColor = string;
+import type { BlockColor } from "./block";
 
 export type SpawnPawnConfig = {
-  color: PawnColor;
+  color: BlockColor;
   position: Vector3;
 };
 
 const PAWN_GEOMETRY = new SphereGeometry(PAWN_RADIUS, 16, 12);
 
-const materialsByColor = new Map<PawnColor, MeshStandardMaterial>();
+const materialsByColor = new Map<BlockColor, MeshStandardMaterial>();
 
-function getPawnMaterial(color: PawnColor): MeshStandardMaterial {
+function getPawnMaterial(color: BlockColor): MeshStandardMaterial {
   let material = materialsByColor.get(color);
   if (!material) {
     material = new MeshStandardMaterial({ color });
