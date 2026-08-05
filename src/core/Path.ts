@@ -14,6 +14,26 @@ export type PathFollowerData = {
   done: boolean;
 };
 
-function Path(points): PathData {}
+export const Path = (points: PositionData[]): PathData => {
+  const segLengths: number[] = [];
+  let total = 0;
 
-function PathFollower(pathId, speed): PathFollowerData {}
+  for (let i = 0; i < points.length; i++) {
+    const next = points[(i + 1) % points.length];
+    const length = points[i].distanceTo(next);
+    segLengths.push(length);
+    total += length;
+  }
+
+  return { points, segLengths, total };
+};
+
+export const PathFollower = (
+  pathId: Entity,
+  speed: number,
+): PathFollowerData => ({
+  pathId,
+  t: 0,
+  speed,
+  done: false,
+});
