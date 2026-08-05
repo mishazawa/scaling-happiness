@@ -59,3 +59,30 @@ export function DEBUG_pathVisualizer(
 
   return entity;
 }
+
+const _tempVec = new Vector3();
+
+export function samplePath(path: PathData, t: number): Vector3 {
+  const { points, segLengths, total } = path;
+
+  if (points.length === 0) return _tempVec.set(0, 0, 0);
+  if (points.length === 1) return _tempVec.copy(points[0]);
+
+  let distance = Math.min(Math.max(t, 0), 1) * total;
+
+  for (let i = 0; i < segLengths.length; i++) {
+    const segLength = segLengths[i];
+    const isLastSegment = i === segLengths.length - 1;
+
+    if (distance <= segLength || isLastSegment) {
+      const start = points[i];
+      const end = points[(i + 1) % points.length];
+      const alpha = segLength > 0 ? Math.min(distance / segLength, 1) : 0;
+      return _tempVec.copy(start).lerp(end, alpha);
+    }
+
+    distance -= segLength;
+  }
+
+  return _tempVec.copy(points[0]);
+}

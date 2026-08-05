@@ -25,5 +25,7 @@ export const QUEUE_OFFSET = 0;
 export const GRID_CLUSTER = 2;
 export const LIFES_COUNT = 5;
 
-export const SPAWN_TRANSIT_DURATION = 0.4;
-export const SPAWN_COOLDOWN = 0.3;
+export const SPAWN_TRANSIT_DURATION = 0.1;
+export const SPAWN_COOLDOWN = 0.1;
+export const TRACK_START_T = 0.1;
+export const TRACK_END_T = 0.9;
