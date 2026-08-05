@@ -17,6 +17,7 @@ export type World = {
   renderables: Map<Entity, Object3D>;
   queues: Map<Entity, Entity[]>;
   queueMembership: Map<Entity, Entity>;
+  lastFiredLanes: Map<Entity, number>;
   events: Event[];
 };
 
@@ -33,6 +34,7 @@ export function createWorld(): World {
     renderables: new Map(),
     queues: new Map(),
     queueMembership: new Map(),
+    lastFiredLanes: new Map(),
     events: [],
   };
 }

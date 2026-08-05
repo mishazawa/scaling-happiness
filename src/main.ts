@@ -24,6 +24,7 @@ import { createEntity } from "./core/Entity";
 import { createWorld } from "./core/World";
 import { renderSystem } from "./systems/render";
 import { pathFollowSystem } from "./systems/pathFollow";
+import { shootingSystem } from "./systems/shooting";
 import { handlePointerClick } from "./systems/interaction";
 import { eventSystem } from "./systems/event";
 import { garbageCollectionSystem } from "./systems/garbageCollection";
@@ -104,6 +105,7 @@ function main() {
     const dt = clock.getDelta();
 
     pathFollowSystem(world, dt);
+    shootingSystem(world, GRID_PARAMETERS);
     renderSystem(world, dt);
     eventSystem(world, ctx);
     garbageCollectionSystem(world, ctx);

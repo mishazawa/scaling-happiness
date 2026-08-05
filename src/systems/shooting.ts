@@ -1,60 +1,91 @@
-export function shootingSystem(world, dt) {
+import type { Vector3 } from "three";
+import type { Entity } from "../core/Entity";
+import { pushEvent } from "../core/Event";
+import type { World } from "../core/World";
+import type { Grid } from "../setup/grid";
+import { toFlat } from "../utils";
 
-  const position = new Vector3(some data);
+type Side = "top" | "right" | "bottom" | "left";
 
-type Side = 0 | 1 | 2 | 3; // counter clock wise bottom right top left
+export function shootingSystem(world: World, grid: Grid): void {
+  const { columns, rows, cellSize, center } = grid;
 
-const side: Side = getSideFromPosition(position); 
+  const originX = center.x - ((columns - 1) * cellSize) / 2;
+  const originZ = center.z - ((rows - 1) * cellSize) / 2;
 
-const spacing = [1, 1];  // from constants
+  for (const [entity, follower] of world.pathFollowers) {
+    if (follower.done) continue;
 
-const origin = [
- -spacing[0] * (columnCount - 1) / 2,
--spacing[1] * (rowCount - 1) / 2  
-];
+    const position = world.positions.get(entity);
+    if (!position) continue;
 
-let lastFiredLine = null; // per entity
+    const side = getSide(position, center);
+    const horizontal = side === "top" || side === "bottom";
 
-function onFrame () {
-  // imagine this code inside system
-  // ...
+    const axisCoord = horizontal ? position.x : position.z;
+    const axisOrigin = horizontal ? originX : originZ;
+    const axisCount = horizontal ? columns : rows;
 
-  const horizontal = side === TOP || side === BOTTOM;
+    const lane = Math.round((axisCoord - axisOrigin) / cellSize);
+    if (lane < 0 || lane >= axisCount) continue;
 
-  const axisCoord   = horizontal ? position.x : position.y;
-  const axisOrigin  = horizontal ? origin[0]  : origin[1];
-  const axisSpacing = horizontal ? spacing[0] : spacing[1];
-  const axisCount   = horizontal ? columnCount : rowCount;
+    // Lane indices are only unique within a side: column 7 on the bottom
+    // edge and row 7 on the right edge are different lanes with the same
+    // number, so the memory key must include the side.
+    const laneKey = laneKeyFor(side, lane);
+    const lastLaneKey = world.lastFiredLanes.get(entity);
+    if (laneKey === lastLaneKey) continue;
+    world.lastFiredLanes.set(entity, laneKey);
 
-  const line = Math.round((axisCoord - axisOrigin) / axisSpacing);
-  
-  if (line === lastFiredLine) return;                                 // already fired
-  if (line < 0 || line >= axisCount) return;
-  lastFiredLine = line;
+    // Inward means toward smaller row/column on bottom/left, toward larger on top/right.
+    const forward = side === "bottom" || side === "left";
 
+    const blockEntity = findNearestBlockInLane(
+      world,
+      lane,
+      horizontal,
+      forward,
+      columns,
+      rows,
+    );
+    if (blockEntity === undefined) continue;
 
-  const idx = nearestInLine(line, horizontal, side === TOP || side === LEFT)
-
-    const [row, col] = horizontal
-    ? [idx, line]
-    : [line, idx];
-  
-  const index = toFlat([row, col]);
-
-  const entity_block = world.gridToEntity.get(index)
-
-  if (entity_block) {
-    destroy(entity_block)
+    pushEvent(world, { type: "entity-destroy", entity: blockEntity });
   }
 }
 
-function nearestInLine(line: number, horizontal: boolean, forward: boolean) {
-  const count = horizontal ? rowCount : columnCount;
+const SIDES: Side[] = ["top", "right", "bottom", "left"];
+
+function laneKeyFor(side: Side, lane: number): number {
+  return SIDES.indexOf(side) * 1_000_000 + lane;
+}
+
+function getSide(position: Vector3, center: Vector3): Side {
+  const dx = position.x - center.x;
+  const dz = position.z - center.z;
+
+  if (Math.abs(dx) > Math.abs(dz)) {
+    return dx > 0 ? "right" : "left";
+  }
+  return dz > 0 ? "top" : "bottom";
+}
+
+function findNearestBlockInLane(
+  world: World,
+  lane: number,
+  horizontal: boolean,
+  forward: boolean,
+  columns: number,
+  rows: number,
+): Entity | undefined {
+  const count = horizontal ? rows : columns;
+
   for (let i = 0; i < count; i++) {
     const step = forward ? i : count - 1 - i;
-    const index = horizontal ? toFlat([step, line]) : toFlat([line, step]);
-    if (world.gridToEntity.has(index)) return step;
+    const [row, column] = horizontal ? [step, lane] : [lane, step];
+    const entity = world.gridToEntity.get(toFlat(row, column, columns));
+    if (entity !== undefined) return entity;
   }
-  return null;
-}
+
+  return undefined;
 }
