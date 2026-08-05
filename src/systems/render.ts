@@ -6,7 +6,7 @@ export function renderSystem(
   _world: World,
   _renderables: Map<Entity, Object3D>,
 ) {
-  // iterate over world.positions and copy positions
+  // iterate over world.positions and copy positions to renderables
 }
 
 export function renderSystemInit(

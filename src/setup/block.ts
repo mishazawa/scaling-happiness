@@ -16,7 +16,6 @@ import { toFlat } from "../utils";
 export type BlockColor = "#FFF" | "#000";
 
 export type BlockData = {
-  color: BlockColor;
   column: number;
   row: number;
 };
@@ -47,7 +46,8 @@ export function spawnBlock(
   const entity = createEntity();
 
   world.positions.set(entity, Position(position.x, position.y, position.z));
-  world.blocks.set(entity, { color, row, column });
+  world.blocks.set(entity, { row, column });
+  world.colors.set(entity, color);
   world.gridToEntity.set(toFlat(row, column, totalColumns), entity);
 
   addTag(world, entity, "block");
