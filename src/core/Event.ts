@@ -2,7 +2,7 @@ import type { Entity } from "./Entity";
 import type { World } from "./World";
 
 export type EntityDestroyEvent = {
-  type: "entity-destroy";
+  type: "entity-destroy" | "spawn-on-lane" | "life-dec" | "life-inc";
   entity: Entity;
 };
 

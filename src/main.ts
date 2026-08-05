@@ -102,8 +102,9 @@ function main() {
 
     pathFollowSystem(world, dt);
     shootingSystem(world, GRID_PARAMETERS);
-    renderSystem(world, dt);
+
     eventSystem(world, ctx);
+    renderSystem(world, dt);
     garbageCollectionSystem(world, ctx);
     renderer.render(scene, camera);
     clock.update();

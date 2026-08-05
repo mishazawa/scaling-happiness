@@ -4,12 +4,17 @@ import { getQueueId } from "../core/Queue";
 import type { World } from "../core/World";
 import type { SystemContext } from "./context";
 
-export function garbageCollectionSystem(world: World, ctx: SystemContext): void {
+export function garbageCollectionSystem(
+  world: World,
+  ctx: SystemContext,
+): void {
   const destroyed = Array.from(getEntitiesByTag(world, "destroy"));
 
   for (const entity of destroyed) {
     destroyEntity(world, ctx, entity);
   }
+
+  world.events = []; // clenup events
 }
 
 function destroyEntity(world: World, ctx: SystemContext, entity: Entity): void {

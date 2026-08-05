@@ -5,6 +5,7 @@ import type { Tag } from "./Tag";
 import type { PathData, PathFollowerData } from "./Path";
 import type { Event } from "./Event";
 import type { AmmoData } from "./Ammo";
+import { LIFES_COUNT } from "../constants";
 
 export type World = {
   positions: Map<Entity, Vector3>;
@@ -21,10 +22,12 @@ export type World = {
   lastFiredLanes: Map<Entity, number>;
   ammo: Map<Entity, AmmoData>;
   events: Event[];
+  lifes: number;
 };
 
 export function createWorld(): World {
   return {
+    lifes: LIFES_COUNT,
     positions: new Map(),
     blocks: new Map(),
     colors: new Map(),

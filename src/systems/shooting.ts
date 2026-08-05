@@ -58,6 +58,7 @@ export function shootingSystem(world: World, grid: Grid): void {
 
           if (depleteAmmo(world, entity)) {
             pushEvent(world, { type: "entity-destroy", entity });
+            pushEvent(world, { type: "life-inc", entity });
             break;
           }
         }

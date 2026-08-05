@@ -6,6 +6,7 @@ import { hasTag } from "../core/Tag";
 import type { World } from "../core/World";
 import { releasePawnFromQueue, spawnQueuedPawn } from "../setup/queue";
 import { PAWN_SPEED } from "../constants";
+import { pushEvent } from "../core/Event";
 
 const raycaster = new Raycaster();
 const pointer = new Vector2();
@@ -37,8 +38,9 @@ export function handlePointerClick(
 
     const released = releasePawnFromQueue(world, queueId);
     if (released !== undefined) {
-      world.pathFollowers.set(released, PathFollower(pathEntity, PAWN_SPEED));
+      world.pathFollowers.set(released, PathFollower(pathEntity));
       spawnQueuedPawn(world, scene, queueId);
+      pushEvent(world, { type: "life-dec", entity: released });
     }
 
     return;

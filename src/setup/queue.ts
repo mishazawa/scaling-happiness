@@ -31,13 +31,20 @@ function layoutQueue(world: World, queueId: QueueId): void {
   });
 }
 
-export function addPawnToQueue(world: World, queueId: QueueId, pawn: Entity): void {
+export function addPawnToQueue(
+  world: World,
+  queueId: QueueId,
+  pawn: Entity,
+): void {
   enqueue(world, queueId, pawn);
   addTag(world, pawn, "queued");
   layoutQueue(world, queueId);
 }
 
-export function releasePawnFromQueue(world: World, queueId: QueueId): Entity | undefined {
+export function releasePawnFromQueue(
+  world: World,
+  queueId: QueueId,
+): Entity | undefined {
   const pawn = dequeue(world, queueId);
   if (pawn === undefined) return undefined;
 
@@ -47,7 +54,11 @@ export function releasePawnFromQueue(world: World, queueId: QueueId): Entity | u
   return pawn;
 }
 
-export function spawnQueuedPawn(world: World, scene: Scene, queueId: QueueId): Entity {
+export function spawnQueuedPawn(
+  world: World,
+  scene: Scene,
+  queueId: QueueId,
+): Entity {
   const position = world.positions.get(queueId) ?? new Vector3();
 
   const pawn = spawnPawn(world, scene, {

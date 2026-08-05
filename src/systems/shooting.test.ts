@@ -212,6 +212,7 @@ describe("shootingSystem", () => {
     expect(world.events).toEqual([
       { type: "entity-destroy", entity: block },
       { type: "entity-destroy", entity: pawn },
+      { type: "life-inc", entity: pawn },
     ]);
     expect(world.ammo.get(pawn)).toBe(0);
   });

@@ -1,3 +1,4 @@
+import { PAWN_SPEED } from "../constants";
 import type { Entity } from "./Entity";
 import type { PositionData } from "./Position";
 
@@ -30,7 +31,7 @@ export const Path = (points: PositionData[]): PathData => {
 
 export const PathFollower = (
   pathId: Entity,
-  speed: number,
+  speed: number = PAWN_SPEED,
 ): PathFollowerData => ({
   pathId,
   t: 0,
