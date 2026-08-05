@@ -14,7 +14,8 @@ import type { World } from "./World";
 export type Event =
   | { type: "queue-clicked"; queue: QueueId }
   | { type: "pawn-spawned"; entity: Entity }
-  | { type: "pawn-resolved"; entity: Entity; depleted: boolean };
+  | { type: "pawn-resolved"; entity: Entity; depleted: boolean }
+  | { type: "position-tween-complete"; entity: Entity };
 
 export function pushEvent(world: World, event: Event): void {
   world.events.push(event);
@@ -38,4 +39,5 @@ export const EVENT_CONSUMERS = {
   "queue-clicked": "spawnSystem",
   "pawn-spawned": "lifeSystem",
   "pawn-resolved": "lifeSystem",
+  "position-tween-complete": "spawnSystem",
 } satisfies Record<Event["type"], string>;

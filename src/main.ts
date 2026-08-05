@@ -20,6 +20,7 @@ import { createEntity } from "./core/Entity";
 import { createWorld } from "./core/World";
 import { renderSystem } from "./systems/render";
 import { pathFollowSystem } from "./systems/pathFollow";
+import { timerSystem } from "./systems/timer";
 import { shootingSystem } from "./systems/shooting";
 import { handlePointerClick } from "./systems/interaction";
 import { spawnSystem } from "./systems/spawn";
@@ -127,6 +128,7 @@ function main() {
 
     if (world.status === "playing") {
       pathFollowSystem(world, dt);
+      timerSystem(world, dt);
       shootingSystem(world, GRID_PARAMETERS);
       spawnSystem(world, ctx);
       lifeSystem(world);

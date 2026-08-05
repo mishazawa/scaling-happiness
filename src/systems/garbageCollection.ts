@@ -29,6 +29,7 @@ function destroyEntity(world: World, ctx: SystemContext, entity: Entity): void {
   world.pathFollowers.delete(entity);
   world.lastFiredLanes.delete(entity);
   world.ammo.delete(entity);
+  world.positionTweens.delete(entity);
 
   const queueId = getQueueId(world, entity);
   if (queueId !== undefined) {

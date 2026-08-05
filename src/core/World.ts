@@ -5,6 +5,8 @@ import type { Tag } from "./Tag";
 import type { PathData, PathFollowerData } from "./Path";
 import type { Event } from "./Event";
 import type { AmmoData } from "./Ammo";
+import type { PositionTweenData } from "./Tween";
+import type { CountdownData } from "./Countdown";
 import { LIFES_COUNT } from "../constants";
 
 export type World = {
@@ -21,6 +23,8 @@ export type World = {
   queueMembership: Map<Entity, Entity>;
   lastFiredLanes: Map<Entity, number>;
   ammo: Map<Entity, AmmoData>;
+  positionTweens: Map<Entity, PositionTweenData>;
+  countdowns: Map<Entity, CountdownData>;
   events: Event[];
   lifes: number;
   status: GameStatus;
@@ -45,6 +49,8 @@ export function createWorld(): World {
     queueMembership: new Map(),
     lastFiredLanes: new Map(),
     ammo: new Map(),
+    positionTweens: new Map(),
+    countdowns: new Map(),
     events: [],
   };
 }

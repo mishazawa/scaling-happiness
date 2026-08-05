@@ -4,6 +4,7 @@ import { createWorld } from "../core/World";
 import { createEntity } from "../core/Entity";
 import { addTag, hasTag } from "../core/Tag";
 import { PathFollower } from "../core/Path";
+import { PositionTween } from "../core/Tween";
 import { spawnPawn } from "../setup/pawn";
 import { spawnBlock } from "../setup/block";
 import { spawnQueue, addPawnToQueue } from "../setup/queue";
@@ -42,6 +43,10 @@ describe("garbageCollectionSystem", () => {
     });
     const pathEntity = createEntity();
     world.pathFollowers.set(pawn, PathFollower(pathEntity, 1));
+    world.positionTweens.set(
+      pawn,
+      PositionTween(new Vector3(), new Vector3(1, 0, 0), 1),
+    );
     expect(world.ammo.has(pawn)).toBe(true);
 
     addTag(world, pawn, "destroy");
@@ -51,6 +56,7 @@ describe("garbageCollectionSystem", () => {
     expect(world.colors.has(pawn)).toBe(false);
     expect(world.pathFollowers.has(pawn)).toBe(false);
     expect(world.ammo.has(pawn)).toBe(false);
+    expect(world.positionTweens.has(pawn)).toBe(false);
     expect(hasTag(world, pawn, "pawn")).toBe(false);
     expect(hasTag(world, pawn, "destroy")).toBe(false);
   });
