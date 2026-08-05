@@ -4,6 +4,7 @@ import { createWorld } from "../core/World";
 import { createEntity } from "../core/Entity";
 import { Position } from "../core/Position";
 import { PathFollower } from "../core/Path";
+import { hasTag } from "../core/Tag";
 import { spawnBlock } from "../setup/block";
 import type { Grid } from "../setup/grid";
 import { toFlat } from "../utils";
@@ -46,12 +47,9 @@ describe("shootingSystem", () => {
 
     shootingSystem(world, grid);
 
-    expect(world.events).toEqual([
-      {
-        type: "entity-destroy",
-        entity: world.gridToEntity.get(toFlat(0, 1, 3)),
-      },
-    ]);
+    const block = world.gridToEntity.get(toFlat(0, 1, 3))!;
+    expect(hasTag(world, block, "destroy")).toBe(true);
+    expect(world.events).toEqual([]);
   });
 
   it("fires from the nearest edge, skipping already-empty cells closer to the track", () => {
@@ -64,12 +62,8 @@ describe("shootingSystem", () => {
 
     shootingSystem(world, grid);
 
-    expect(world.events).toEqual([
-      {
-        type: "entity-destroy",
-        entity: world.gridToEntity.get(toFlat(2, 1, 3)),
-      },
-    ]);
+    const block = world.gridToEntity.get(toFlat(2, 1, 3))!;
+    expect(hasTag(world, block, "destroy")).toBe(true);
   });
 
   it("fires inward from the top edge, starting at the highest row index", () => {
@@ -82,12 +76,8 @@ describe("shootingSystem", () => {
 
     shootingSystem(world, grid);
 
-    expect(world.events).toEqual([
-      {
-        type: "entity-destroy",
-        entity: world.gridToEntity.get(toFlat(2, 1, 3)),
-      },
-    ]);
+    const block = world.gridToEntity.get(toFlat(2, 1, 3))!;
+    expect(hasTag(world, block, "destroy")).toBe(true);
   });
 
   it("fires inward from the left/right edges along the row axis", () => {
@@ -100,12 +90,8 @@ describe("shootingSystem", () => {
 
     shootingSystem(world, grid);
 
-    expect(world.events).toEqual([
-      {
-        type: "entity-destroy",
-        entity: world.gridToEntity.get(toFlat(1, 0, 3)),
-      },
-    ]);
+    const block = world.gridToEntity.get(toFlat(1, 0, 3))!;
+    expect(hasTag(world, block, "destroy")).toBe(true);
   });
 
   it("does not fire again while the pawn stays in the same lane", () => {
@@ -116,9 +102,12 @@ describe("shootingSystem", () => {
     makePawn(world, new Vector3(0, 0, -2));
 
     shootingSystem(world, grid);
+    const block = world.gridToEntity.get(toFlat(0, 1, 3))!;
+    world.tags.get(block)?.delete("destroy"); // simulate GC having run
+
     shootingSystem(world, grid);
 
-    expect(world.events).toHaveLength(1);
+    expect(hasTag(world, block, "destroy")).toBe(false);
   });
 
   it("fires again once the pawn moves to a new lane", () => {
@@ -129,12 +118,14 @@ describe("shootingSystem", () => {
 
     const pawn = makePawn(world, new Vector3(-1, 0, -2));
     shootingSystem(world, grid);
-    expect(world.events).toHaveLength(1);
+    const firstBlock = world.gridToEntity.get(toFlat(0, 0, 3))!;
+    expect(hasTag(world, firstBlock, "destroy")).toBe(true);
 
     world.positions.get(pawn)!.set(0, 0, -2);
     shootingSystem(world, grid);
 
-    expect(world.events).toHaveLength(2);
+    const secondBlock = world.gridToEntity.get(toFlat(0, 1, 3))!;
+    expect(hasTag(world, secondBlock, "destroy")).toBe(true);
   });
 
   it("fires again after turning a corner, even though the lane number repeats", () => {
@@ -147,13 +138,15 @@ describe("shootingSystem", () => {
 
     const pawn = makePawn(world, new Vector3(1, 0, -2));
     shootingSystem(world, grid);
-    expect(world.events).toHaveLength(1);
+    const firstBlock = world.gridToEntity.get(toFlat(0, 2, 3))!;
+    expect(hasTag(world, firstBlock, "destroy")).toBe(true);
 
     // Move around the corner onto the right edge, still at lane index 2.
     world.positions.get(pawn)!.set(2, 0, 1);
     shootingSystem(world, grid);
 
-    expect(world.events).toHaveLength(2);
+    const secondBlock = world.gridToEntity.get(toFlat(2, 2, 3))!;
+    expect(hasTag(world, secondBlock, "destroy")).toBe(true);
   });
 
   it("does nothing when the lane is empty", () => {
@@ -162,21 +155,29 @@ describe("shootingSystem", () => {
 
     makePawn(world, new Vector3(0, 0, -2));
 
-    shootingSystem(world, grid);
-
+    expect(() => shootingSystem(world, grid)).not.toThrow();
     expect(world.events).toEqual([]);
   });
 
   it("ignores pawns whose path following is done", () => {
     const world = createWorld();
     const grid = makeGrid();
-    spawnBlock(world, new Scene(), "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    const block = spawnBlock(
+      world,
+      new Scene(),
+      "#FFF",
+      0,
+      1,
+      3,
+      new Vector3(0, 0, -1),
+    );
 
     const pawn = makePawn(world, new Vector3(0, 0, -2));
     world.pathFollowers.get(pawn)!.done = true;
 
     shootingSystem(world, grid);
 
+    expect(hasTag(world, block, "destroy")).toBe(false);
     expect(world.events).toEqual([]);
   });
 
@@ -191,7 +192,7 @@ describe("shootingSystem", () => {
     expect(world.events).toEqual([]);
   });
 
-  it("destroys the pawn once its ammo runs out on a hit", () => {
+  it("destroys the pawn and emits a depleted pawn-resolved once ammo runs out on a hit", () => {
     const world = createWorld();
     const grid = makeGrid();
     const block = spawnBlock(
@@ -209,10 +210,10 @@ describe("shootingSystem", () => {
 
     shootingSystem(world, grid);
 
+    expect(hasTag(world, block, "destroy")).toBe(true);
+    expect(hasTag(world, pawn, "destroy")).toBe(true);
     expect(world.events).toEqual([
-      { type: "entity-destroy", entity: block },
-      { type: "entity-destroy", entity: pawn },
-      { type: "life-inc", entity: pawn },
+      { type: "pawn-resolved", entity: pawn, depleted: true },
     ]);
     expect(world.ammo.get(pawn)).toBe(0);
   });
@@ -235,7 +236,9 @@ describe("shootingSystem", () => {
 
     shootingSystem(world, grid);
 
-    expect(world.events).toEqual([{ type: "entity-destroy", entity: block }]);
+    expect(hasTag(world, block, "destroy")).toBe(true);
+    expect(hasTag(world, pawn, "destroy")).toBe(false);
+    expect(world.events).toEqual([]);
     expect(world.ammo.get(pawn)).toBe(1);
   });
 
@@ -257,7 +260,8 @@ describe("shootingSystem", () => {
 
     shootingSystem(world, grid);
 
-    expect(world.events).toEqual([{ type: "entity-destroy", entity: block }]);
+    expect(hasTag(world, block, "destroy")).toBe(true);
+    expect(world.events).toEqual([]);
     expect(world.ammo.has(pawn)).toBe(false);
   });
 });

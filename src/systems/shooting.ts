@@ -4,9 +4,11 @@ import { pushEvent } from "../core/Event";
 import type { World } from "../core/World";
 import type { Grid } from "../setup/grid";
 import { toFlat } from "../utils";
+import { markDestroyed } from "../setup/destroy";
 
 type Side = "top" | "right" | "bottom" | "left";
 
+/** Produces (via destroy.ts / core/Event.ts): destroy tag, pawn-resolved. */
 export function shootingSystem(world: World, grid: Grid): void {
   const { columns, rows, cellSize, center } = grid;
 
@@ -54,11 +56,12 @@ export function shootingSystem(world: World, grid: Grid): void {
       );
       if (blockEntity !== undefined) {
         if (checkColor(world, blockEntity, entity)) {
-          pushEvent(world, { type: "entity-destroy", entity: blockEntity });
+          markDestroyed(world, blockEntity);
 
-          if (depleteAmmo(world, entity)) {
-            pushEvent(world, { type: "entity-destroy", entity });
-            pushEvent(world, { type: "life-inc", entity });
+          const depleted = depleteAmmo(world, entity);
+          if (depleted) {
+            markDestroyed(world, entity);
+            pushEvent(world, { type: "pawn-resolved", entity, depleted });
             break;
           }
         }

@@ -13,8 +13,6 @@ export function garbageCollectionSystem(
   for (const entity of destroyed) {
     destroyEntity(world, ctx, entity);
   }
-
-  world.events = []; // clenup events
 }
 
 function destroyEntity(world: World, ctx: SystemContext, entity: Entity): void {

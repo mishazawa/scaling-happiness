@@ -1,11 +1,8 @@
-import { Raycaster, Vector2, type Camera, type Scene } from "three";
+import { Raycaster, Vector2, type Camera } from "three";
 import type { Entity } from "../core/Entity";
-import { PathFollower } from "../core/Path";
 import { getQueueId, type QueueId } from "../core/Queue";
 import { hasTag } from "../core/Tag";
 import type { World } from "../core/World";
-import { releasePawnFromQueue, spawnQueuedPawn } from "../setup/queue";
-import { PAWN_SPEED } from "../constants";
 import { pushEvent } from "../core/Event";
 
 const raycaster = new Raycaster();
@@ -13,11 +10,9 @@ const pointer = new Vector2();
 
 export function handlePointerClick(
   world: World,
-  scene: Scene,
   camera: Camera,
   domElement: HTMLElement,
   event: PointerEvent,
-  pathEntity: Entity,
 ): void {
   const rect = domElement.getBoundingClientRect();
   pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -36,13 +31,7 @@ export function handlePointerClick(
     const queueId = getQueueId(world, entity) as QueueId | undefined;
     if (queueId === undefined) continue;
 
-    const released = releasePawnFromQueue(world, queueId);
-    if (released !== undefined) {
-      world.pathFollowers.set(released, PathFollower(pathEntity));
-      spawnQueuedPawn(world, scene, queueId);
-      pushEvent(world, { type: "life-dec", entity: released });
-    }
-
+    pushEvent(world, { type: "queue-clicked", queue: queueId });
     return;
   }
 }

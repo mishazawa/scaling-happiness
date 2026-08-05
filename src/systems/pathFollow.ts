@@ -2,7 +2,9 @@ import { Vector3 } from "three";
 import type { World } from "../core/World";
 import type { PathData } from "../core/Path";
 import { pushEvent } from "../core/Event";
+import { markDestroyed } from "../setup/destroy";
 
+/** Produces (via destroy.ts / core/Event.ts): destroy tag, pawn-resolved. */
 export function pathFollowSystem(world: World, dt: number) {
   for (const [entity, follower] of world.pathFollowers) {
     if (follower.done) continue;
@@ -15,7 +17,8 @@ export function pathFollowSystem(world: World, dt: number) {
     if (follower.t >= 1) {
       follower.t = 1;
       follower.done = true;
-      pushEvent(world, { type: "entity-destroy", entity });
+      markDestroyed(world, entity);
+      pushEvent(world, { type: "pawn-resolved", entity, depleted: false });
     }
 
     const pos = world.positions.get(entity);

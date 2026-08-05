@@ -1,6 +1,15 @@
 import type { Entity } from "./Entity";
 import type { World } from "./World";
 
+/**
+ * Tags categorize entities so systems can query "which entities are X"
+ * without knowing an entity's full component set. Two kinds share this union:
+ *  - kind tags ("block", "pawn"): what an entity fundamentally is, set once.
+ *  - state tags ("queued", "destroy"): a transient condition, added and
+ *    removed as state changes (e.g. "queued" marks an entity as clickable
+ *    while it waits in a queue; "destroy" marks it for garbageCollectionSystem
+ *    to remove on the next pass).
+ */
 export type Tag = "block" | "pawn" | "queued" | "destroy";
 
 const EMPTY_TAG_SET: ReadonlySet<Tag> = new Set();

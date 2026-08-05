@@ -15,7 +15,7 @@ describe("garbageCollectionSystem", () => {
   it("removes a destroy-tagged entity's mesh from the scene and renderables", () => {
     const world = createWorld();
     const scene = new Scene();
-    const ctx: SystemContext = { scene };
+    const ctx: SystemContext = { scene, pathEntity: createEntity() };
 
     const pawn = spawnPawn(world, scene, {
       color: "#FFF",
@@ -34,7 +34,7 @@ describe("garbageCollectionSystem", () => {
   it("deletes the entity from positions, colors, pathFollowers, ammo, and tags", () => {
     const world = createWorld();
     const scene = new Scene();
-    const ctx: SystemContext = { scene };
+    const ctx: SystemContext = { scene, pathEntity: createEntity() };
 
     const pawn = spawnPawn(world, scene, {
       color: "#000",
@@ -58,7 +58,7 @@ describe("garbageCollectionSystem", () => {
   it("clears a destroyed block's grid slot", () => {
     const world = createWorld();
     const scene = new Scene();
-    const ctx: SystemContext = { scene };
+    const ctx: SystemContext = { scene, pathEntity: createEntity() };
 
     const block = spawnBlock(world, scene, "#FFF", 1, 2, 5, new Vector3());
     expect(world.gridToEntity.size).toBe(1);
@@ -73,7 +73,7 @@ describe("garbageCollectionSystem", () => {
   it("removes a still-queued pawn from its queue's member array and membership index", () => {
     const world = createWorld();
     const scene = new Scene();
-    const ctx: SystemContext = { scene };
+    const ctx: SystemContext = { scene, pathEntity: createEntity() };
 
     const queueId = spawnQueue(world, new Vector3());
     const pawn = spawnPawn(world, scene, {
@@ -92,7 +92,7 @@ describe("garbageCollectionSystem", () => {
 
   it("is a no-op when there are no destroy-tagged entities", () => {
     const world = createWorld();
-    const ctx: SystemContext = { scene: new Scene() };
+    const ctx: SystemContext = { scene: new Scene(), pathEntity: createEntity() };
 
     expect(() => garbageCollectionSystem(world, ctx)).not.toThrow();
   });

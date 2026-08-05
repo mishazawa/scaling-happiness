@@ -4,6 +4,7 @@ import { createWorld } from "../core/World";
 import { createEntity } from "../core/Entity";
 import { Position } from "../core/Position";
 import { Path, PathFollower } from "../core/Path";
+import { hasTag } from "../core/Tag";
 import { pathFollowSystem } from "./pathFollow";
 
 function makeSquarePath() {
@@ -95,7 +96,7 @@ describe("pathFollowSystem", () => {
     expect(world.pathFollowers.get(follower)!.t).toBe(1);
   });
 
-  it("pushes exactly one entity-destroy event when a follower completes the loop", () => {
+  it("marks the follower destroyed and emits exactly one pawn-resolved event when it completes the loop", () => {
     const world = createWorld();
     const pathEntity = createEntity();
     world.paths.set(pathEntity, makeSquarePath());
@@ -105,10 +106,15 @@ describe("pathFollowSystem", () => {
     world.positions.set(follower, Position(0, 0, 0));
 
     pathFollowSystem(world, 1);
-    expect(world.events).toEqual([{ type: "entity-destroy", entity: follower }]);
+    expect(hasTag(world, follower, "destroy")).toBe(true);
+    expect(world.events).toEqual([
+      { type: "pawn-resolved", entity: follower, depleted: false },
+    ]);
 
     pathFollowSystem(world, 1);
-    expect(world.events).toEqual([{ type: "entity-destroy", entity: follower }]);
+    expect(world.events).toEqual([
+      { type: "pawn-resolved", entity: follower, depleted: false },
+    ]);
   });
 
   it("moves multiple followers on the same path independently", () => {

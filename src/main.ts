@@ -22,8 +22,10 @@ import { renderSystem } from "./systems/render";
 import { pathFollowSystem } from "./systems/pathFollow";
 import { shootingSystem } from "./systems/shooting";
 import { handlePointerClick } from "./systems/interaction";
-import { eventSystem } from "./systems/event";
+import { spawnSystem } from "./systems/spawn";
+import { lifeSystem } from "./systems/life";
 import { garbageCollectionSystem } from "./systems/garbageCollection";
+import { clearEventsSystem } from "./systems/clearEvents";
 import type { SystemContext } from "./systems/context";
 import { DEBUG_pathVisualizer, makePathAroundTheGrid } from "./utils/path";
 import { createQueues } from "./utils/queue";
@@ -67,7 +69,6 @@ function main() {
   });
 
   const world = createWorld();
-  const ctx: SystemContext = { scene };
 
   const GRID_PARAMETERS = {
     columns: GRID_COLUMNS,
@@ -85,15 +86,10 @@ function main() {
 
   createQueues(world, scene);
 
+  const ctx: SystemContext = { scene, pathEntity };
+
   renderer.domElement.addEventListener("click", (event) => {
-    handlePointerClick(
-      world,
-      scene,
-      camera,
-      renderer.domElement,
-      event,
-      pathEntity,
-    );
+    handlePointerClick(world, camera, renderer.domElement, event);
   });
 
   function animate() {
@@ -102,10 +98,12 @@ function main() {
 
     pathFollowSystem(world, dt);
     shootingSystem(world, GRID_PARAMETERS);
+    spawnSystem(world, ctx);
+    lifeSystem(world);
 
-    eventSystem(world, ctx);
     renderSystem(world, dt);
     garbageCollectionSystem(world, ctx);
+    clearEventsSystem(world);
     renderer.render(scene, camera);
     clock.update();
   }
