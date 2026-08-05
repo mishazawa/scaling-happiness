@@ -1,6 +1,7 @@
 import { Vector3 } from "three";
 import type { World } from "../core/World";
 import type { PathData } from "../core/Path";
+import { pushEvent } from "../core/Event";
 
 export function pathFollowSystem(world: World, dt: number) {
   for (const [entity, follower] of world.pathFollowers) {
@@ -13,7 +14,8 @@ export function pathFollowSystem(world: World, dt: number) {
 
     if (follower.t >= 1) {
       follower.t = 1;
-      follower.done = true; // end of path, lap-completion handling comes later
+      follower.done = true;
+      pushEvent(world, { type: "entity-destroy", entity });
     }
 
     const pos = world.positions.get(entity);

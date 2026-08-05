@@ -95,6 +95,22 @@ describe("pathFollowSystem", () => {
     expect(world.pathFollowers.get(follower)!.t).toBe(1);
   });
 
+  it("pushes exactly one entity-destroy event when a follower completes the loop", () => {
+    const world = createWorld();
+    const pathEntity = createEntity();
+    world.paths.set(pathEntity, makeSquarePath());
+
+    const follower = createEntity();
+    world.pathFollowers.set(follower, PathFollower(pathEntity, 100));
+    world.positions.set(follower, Position(0, 0, 0));
+
+    pathFollowSystem(world, 1);
+    expect(world.events).toEqual([{ type: "entity-destroy", entity: follower }]);
+
+    pathFollowSystem(world, 1);
+    expect(world.events).toEqual([{ type: "entity-destroy", entity: follower }]);
+  });
+
   it("moves multiple followers on the same path independently", () => {
     const world = createWorld();
     const pathEntity = createEntity();

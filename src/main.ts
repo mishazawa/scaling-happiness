@@ -25,6 +25,9 @@ import { createWorld } from "./core/World";
 import { renderSystem } from "./systems/render";
 import { pathFollowSystem } from "./systems/pathFollow";
 import { handlePointerClick } from "./systems/interaction";
+import { eventSystem } from "./systems/event";
+import { garbageCollectionSystem } from "./systems/garbageCollection";
+import type { SystemContext } from "./systems/context";
 import { DEBUG_pathVisualizer, makePathAroundTheGrid } from "./utils/path";
 
 function updateCameraFrustum(camera: OrthographicCamera) {
@@ -66,6 +69,7 @@ function main() {
   });
 
   const world = createWorld();
+  const ctx: SystemContext = { scene };
 
   const GRID_PARAMETERS = {
     columns: GRID_COLUMNS,
@@ -104,6 +108,8 @@ function main() {
 
     pathFollowSystem(world, dt);
     renderSystem(world, dt);
+    eventSystem(world, ctx);
+    garbageCollectionSystem(world, ctx);
     renderer.render(scene, camera);
     clock.update();
   }

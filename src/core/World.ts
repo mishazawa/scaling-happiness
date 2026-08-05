@@ -3,6 +3,7 @@ import type { Entity } from "./Entity";
 import type { BlockColor, BlockData } from "../setup/block";
 import type { Tag } from "./Tag";
 import type { PathData, PathFollowerData } from "./Path";
+import type { Event } from "./Event";
 
 export type World = {
   positions: Map<Entity, Vector3>;
@@ -16,6 +17,7 @@ export type World = {
   renderables: Map<Entity, Object3D>;
   queues: Map<Entity, Entity[]>;
   queueMembership: Map<Entity, Entity>;
+  events: Event[];
 };
 
 export function createWorld(): World {
@@ -31,5 +33,6 @@ export function createWorld(): World {
     renderables: new Map(),
     queues: new Map(),
     queueMembership: new Map(),
+    events: [],
   };
 }
