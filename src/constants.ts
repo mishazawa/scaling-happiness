@@ -4,3 +4,5 @@ export const BLOCK_SIZE = 1;
 export const CAMERA_FRUSTUM_SIZE = 20;
 export const GRID_COLUMNS = 8;
 export const GRID_ROWS = 8;
+export const GROUND_SIZE = 20;
+export const GROUND_COLOR = "#444";

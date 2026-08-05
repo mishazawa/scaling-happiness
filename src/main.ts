@@ -15,6 +15,7 @@ import {
   GRID_ROWS,
 } from "./constants";
 import { setupLight } from "./setup/light";
+import { setupGround } from "./setup/ground";
 import { makeGrid } from "./setup/grid";
 import { createWorld } from "./core/World";
 import type { Entity } from "./core/Entity";
@@ -45,6 +46,7 @@ function main() {
   updateCameraFrustum(camera);
 
   setupLight(scene);
+  setupGround(scene);
 
   const renderer = new WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
