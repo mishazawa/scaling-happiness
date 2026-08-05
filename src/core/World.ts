@@ -24,6 +24,7 @@ export type World = {
   lastFiredLanes: Map<Entity, number>;
   ammo: Map<Entity, AmmoData>;
   positionTweens: Map<Entity, PositionTweenData>;
+  projectileTargets: Map<Entity, number>;
   countdowns: Map<Entity, CountdownData>;
   events: Event[];
   lifes: number;
@@ -50,6 +51,7 @@ export function createWorld(): World {
     lastFiredLanes: new Map(),
     ammo: new Map(),
     positionTweens: new Map(),
+    projectileTargets: new Map(),
     countdowns: new Map(),
     events: [],
   };

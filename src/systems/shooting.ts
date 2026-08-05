@@ -1,15 +1,27 @@
 import type { Vector3 } from "three";
 import type { Entity } from "../core/Entity";
 import { pushEvent } from "../core/Event";
+import { addTag, hasTag } from "../core/Tag";
 import type { World } from "../core/World";
 import type { Grid } from "../setup/grid";
 import { toFlat } from "../utils";
 import { markDestroyed } from "../setup/destroy";
+import { spawnProjectile } from "../setup/projectile";
+import type { SystemContext } from "./context";
 
 type Side = "top" | "right" | "bottom" | "left";
 
-/** Produces (via destroy.ts / core/Event.ts): destroy tag, pawn-resolved. */
-export function shootingSystem(world: World, grid: Grid): void {
+/**
+ * Produces (via destroy.ts / core/Event.ts): "targeted" tag, "destroy" tag
+ * on the shooter (ammo depleted), pawn-resolved. Blocks are never destroyed
+ * here directly — a hit tags the block "targeted" and spawns a projectile;
+ * destructionSystem applies the actual destroy once the projectile lands.
+ */
+export function shootingSystem(
+  world: World,
+  grid: Grid,
+  ctx: SystemContext,
+): void {
   const { columns, rows, cellSize, center } = grid;
 
   const originX = center.x - ((columns - 1) * cellSize) / 2;
@@ -54,9 +66,21 @@ export function shootingSystem(world: World, grid: Grid): void {
         columns,
         rows,
       );
-      if (blockEntity !== undefined) {
+      if (blockEntity !== undefined && !hasTag(world, blockEntity, "targeted")) {
         if (checkColor(world, blockEntity, entity)) {
-          markDestroyed(world, blockEntity);
+          addTag(world, blockEntity, "targeted");
+
+          const block = world.blocks.get(blockEntity)!;
+          const shooterPosition = world.positions.get(entity)!;
+          const blockPosition = world.positions.get(blockEntity)!;
+          spawnProjectile(
+            world,
+            ctx.scene,
+            world.colors.get(entity)!,
+            shooterPosition,
+            blockPosition,
+            toFlat(block.row, block.column, columns),
+          );
 
           const depleted = depleteAmmo(world, entity);
           if (depleted) {

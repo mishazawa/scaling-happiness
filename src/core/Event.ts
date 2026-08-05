@@ -39,5 +39,5 @@ export const EVENT_CONSUMERS = {
   "queue-clicked": "spawnSystem",
   "pawn-spawned": "lifeSystem",
   "pawn-resolved": "lifeSystem",
-  "position-tween-complete": "spawnSystem",
+  "position-tween-complete": "spawnSystem, destructionSystem",
 } satisfies Record<Event["type"], string>;

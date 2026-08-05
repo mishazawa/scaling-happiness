@@ -26,6 +26,7 @@ import { handlePointerClick } from "./systems/interaction";
 import { spawnSystem } from "./systems/spawn";
 import { lifeSystem } from "./systems/life";
 import { garbageCollectionSystem } from "./systems/garbageCollection";
+import { destructionSystem } from "./systems/destruction";
 import { clearEventsSystem } from "./systems/clearEvents";
 import { gameStatusSystem } from "./systems/gameStatus";
 import type { SystemContext } from "./systems/context";
@@ -128,8 +129,9 @@ function main() {
 
     if (world.status === "playing") {
       pathFollowSystem(world, dt);
+      shootingSystem(world, GRID_PARAMETERS, ctx);
       timerSystem(world, dt);
-      shootingSystem(world, GRID_PARAMETERS);
+      destructionSystem(world);
       spawnSystem(world, ctx);
       lifeSystem(world);
 

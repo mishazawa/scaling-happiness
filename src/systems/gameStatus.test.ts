@@ -3,6 +3,7 @@ import { Scene, Vector3 } from "three";
 import { createWorld } from "../core/World";
 import { createEntity } from "../core/Entity";
 import { PathFollower } from "../core/Path";
+import { addTag } from "../core/Tag";
 import { spawnBlock } from "../setup/block";
 import { gameStatusSystem } from "./gameStatus";
 
@@ -29,6 +30,17 @@ describe("gameStatusSystem", () => {
     spawnBlock(world, new Scene(), "#FFF", 0, 0, 1, new Vector3());
     world.lifes = 0;
     world.pathFollowers.set(createEntity(), PathFollower(createEntity(), 1));
+
+    gameStatusSystem(world);
+
+    expect(world.status).toBe("playing");
+  });
+
+  it("does not lose at 0 lifes while a projectile is still in flight", () => {
+    const world = createWorld();
+    spawnBlock(world, new Scene(), "#FFF", 0, 0, 1, new Vector3());
+    world.lifes = 0;
+    addTag(world, createEntity(), "projectile");
 
     gameStatusSystem(world);
 

@@ -1,3 +1,4 @@
+import { getEntitiesByTag } from "../core/Tag";
 import type { World } from "../core/World";
 
 /**
@@ -13,7 +14,13 @@ export function gameStatusSystem(world: World): void {
     return;
   }
 
-  if (world.lifes === 0 && world.pathFollowers.size === 0) {
+  // A projectile still in flight can clear the last block once it lands —
+  // don't call the game lost while one is pending.
+  if (
+    world.lifes === 0 &&
+    world.pathFollowers.size === 0 &&
+    getEntitiesByTag(world, "projectile").size === 0
+  ) {
     world.status = "lost";
   }
 }

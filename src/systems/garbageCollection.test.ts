@@ -61,6 +61,21 @@ describe("garbageCollectionSystem", () => {
     expect(hasTag(world, pawn, "destroy")).toBe(false);
   });
 
+  it("deletes a destroyed projectile's target cell", () => {
+    const world = createWorld();
+    const scene = new Scene();
+    const ctx: SystemContext = { scene, pathEntity: createEntity() };
+
+    const projectile = createEntity();
+    addTag(world, projectile, "projectile");
+    world.projectileTargets.set(projectile, 7);
+
+    addTag(world, projectile, "destroy");
+    garbageCollectionSystem(world, ctx);
+
+    expect(world.projectileTargets.has(projectile)).toBe(false);
+  });
+
   it("clears a destroyed block's grid slot", () => {
     const world = createWorld();
     const scene = new Scene();

@@ -4,14 +4,24 @@ import type { World } from "./World";
 /**
  * Tags categorize entities so systems can query "which entities are X"
  * without knowing an entity's full component set. Two kinds share this union:
- *  - kind tags ("block", "pawn"): what an entity fundamentally is, set once.
- *  - state tags ("queued", "spawning", "destroy"): a transient condition,
- *    added and removed as state changes (e.g. "queued" marks an entity as
- *    clickable while it waits in a queue; "spawning" marks a pawn mid-tween
- *    on its way from queue to track; "destroy" marks it for
- *    garbageCollectionSystem to remove on the next pass).
+ *  - kind tags ("block", "pawn", "projectile"): what an entity fundamentally
+ *    is, set once.
+ *  - state tags ("queued", "spawning", "targeted", "destroy"): a transient
+ *    condition, added and removed as state changes (e.g. "queued" marks an
+ *    entity as clickable while it waits in a queue; "spawning" marks a pawn
+ *    mid-tween on its way from queue to track; "targeted" marks a block with
+ *    a projectile in flight toward it — it occludes its lane and cannot be
+ *    fired on again; "destroy" marks it for garbageCollectionSystem to
+ *    remove on the next pass).
  */
-export type Tag = "block" | "pawn" | "queued" | "spawning" | "destroy";
+export type Tag =
+  | "block"
+  | "pawn"
+  | "projectile"
+  | "queued"
+  | "spawning"
+  | "targeted"
+  | "destroy";
 
 const EMPTY_TAG_SET: ReadonlySet<Tag> = new Set();
 const EMPTY_ENTITY_SET: ReadonlySet<Entity> = new Set();

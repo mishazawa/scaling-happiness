@@ -29,3 +29,6 @@ export const SPAWN_TRANSIT_DURATION = 0.1;
 export const SPAWN_COOLDOWN = 0.1;
 export const TRACK_START_T = 0.02;
 export const TRACK_END_T = 1 - TRACK_START_T;
+
+export const PROJECTILE_DURATION = 0.05;
+export const PROJECTILE_RADIUS = 0.1;
