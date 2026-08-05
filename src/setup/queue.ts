@@ -1,10 +1,11 @@
-import { Vector3 } from "three";
+import { Vector3, type Scene } from "three";
 import { QUEUE_DIRECTION, QUEUE_SPACING } from "../constants";
 import { createEntity, type Entity } from "../core/Entity";
 import { Position } from "../core/Position";
 import { addTag, removeTag } from "../core/Tag";
 import { dequeue, enqueue, type QueueId } from "../core/Queue";
 import type { World } from "../core/World";
+import { randomPawnColor, spawnPawn } from "./pawn";
 
 const DIRECTION = new Vector3(...QUEUE_DIRECTION);
 
@@ -42,6 +43,19 @@ export function releasePawnFromQueue(world: World, queueId: QueueId): Entity | u
 
   removeTag(world, pawn, "queued");
   layoutQueue(world, queueId);
+
+  return pawn;
+}
+
+export function spawnQueuedPawn(world: World, scene: Scene, queueId: QueueId): Entity {
+  const position = world.positions.get(queueId) ?? new Vector3();
+
+  const pawn = spawnPawn(world, scene, {
+    color: randomPawnColor(),
+    position,
+  });
+
+  addPawnToQueue(world, queueId, pawn);
 
   return pawn;
 }

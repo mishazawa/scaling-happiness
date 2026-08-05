@@ -19,8 +19,7 @@ import {
 import { setupLight } from "./setup/light";
 import { setupGround } from "./setup/ground";
 import { makeGrid } from "./setup/grid";
-import { spawnPawn } from "./setup/pawn";
-import { addPawnToQueue, spawnQueue } from "./setup/queue";
+import { spawnQueue, spawnQueuedPawn } from "./setup/queue";
 import { createEntity } from "./core/Entity";
 import { createWorld } from "./core/World";
 import { renderSystem } from "./systems/render";
@@ -84,16 +83,13 @@ function main() {
 
   const queueId = spawnQueue(world, new Vector3(...QUEUE_POSITION));
   for (let i = 0; i < QUEUE_INITIAL_SIZE; i++) {
-    const pawn = spawnPawn(world, scene, {
-      color: Math.random() > 0.5 ? "#FFF" : "#000",
-      position: new Vector3(...QUEUE_POSITION),
-    });
-    addPawnToQueue(world, queueId, pawn);
+    spawnQueuedPawn(world, scene, queueId);
   }
 
   renderer.domElement.addEventListener("click", (event) => {
     handlePointerClick(
       world,
+      scene,
       camera,
       renderer.domElement,
       event,

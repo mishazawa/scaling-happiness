@@ -1,16 +1,17 @@
-import { Raycaster, Vector2, type Camera } from "three";
+import { Raycaster, Vector2, type Camera, type Scene } from "three";
 import type { Entity } from "../core/Entity";
 import { PathFollower } from "../core/Path";
 import { getQueueId, type QueueId } from "../core/Queue";
 import { hasTag } from "../core/Tag";
 import type { World } from "../core/World";
-import { releasePawnFromQueue } from "../setup/queue";
+import { releasePawnFromQueue, spawnQueuedPawn } from "../setup/queue";
 
 const raycaster = new Raycaster();
 const pointer = new Vector2();
 
 export function handlePointerClick(
   world: World,
+  scene: Scene,
   camera: Camera,
   domElement: HTMLElement,
   event: PointerEvent,
@@ -37,6 +38,7 @@ export function handlePointerClick(
     const released = releasePawnFromQueue(world, queueId);
     if (released !== undefined) {
       world.pathFollowers.set(released, PathFollower(pathEntity, pawnSpeed));
+      spawnQueuedPawn(world, scene, queueId);
     }
 
     return;

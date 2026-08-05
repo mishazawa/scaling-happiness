@@ -20,6 +20,12 @@ export type SpawnPawnConfig = {
 
 const PAWN_GEOMETRY = new SphereGeometry(PAWN_RADIUS, 16, 12);
 
+const PAWN_COLORS: BlockColor[] = ["#FFF", "#000"];
+
+export function randomPawnColor(): BlockColor {
+  return PAWN_COLORS[Math.floor(Math.random() * PAWN_COLORS.length)];
+}
+
 const materialsByColor = new Map<BlockColor, MeshStandardMaterial>();
 
 function getPawnMaterial(color: BlockColor): MeshStandardMaterial {
