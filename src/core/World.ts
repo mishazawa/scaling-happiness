@@ -1,4 +1,4 @@
-import type { Vector3 } from "three";
+import type { Vector3, Object3D } from "three";
 import type { Entity } from "./Entity";
 import type { BlockColor, BlockData } from "../setup/block";
 import type { Tag } from "./Tag";
@@ -13,6 +13,7 @@ export type World = {
   gridToEntity: Map<number, Entity>;
   paths: Map<Entity, PathData>;
   pathFollowers: Map<Entity, PathFollowerData>;
+  renderables: Map<Entity, Object3D>;
 };
 
 export function createWorld(): World {
@@ -25,5 +26,6 @@ export function createWorld(): World {
     gridToEntity: new Map(),
     paths: new Map<Entity, PathData>(),
     pathFollowers: new Map(),
+    renderables: new Map(),
   };
 }

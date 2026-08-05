@@ -5,12 +5,13 @@ import {
   LineBasicMaterial,
   LineLoop,
   Vector3,
-  type Object3D,
   type Scene,
 } from "three";
 import type { Entity } from "../core/Entity";
 import { createEntity } from "../core/Entity";
 import { Path, type PathData } from "../core/Path";
+import type { World } from "../core/World";
+import { addRenderable } from "../systems/render";
 import type { Grid } from "../setup/grid";
 
 export function makePathAroundTheGrid(grid: Grid, padding: number): PathData {
@@ -28,8 +29,8 @@ export function makePathAroundTheGrid(grid: Grid, padding: number): PathData {
 }
 
 export function DEBUG_pathVisualizer(
+  world: World,
   path: PathData,
-  renderables: Map<Entity, Object3D>,
   scene: Scene,
   colorStart: string = "#ff00ff",
   colorEnd: string = "#00ffff",
@@ -52,8 +53,7 @@ export function DEBUG_pathVisualizer(
   const line = new LineLoop(geometry, material);
 
   const entity = createEntity();
-  renderables.set(entity, line);
-  scene.add(line);
+  addRenderable(world, scene, entity, line);
 
   return entity;
 }

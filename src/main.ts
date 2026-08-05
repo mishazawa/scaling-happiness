@@ -1,11 +1,4 @@
-import {
-  Object3D,
-  OrthographicCamera,
-  Scene,
-  Timer,
-  Vector3,
-  WebGLRenderer,
-} from "three";
+import { OrthographicCamera, Scene, Timer, Vector3, WebGLRenderer } from "three";
 import "./style.css";
 import {
   BLOCK_SIZE,
@@ -18,7 +11,6 @@ import { setupLight } from "./setup/light";
 import { setupGround } from "./setup/ground";
 import { makeGrid } from "./setup/grid";
 import { createWorld } from "./core/World";
-import type { Entity } from "./core/Entity";
 import { renderSystem } from "./systems/render";
 import { DEBUG_pathVisualizer, makePathAroundTheGrid } from "./utils/path";
 
@@ -61,7 +53,6 @@ function main() {
   });
 
   const world = createWorld();
-  const renderables = new Map<Entity, Object3D>();
 
   const GRID_PARAMETERS = {
     columns: GRID_COLUMNS,
@@ -70,16 +61,16 @@ function main() {
     center: new Vector3(0, 0, 0),
   };
 
-  makeGrid(world, renderables, scene, GRID_PARAMETERS);
+  makeGrid(world, scene, GRID_PARAMETERS);
   const pd = makePathAroundTheGrid(GRID_PARAMETERS, 1);
 
-  DEBUG_pathVisualizer(pd, renderables, scene);
+  DEBUG_pathVisualizer(world, pd, scene);
 
   function animate() {
     requestAnimationFrame(animate);
-    clock.getDelta();
+    const dt = clock.getDelta();
 
-    renderSystem(world, renderables);
+    renderSystem(world, dt);
     renderer.render(scene, camera);
     clock.update();
   }
