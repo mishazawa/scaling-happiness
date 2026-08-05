@@ -26,6 +26,7 @@ import { spawnSystem } from "./systems/spawn";
 import { lifeSystem } from "./systems/life";
 import { garbageCollectionSystem } from "./systems/garbageCollection";
 import { clearEventsSystem } from "./systems/clearEvents";
+import { gameStatusSystem } from "./systems/gameStatus";
 import type { SystemContext } from "./systems/context";
 import { DEBUG_pathVisualizer, makePathAroundTheGrid } from "./utils/path";
 import { createQueues } from "./utils/queue";
@@ -44,8 +45,21 @@ function updateCameraFrustum(camera: OrthographicCamera) {
   camera.updateProjectionMatrix();
 }
 
+const GRID_PARAMETERS = {
+  columns: GRID_COLUMNS,
+  rows: GRID_ROWS,
+  cellSize: BLOCK_SIZE,
+  center: new Vector3(0, 0, 0),
+};
+
 function main() {
   const container = document.querySelector<HTMLDivElement>("#app")!;
+  const endScreen = document.querySelector<HTMLDivElement>("#end-screen")!;
+  const endScreenMessage = document.querySelector<HTMLHeadingElement>(
+    "#end-screen-message",
+  )!;
+  const repeatButton =
+    document.querySelector<HTMLButtonElement>("#repeat-game")!;
 
   const clock = new Timer();
   const scene = new Scene();
@@ -68,41 +82,62 @@ function main() {
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  const world = createWorld();
+  let world = createWorld();
+  let ctx: SystemContext;
 
-  const GRID_PARAMETERS = {
-    columns: GRID_COLUMNS,
-    rows: GRID_ROWS,
-    cellSize: BLOCK_SIZE,
-    center: new Vector3(0, 0, 0),
-  };
+  function initGame() {
+    for (const object3D of world.renderables.values()) {
+      scene.remove(object3D);
+    }
 
-  makeGrid(world, scene, GRID_PARAMETERS);
-  const pd = makePathAroundTheGrid(GRID_PARAMETERS, 1);
-  const pathEntity = createEntity();
-  world.paths.set(pathEntity, pd);
+    world = createWorld();
 
-  DEBUG_pathVisualizer(world, pd, scene);
+    makeGrid(world, scene, GRID_PARAMETERS);
+    const pd = makePathAroundTheGrid(GRID_PARAMETERS, 1);
+    const pathEntity = createEntity();
+    world.paths.set(pathEntity, pd);
 
-  createQueues(world, scene);
+    DEBUG_pathVisualizer(world, pd, scene);
 
-  const ctx: SystemContext = { scene, pathEntity };
+    createQueues(world, scene);
+
+    ctx = { scene, pathEntity };
+    endScreen.classList.add("hidden");
+  }
+  initGame();
+
+  repeatButton.addEventListener("click", () => {
+    initGame();
+  });
 
   renderer.domElement.addEventListener("click", (event) => {
+    if (world.status !== "playing") return;
     handlePointerClick(world, camera, renderer.domElement, event);
   });
+
+  function showEndScreen() {
+    endScreenMessage.textContent =
+      world.status === "won" ? "You win!" : "Game over";
+    endScreen.classList.remove("hidden");
+  }
 
   function animate() {
     requestAnimationFrame(animate);
     const dt = clock.getDelta();
 
-    pathFollowSystem(world, dt);
-    shootingSystem(world, GRID_PARAMETERS);
-    spawnSystem(world, ctx);
-    lifeSystem(world);
+    if (world.status === "playing") {
+      pathFollowSystem(world, dt);
+      shootingSystem(world, GRID_PARAMETERS);
+      spawnSystem(world, ctx);
+      lifeSystem(world);
 
-    renderSystem(world, dt);
-    garbageCollectionSystem(world, ctx);
+      renderSystem(world, dt);
+      garbageCollectionSystem(world, ctx);
+      gameStatusSystem(world);
+
+      if (world.status !== "playing") showEndScreen();
+    }
+
     clearEventsSystem(world);
     renderer.render(scene, camera);
     clock.update();

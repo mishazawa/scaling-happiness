@@ -23,11 +23,15 @@ export type World = {
   ammo: Map<Entity, AmmoData>;
   events: Event[];
   lifes: number;
+  status: GameStatus;
 };
+
+export type GameStatus = "playing" | "won" | "lost";
 
 export function createWorld(): World {
   return {
     lifes: LIFES_COUNT,
+    status: "playing",
     positions: new Map(),
     blocks: new Map(),
     colors: new Map(),

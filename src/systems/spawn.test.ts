@@ -55,4 +55,54 @@ describe("spawnSystem", () => {
       { type: "pawn-spawned", entity: pawn },
     ]);
   });
+
+  it("releases at most `lifes` pawns across a batch of queue-clicked events", () => {
+    const world = createWorld();
+    const scene = new Scene();
+    const ctx: SystemContext = { scene, pathEntity: createEntity() };
+    world.lifes = 1;
+
+    const queueA = spawnQueue(world, new Vector3());
+    const queueB = spawnQueue(world, new Vector3(1, 0, 0));
+    const pawnA = spawnPawn(world, scene, {
+      color: "#FFF",
+      position: new Vector3(),
+    });
+    const pawnB = spawnPawn(world, scene, {
+      color: "#FFF",
+      position: new Vector3(),
+    });
+    addPawnToQueue(world, queueA, pawnA);
+    addPawnToQueue(world, queueB, pawnB);
+
+    pushEvent(world, { type: "queue-clicked", queue: queueA });
+    pushEvent(world, { type: "queue-clicked", queue: queueB });
+    spawnSystem(world, ctx);
+
+    expect(readEvents(world, "pawn-spawned")).toEqual([
+      { type: "pawn-spawned", entity: pawnA },
+    ]);
+    expect(hasTag(world, pawnA, "queued")).toBe(false);
+    expect(hasTag(world, pawnB, "queued")).toBe(true);
+  });
+
+  it("releases nothing when lifes is 0", () => {
+    const world = createWorld();
+    const scene = new Scene();
+    const ctx: SystemContext = { scene, pathEntity: createEntity() };
+    world.lifes = 0;
+
+    const queueId = spawnQueue(world, new Vector3());
+    const pawn = spawnPawn(world, scene, {
+      color: "#FFF",
+      position: new Vector3(),
+    });
+    addPawnToQueue(world, queueId, pawn);
+
+    pushEvent(world, { type: "queue-clicked", queue: queueId });
+    spawnSystem(world, ctx);
+
+    expect(readEvents(world, "pawn-spawned")).toEqual([]);
+    expect(hasTag(world, pawn, "queued")).toBe(true);
+  });
 });
