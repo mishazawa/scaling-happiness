@@ -35,11 +35,11 @@ export function spawnSystem(world: World, ctx: SystemContext): void {
     spent += 1;
 
     const path = world.paths.get(ctx.pathEntity)!;
-    const from = world.positions.get(released)!;
+    const pawnStartPos = world.positions.get(released)!;
     world.positionTweens.set(
       released,
       PositionTween(
-        from,
+        pawnStartPos,
         samplePath(path, TRACK_START_T),
         SPAWN_TRANSIT_DURATION,
       ),
