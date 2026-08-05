@@ -5,13 +5,8 @@ import { pushEvent, readEvents } from "../core/Event";
 import { addTag, getEntitiesByTag, hasTag, removeTag } from "../core/Tag";
 import type { World } from "../core/World";
 import { releasePawnFromQueue, spawnQueuedPawn } from "../setup/queue";
-import {
-  SPAWN_COOLDOWN,
-  SPAWN_TRANSIT_DURATION,
-  TRACK_START_T,
-} from "../constants";
+import { SPAWN_COOLDOWN, SPAWN_TRANSIT_DURATION } from "../constants";
 import type { SystemContext } from "./context";
-import { samplePath } from "../utils/path";
 
 /**
  * Owns `world.pathFollowers`, queue occupancy (`world.queues` /
@@ -38,11 +33,7 @@ export function spawnSystem(world: World, ctx: SystemContext): void {
     const pawnStartPos = world.positions.get(released)!;
     world.positionTweens.set(
       released,
-      PositionTween(
-        pawnStartPos,
-        samplePath(path, TRACK_START_T),
-        SPAWN_TRANSIT_DURATION,
-      ),
+      PositionTween(pawnStartPos, path.points[0], SPAWN_TRANSIT_DURATION),
     );
     addTag(world, released, "spawning");
 

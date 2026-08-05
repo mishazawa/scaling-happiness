@@ -1,7 +1,6 @@
 import type { World } from "../core/World";
 import { pushEvent } from "../core/Event";
 import { markDestroyed } from "../setup/destroy";
-import { TRACK_END_T } from "../constants";
 import { samplePath } from "../utils/path";
 
 /** Produces (via destroy.ts / core/Event.ts): destroy tag, pawn-resolved. */
@@ -14,8 +13,8 @@ export function pathFollowSystem(world: World, dt: number) {
 
     follower.t += (follower.speed * dt) / path.total;
 
-    if (follower.t >= TRACK_END_T) {
-      follower.t = TRACK_END_T;
+    if (follower.t >= 1) {
+      follower.t = 1;
       follower.done = true;
       markDestroyed(world, entity);
       pushEvent(world, { type: "pawn-resolved", entity, depleted: false });

@@ -1,4 +1,4 @@
-import { PAWN_SPEED, TRACK_START_T } from "../constants";
+import { PAWN_SPEED } from "../constants";
 import type { Entity } from "./Entity";
 import type { PositionData } from "./Position";
 
@@ -15,13 +15,13 @@ export type PathFollowerData = {
   done: boolean;
 };
 
+/** Builds an open path through `points` — no closing segment back to the start. */
 export const Path = (points: PositionData[]): PathData => {
   const segLengths: number[] = [];
   let total = 0;
 
-  for (let i = 0; i < points.length; i++) {
-    const next = points[(i + 1) % points.length];
-    const length = points[i].distanceTo(next);
+  for (let i = 0; i < points.length - 1; i++) {
+    const length = points[i].distanceTo(points[i + 1]);
     segLengths.push(length);
     total += length;
   }
@@ -34,7 +34,7 @@ export const PathFollower = (
   speed: number = PAWN_SPEED,
 ): PathFollowerData => ({
   pathId,
-  t: TRACK_START_T,
+  t: 0,
   speed,
   done: false,
 });
