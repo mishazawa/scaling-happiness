@@ -1,5 +1,6 @@
-import type { Vector3 } from "three";
+import type { Scene, Vector3 } from "three";
 import type { World } from "../core/World";
+import { spawnBlock } from "./block";
 
 export type Grid = {
   columns: number;
@@ -8,11 +9,9 @@ export type Grid = {
   center: Vector3;
 };
 
+export function makeGrid(_world: World, _scene: Scene, _config: Grid) {
 
-
-export function makeGrid(world: World, scene: Scene, config: Grid) {
-
-  for each row:
-   for each column:
-      
+  for rows:
+  for columns:
+    spawnBlock
 }
