@@ -1,6 +1,4 @@
-import { Vector3, type Scene } from "three";
-import type { World } from "../core/World";
-import { spawnBlock } from "./block";
+import { Vector3 } from "three";
 
 export type Grid = {
   columns: number;
