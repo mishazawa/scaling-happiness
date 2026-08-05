@@ -18,11 +18,16 @@ function makeGrid(): Grid {
   };
 }
 
-function makePawn(world: ReturnType<typeof createWorld>, position: Vector3) {
+function makePawn(
+  world: ReturnType<typeof createWorld>,
+  position: Vector3,
+  ammo?: number,
+) {
   const pawn = createEntity();
   world.positions.set(pawn, Position(position.x, position.y, position.z));
   const pathEntity = createEntity();
   world.pathFollowers.set(pawn, PathFollower(pathEntity, 1));
+  if (ammo !== undefined) world.ammo.set(pawn, ammo);
   return pawn;
 }
 
@@ -171,5 +176,50 @@ describe("shootingSystem", () => {
 
     expect(() => shootingSystem(world, grid)).not.toThrow();
     expect(world.events).toEqual([]);
+  });
+
+  it("destroys the pawn once its ammo runs out on a hit", () => {
+    const world = createWorld();
+    const grid = makeGrid();
+    const block = spawnBlock(world, new Scene(), "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+
+    const pawn = makePawn(world, new Vector3(0, 0, -2), 1);
+    world.colors.set(pawn, "#FFF");
+
+    shootingSystem(world, grid);
+
+    expect(world.events).toEqual([
+      { type: "entity-destroy", entity: block },
+      { type: "entity-destroy", entity: pawn },
+    ]);
+    expect(world.ammo.get(pawn)).toBe(0);
+  });
+
+  it("decrements ammo on a hit without destroying the pawn while rounds remain", () => {
+    const world = createWorld();
+    const grid = makeGrid();
+    const block = spawnBlock(world, new Scene(), "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+
+    const pawn = makePawn(world, new Vector3(0, 0, -2), 2);
+    world.colors.set(pawn, "#FFF");
+
+    shootingSystem(world, grid);
+
+    expect(world.events).toEqual([{ type: "entity-destroy", entity: block }]);
+    expect(world.ammo.get(pawn)).toBe(1);
+  });
+
+  it("leaves ammo untracked for pawns with no ammo component", () => {
+    const world = createWorld();
+    const grid = makeGrid();
+    const block = spawnBlock(world, new Scene(), "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+
+    const pawn = makePawn(world, new Vector3(0, 0, -2));
+    world.colors.set(pawn, "#FFF");
+
+    shootingSystem(world, grid);
+
+    expect(world.events).toEqual([{ type: "entity-destroy", entity: block }]);
+    expect(world.ammo.has(pawn)).toBe(false);
   });
 });

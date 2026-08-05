@@ -55,6 +55,11 @@ export function shootingSystem(world: World, grid: Grid): void {
       if (blockEntity !== undefined) {
         if (checkColor(world, blockEntity, entity)) {
           pushEvent(world, { type: "entity-destroy", entity: blockEntity });
+
+          if (depleteAmmo(world, entity)) {
+            pushEvent(world, { type: "entity-destroy", entity });
+            break;
+          }
         }
       }
       if (l === lane) break;
@@ -99,4 +104,14 @@ function findNearestBlockInLane(
 }
 function checkColor(world: World, blockEntity: Entity, shooterEntity: Entity) {
   return world.colors.get(blockEntity) === world.colors.get(shooterEntity);
+}
+
+// Returns true when the shooter just fired its last round.
+function depleteAmmo(world: World, shooterEntity: Entity): boolean {
+  const ammo = world.ammo.get(shooterEntity);
+  if (ammo === undefined) return false;
+
+  const remaining = ammo - 1;
+  world.ammo.set(shooterEntity, remaining);
+  return remaining <= 0;
 }

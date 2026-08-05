@@ -31,7 +31,7 @@ describe("garbageCollectionSystem", () => {
     expect(world.renderables.has(pawn)).toBe(false);
   });
 
-  it("deletes the entity from positions, colors, pathFollowers, and tags", () => {
+  it("deletes the entity from positions, colors, pathFollowers, ammo, and tags", () => {
     const world = createWorld();
     const scene = new Scene();
     const ctx: SystemContext = { scene };
@@ -42,6 +42,7 @@ describe("garbageCollectionSystem", () => {
     });
     const pathEntity = createEntity();
     world.pathFollowers.set(pawn, PathFollower(pathEntity, 1));
+    expect(world.ammo.has(pawn)).toBe(true);
 
     addTag(world, pawn, "destroy");
     garbageCollectionSystem(world, ctx);
@@ -49,6 +50,7 @@ describe("garbageCollectionSystem", () => {
     expect(world.positions.has(pawn)).toBe(false);
     expect(world.colors.has(pawn)).toBe(false);
     expect(world.pathFollowers.has(pawn)).toBe(false);
+    expect(world.ammo.has(pawn)).toBe(false);
     expect(hasTag(world, pawn, "pawn")).toBe(false);
     expect(hasTag(world, pawn, "destroy")).toBe(false);
   });

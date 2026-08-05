@@ -5,7 +5,7 @@ import {
   type Scene,
   type Vector3,
 } from "three";
-import { PAWN_RADIUS } from "../constants";
+import { PAWN_AMMO, PAWN_RADIUS } from "../constants";
 import { createEntity, type Entity } from "../core/Entity";
 import { Position } from "../core/Position";
 import type { World } from "../core/World";
@@ -46,6 +46,7 @@ export function spawnPawn(
 
   world.positions.set(entity, Position(position.x, position.y, position.z));
   world.colors.set(entity, color);
+  world.ammo.set(entity, PAWN_AMMO);
 
   addTag(world, entity, "pawn");
 

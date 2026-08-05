@@ -9,6 +9,7 @@ export const GROUND_COLOR = "#444";
 
 export const PAWN_RADIUS = 0.35;
 export const PAWN_SPEED = 10;
+export const PAWN_AMMO = 5;
 
 export const QUEUE_POSITION: [number, number, number] = [
   0,

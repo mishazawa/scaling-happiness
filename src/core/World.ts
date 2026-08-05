@@ -4,6 +4,7 @@ import type { BlockColor, BlockData } from "../setup/block";
 import type { Tag } from "./Tag";
 import type { PathData, PathFollowerData } from "./Path";
 import type { Event } from "./Event";
+import type { AmmoData } from "./Ammo";
 
 export type World = {
   positions: Map<Entity, Vector3>;
@@ -18,6 +19,7 @@ export type World = {
   queues: Map<Entity, Entity[]>;
   queueMembership: Map<Entity, Entity>;
   lastFiredLanes: Map<Entity, number>;
+  ammo: Map<Entity, AmmoData>;
   events: Event[];
 };
 
@@ -35,6 +37,7 @@ export function createWorld(): World {
     queues: new Map(),
     queueMembership: new Map(),
     lastFiredLanes: new Map(),
+    ammo: new Map(),
     events: [],
   };
 }

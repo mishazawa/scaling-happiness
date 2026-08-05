@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Object3D, Scene, Vector3 } from "three";
 import { createWorld } from "../core/World";
 import { hasTag } from "../core/Tag";
+import { PAWN_AMMO } from "../constants";
 import { spawnPawn } from "./pawn";
 
 describe("spawnPawn", () => {
@@ -37,6 +38,16 @@ describe("spawnPawn", () => {
     expect(mesh).toBeInstanceOf(Object3D);
     expect(mesh!.position.equals(position)).toBe(true);
     expect(scene.children).toContain(mesh);
+  });
+
+  it("gives the pawn its starting ammo count", () => {
+    const world = createWorld();
+    const entity = spawnPawn(world, new Scene(), {
+      color: "#FFF",
+      position: new Vector3(),
+    });
+
+    expect(world.ammo.get(entity)).toBe(PAWN_AMMO);
   });
 
   it("assigns each entity a unique id", () => {
