@@ -15,10 +15,10 @@ describe("spawnBlock", () => {
 
     expect(world.positions.get(entity)).toEqual(position);
     expect(world.blocks.get(entity)).toEqual({
-      color: "#FFF",
       row: 1,
       column: 2,
     });
+    expect(world.colors.get(entity)).toEqual("#FFF");
     expect(world.gridToEntity.get(toFlat(1, 2, 5))).toBe(entity);
   });
 

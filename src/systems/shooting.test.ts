@@ -25,6 +25,7 @@ function makePawn(
 ) {
   const pawn = createEntity();
   world.positions.set(pawn, Position(position.x, position.y, position.z));
+  world.colors.set(pawn, "#FFF");
   const pathEntity = createEntity();
   world.pathFollowers.set(pawn, PathFollower(pathEntity, 1));
   if (ammo !== undefined) world.ammo.set(pawn, ammo);
@@ -46,7 +47,10 @@ describe("shootingSystem", () => {
     shootingSystem(world, grid);
 
     expect(world.events).toEqual([
-      { type: "entity-destroy", entity: world.gridToEntity.get(toFlat(0, 1, 3)) },
+      {
+        type: "entity-destroy",
+        entity: world.gridToEntity.get(toFlat(0, 1, 3)),
+      },
     ]);
   });
 
@@ -61,7 +65,10 @@ describe("shootingSystem", () => {
     shootingSystem(world, grid);
 
     expect(world.events).toEqual([
-      { type: "entity-destroy", entity: world.gridToEntity.get(toFlat(2, 1, 3)) },
+      {
+        type: "entity-destroy",
+        entity: world.gridToEntity.get(toFlat(2, 1, 3)),
+      },
     ]);
   });
 
@@ -76,7 +83,10 @@ describe("shootingSystem", () => {
     shootingSystem(world, grid);
 
     expect(world.events).toEqual([
-      { type: "entity-destroy", entity: world.gridToEntity.get(toFlat(2, 1, 3)) },
+      {
+        type: "entity-destroy",
+        entity: world.gridToEntity.get(toFlat(2, 1, 3)),
+      },
     ]);
   });
 
@@ -91,7 +101,10 @@ describe("shootingSystem", () => {
     shootingSystem(world, grid);
 
     expect(world.events).toEqual([
-      { type: "entity-destroy", entity: world.gridToEntity.get(toFlat(1, 0, 3)) },
+      {
+        type: "entity-destroy",
+        entity: world.gridToEntity.get(toFlat(1, 0, 3)),
+      },
     ]);
   });
 
@@ -181,7 +194,15 @@ describe("shootingSystem", () => {
   it("destroys the pawn once its ammo runs out on a hit", () => {
     const world = createWorld();
     const grid = makeGrid();
-    const block = spawnBlock(world, new Scene(), "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    const block = spawnBlock(
+      world,
+      new Scene(),
+      "#FFF",
+      0,
+      1,
+      3,
+      new Vector3(0, 0, -1),
+    );
 
     const pawn = makePawn(world, new Vector3(0, 0, -2), 1);
     world.colors.set(pawn, "#FFF");
@@ -198,7 +219,15 @@ describe("shootingSystem", () => {
   it("decrements ammo on a hit without destroying the pawn while rounds remain", () => {
     const world = createWorld();
     const grid = makeGrid();
-    const block = spawnBlock(world, new Scene(), "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    const block = spawnBlock(
+      world,
+      new Scene(),
+      "#FFF",
+      0,
+      1,
+      3,
+      new Vector3(0, 0, -1),
+    );
 
     const pawn = makePawn(world, new Vector3(0, 0, -2), 2);
     world.colors.set(pawn, "#FFF");
@@ -212,7 +241,15 @@ describe("shootingSystem", () => {
   it("leaves ammo untracked for pawns with no ammo component", () => {
     const world = createWorld();
     const grid = makeGrid();
-    const block = spawnBlock(world, new Scene(), "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    const block = spawnBlock(
+      world,
+      new Scene(),
+      "#FFF",
+      0,
+      1,
+      3,
+      new Vector3(0, 0, -1),
+    );
 
     const pawn = makePawn(world, new Vector3(0, 0, -2));
     world.colors.set(pawn, "#FFF");
