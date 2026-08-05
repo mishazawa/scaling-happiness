@@ -12,14 +12,10 @@ import {
   CAMERA_POSITION,
   GRID_COLUMNS,
   GRID_ROWS,
-  PAWN_SPEED,
-  QUEUE_INITIAL_SIZE,
-  QUEUE_POSITION,
 } from "./constants";
 import { setupLight } from "./setup/light";
 import { setupGround } from "./setup/ground";
-import { makeGrid } from "./setup/grid";
-import { spawnQueue, spawnQueuedPawn } from "./setup/queue";
+import { makeGrid } from "./utils/grid";
 import { createEntity } from "./core/Entity";
 import { createWorld } from "./core/World";
 import { renderSystem } from "./systems/render";

@@ -12,7 +12,6 @@ export function shootingSystem(world: World, grid: Grid): void {
 
   const originX = center.x - ((columns - 1) * cellSize) / 2;
   const originZ = center.z - ((rows - 1) * cellSize) / 2;
-
   for (const [entity, follower] of world.pathFollowers) {
     if (follower.done) continue;
 
@@ -21,36 +20,45 @@ export function shootingSystem(world: World, grid: Grid): void {
 
     const side = getSide(position, center);
     const horizontal = side === "top" || side === "bottom";
+    const sideIndex = SIDES.indexOf(side);
 
     const axisCoord = horizontal ? position.x : position.z;
     const axisOrigin = horizontal ? originX : originZ;
     const axisCount = horizontal ? columns : rows;
 
-    const lane = Math.round((axisCoord - axisOrigin) / cellSize);
-    if (lane < 0 || lane >= axisCount) continue;
+    const raw = Math.round((axisCoord - axisOrigin) / cellSize);
+    const lane = Math.min(axisCount - 1, Math.max(0, raw));
 
-    // Lane indices are only unique within a side: column 7 on the bottom
-    // edge and row 7 on the right edge are different lanes with the same
-    // number, so the memory key must include the side.
-    const laneKey = laneKeyFor(side, lane);
-    const lastLaneKey = world.lastFiredLanes.get(entity);
-    if (laneKey === lastLaneKey) continue;
-    world.lastFiredLanes.set(entity, laneKey);
-
-    // Inward means toward smaller row/column on bottom/left, toward larger on top/right.
     const forward = side === "bottom" || side === "left";
 
-    const blockEntity = findNearestBlockInLane(
-      world,
-      lane,
-      horizontal,
-      forward,
-      columns,
-      rows,
-    );
-    if (blockEntity === undefined) continue;
+    const last = world.lastFiredLanes.get(entity);
+    world.lastFiredLanes.set(entity, laneKeyFor(side, lane));
 
-    pushEvent(world, { type: "entity-destroy", entity: blockEntity });
+    // Only interpolate within a side; a side change starts a fresh sweep.
+    let from = lane;
+    if (last !== undefined && Math.floor(last / 1_000_000) === sideIndex) {
+      const lastLane = last % 1_000_000;
+      if (lastLane === lane) continue;
+      from = lastLane + Math.sign(lane - lastLane);
+    }
+
+    const dir = Math.sign(lane - from) || 1;
+    for (let l = from; ; l += dir) {
+      const blockEntity = findNearestBlockInLane(
+        world,
+        l,
+        horizontal,
+        forward,
+        columns,
+        rows,
+      );
+      if (blockEntity !== undefined) {
+        if (checkColor(world, blockEntity, entity)) {
+          pushEvent(world, { type: "entity-destroy", entity: blockEntity });
+        }
+      }
+      if (l === lane) break;
+    }
   }
 }
 
@@ -88,4 +96,7 @@ function findNearestBlockInLane(
   }
 
   return undefined;
+}
+function checkColor(world: World, blockEntity: Entity, shooterEntity: Entity) {
+  return world.colors.get(blockEntity) === world.colors.get(shooterEntity);
 }
