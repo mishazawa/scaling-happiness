@@ -13,7 +13,7 @@ import { addTag } from "../core/Tag";
 import { addRenderable } from "../systems/render";
 import { toFlat } from "../utils";
 
-export type BlockColor = "#FFF" | "#000";
+export type BlockColor = string;
 
 export type BlockData = {
   column: number;

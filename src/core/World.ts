@@ -14,6 +14,8 @@ export type World = {
   paths: Map<Entity, PathData>;
   pathFollowers: Map<Entity, PathFollowerData>;
   renderables: Map<Entity, Object3D>;
+  queues: Map<Entity, Entity[]>;
+  queueMembership: Map<Entity, Entity>;
 };
 
 export function createWorld(): World {
@@ -27,5 +29,7 @@ export function createWorld(): World {
     paths: new Map<Entity, PathData>(),
     pathFollowers: new Map(),
     renderables: new Map(),
+    queues: new Map(),
+    queueMembership: new Map(),
   };
 }

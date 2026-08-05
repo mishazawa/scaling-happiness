@@ -10,6 +10,7 @@ export function addRenderable(
   object3D: Object3D,
 ): void {
   world.renderables.set(entity, Renderable(object3D));
+  object3D.userData.entity = entity;
   scene.add(object3D);
 }
 

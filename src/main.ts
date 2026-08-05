@@ -6,12 +6,20 @@ import {
   CAMERA_POSITION,
   GRID_COLUMNS,
   GRID_ROWS,
+  PAWN_SPEED,
+  QUEUE_INITIAL_SIZE,
+  QUEUE_POSITION,
 } from "./constants";
 import { setupLight } from "./setup/light";
 import { setupGround } from "./setup/ground";
 import { makeGrid } from "./setup/grid";
+import { spawnPawn } from "./setup/pawn";
+import { addPawnToQueue, spawnQueue } from "./setup/queue";
+import { createEntity } from "./core/Entity";
 import { createWorld } from "./core/World";
 import { renderSystem } from "./systems/render";
+import { pathFollowSystem } from "./systems/pathFollow";
+import { handlePointerClick } from "./systems/interaction";
 import { DEBUG_pathVisualizer, makePathAroundTheGrid } from "./utils/path";
 
 function updateCameraFrustum(camera: OrthographicCamera) {
@@ -63,13 +71,29 @@ function main() {
 
   makeGrid(world, scene, GRID_PARAMETERS);
   const pd = makePathAroundTheGrid(GRID_PARAMETERS, 1);
+  const pathEntity = createEntity();
+  world.paths.set(pathEntity, pd);
 
   DEBUG_pathVisualizer(world, pd, scene);
+
+  const queueId = spawnQueue(world, new Vector3(...QUEUE_POSITION));
+  for (let i = 0; i < QUEUE_INITIAL_SIZE; i++) {
+    const pawn = spawnPawn(world, scene, {
+      color: "#e63946",
+      position: new Vector3(...QUEUE_POSITION),
+    });
+    addPawnToQueue(world, queueId, pawn);
+  }
+
+  renderer.domElement.addEventListener("click", (event) => {
+    handlePointerClick(world, camera, renderer.domElement, event, pathEntity, PAWN_SPEED);
+  });
 
   function animate() {
     requestAnimationFrame(animate);
     const dt = clock.getDelta();
 
+    pathFollowSystem(world, dt);
     renderSystem(world, dt);
     renderer.render(scene, camera);
     clock.update();

@@ -36,7 +36,7 @@ describe("makeGrid", () => {
         expect(entity).toBeDefined();
 
         const block = world.blocks.get(entity!);
-        expect(block).toEqual({ color: block!.color, row, column });
+        expect(block).toEqual({ row, column });
 
         const [decodedRow, decodedColumn] = toRowColumn(
           toFlat(row, column, columns),
