@@ -5,6 +5,7 @@ import { getQueueId, type QueueId } from "../core/Queue";
 import { hasTag } from "../core/Tag";
 import type { World } from "../core/World";
 import { releasePawnFromQueue, spawnQueuedPawn } from "../setup/queue";
+import { PAWN_SPEED } from "../constants";
 
 const raycaster = new Raycaster();
 const pointer = new Vector2();
@@ -16,7 +17,6 @@ export function handlePointerClick(
   domElement: HTMLElement,
   event: PointerEvent,
   pathEntity: Entity,
-  pawnSpeed: number,
 ): void {
   const rect = domElement.getBoundingClientRect();
   pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -37,7 +37,7 @@ export function handlePointerClick(
 
     const released = releasePawnFromQueue(world, queueId);
     if (released !== undefined) {
-      world.pathFollowers.set(released, PathFollower(pathEntity, pawnSpeed));
+      world.pathFollowers.set(released, PathFollower(pathEntity, PAWN_SPEED));
       spawnQueuedPawn(world, scene, queueId);
     }
 

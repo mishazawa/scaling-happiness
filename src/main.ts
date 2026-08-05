@@ -29,6 +29,7 @@ import { eventSystem } from "./systems/event";
 import { garbageCollectionSystem } from "./systems/garbageCollection";
 import type { SystemContext } from "./systems/context";
 import { DEBUG_pathVisualizer, makePathAroundTheGrid } from "./utils/path";
+import { createQueues } from "./utils/queue";
 
 function updateCameraFrustum(camera: OrthographicCamera) {
   const aspect = window.innerWidth / window.innerHeight;
@@ -85,10 +86,7 @@ function main() {
 
   DEBUG_pathVisualizer(world, pd, scene);
 
-  const queueId = spawnQueue(world, new Vector3(...QUEUE_POSITION));
-  for (let i = 0; i < QUEUE_INITIAL_SIZE; i++) {
-    spawnQueuedPawn(world, scene, queueId);
-  }
+  createQueues(world, scene);
 
   renderer.domElement.addEventListener("click", (event) => {
     handlePointerClick(
@@ -98,7 +96,6 @@ function main() {
       renderer.domElement,
       event,
       pathEntity,
-      PAWN_SPEED,
     );
   });
 

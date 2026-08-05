@@ -20,12 +20,14 @@ export function makePathAroundTheGrid(grid: Grid, padding: number): PathData {
   const halfWidth = (columns * cellSize) / 2 + padding;
   const halfDepth = (rows * cellSize) / 2 + padding;
 
-  return Path([
-    new Vector3(center.x - halfWidth, center.y, center.z - halfDepth),
-    new Vector3(center.x + halfWidth, center.y, center.z - halfDepth),
-    new Vector3(center.x + halfWidth, center.y, center.z + halfDepth),
-    new Vector3(center.x - halfWidth, center.y, center.z + halfDepth),
-  ]);
+  return Path(
+    [
+      new Vector3(center.x - halfWidth, center.y, center.z - halfDepth),
+      new Vector3(center.x + halfWidth, center.y, center.z - halfDepth),
+      new Vector3(center.x + halfWidth, center.y, center.z + halfDepth),
+      new Vector3(center.x - halfWidth, center.y, center.z + halfDepth),
+    ].reverse(),
+  );
 }
 
 export function DEBUG_pathVisualizer(
