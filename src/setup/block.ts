@@ -2,7 +2,6 @@ import {
   BoxGeometry,
   Mesh,
   MeshStandardMaterial,
-  type Object3D,
   type Scene,
   type Vector3,
 } from "three";
@@ -11,9 +10,10 @@ import { createEntity, type Entity } from "../core/Entity";
 import { Position } from "../core/Position";
 import type { World } from "../core/World";
 import { addTag } from "../core/Tag";
+import { addRenderable } from "../systems/render";
 import { toFlat } from "../utils";
 
-export type BlockColor = "#FFF" | "#000";
+export type BlockColor = string;
 
 export type BlockData = {
   column: number;
@@ -35,7 +35,6 @@ function getBlockMaterial(color: BlockColor): MeshStandardMaterial {
 
 export function spawnBlock(
   world: World,
-  renderables: Map<Entity, Object3D>,
   scene: Scene,
   color: BlockColor,
   row: number,
@@ -57,8 +56,7 @@ export function spawnBlock(
   mesh.castShadow = true;
   mesh.receiveShadow = true;
 
-  renderables.set(entity, mesh);
-  scene.add(mesh);
+  addRenderable(world, scene, entity, mesh);
 
   return entity;
 }

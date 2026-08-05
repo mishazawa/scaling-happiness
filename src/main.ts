@@ -1,11 +1,4 @@
-import {
-  Object3D,
-  OrthographicCamera,
-  Scene,
-  Timer,
-  Vector3,
-  WebGLRenderer,
-} from "three";
+import { OrthographicCamera, Scene, Timer, Vector3, WebGLRenderer } from "three";
 import "./style.css";
 import {
   BLOCK_SIZE,
@@ -13,13 +6,20 @@ import {
   CAMERA_POSITION,
   GRID_COLUMNS,
   GRID_ROWS,
+  PAWN_SPEED,
+  QUEUE_INITIAL_SIZE,
+  QUEUE_POSITION,
 } from "./constants";
 import { setupLight } from "./setup/light";
 import { setupGround } from "./setup/ground";
 import { makeGrid } from "./setup/grid";
+import { spawnPawn } from "./setup/pawn";
+import { addPawnToQueue, spawnQueue } from "./setup/queue";
+import { createEntity } from "./core/Entity";
 import { createWorld } from "./core/World";
-import type { Entity } from "./core/Entity";
 import { renderSystem } from "./systems/render";
+import { pathFollowSystem } from "./systems/pathFollow";
+import { handlePointerClick } from "./systems/interaction";
 import { DEBUG_pathVisualizer, makePathAroundTheGrid } from "./utils/path";
 
 function updateCameraFrustum(camera: OrthographicCamera) {
@@ -61,7 +61,6 @@ function main() {
   });
 
   const world = createWorld();
-  const renderables = new Map<Entity, Object3D>();
 
   const GRID_PARAMETERS = {
     columns: GRID_COLUMNS,
@@ -70,16 +69,32 @@ function main() {
     center: new Vector3(0, 0, 0),
   };
 
-  makeGrid(world, renderables, scene, GRID_PARAMETERS);
+  makeGrid(world, scene, GRID_PARAMETERS);
   const pd = makePathAroundTheGrid(GRID_PARAMETERS, 1);
+  const pathEntity = createEntity();
+  world.paths.set(pathEntity, pd);
 
-  DEBUG_pathVisualizer(pd, renderables, scene);
+  DEBUG_pathVisualizer(world, pd, scene);
+
+  const queueId = spawnQueue(world, new Vector3(...QUEUE_POSITION));
+  for (let i = 0; i < QUEUE_INITIAL_SIZE; i++) {
+    const pawn = spawnPawn(world, scene, {
+      color: "#e63946",
+      position: new Vector3(...QUEUE_POSITION),
+    });
+    addPawnToQueue(world, queueId, pawn);
+  }
+
+  renderer.domElement.addEventListener("click", (event) => {
+    handlePointerClick(world, camera, renderer.domElement, event, pathEntity, PAWN_SPEED);
+  });
 
   function animate() {
     requestAnimationFrame(animate);
-    clock.getDelta();
+    const dt = clock.getDelta();
 
-    renderSystem(world, renderables);
+    pathFollowSystem(world, dt);
+    renderSystem(world, dt);
     renderer.render(scene, camera);
     clock.update();
   }

@@ -1,3 +1,3 @@
 import type { World } from "../core/World";
 
-export function movementSystem(world: World, dt: number) {}
+export function movementSystem(_world: World, _dt: number) {}

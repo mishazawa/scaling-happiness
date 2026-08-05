@@ -1,18 +1,24 @@
 import type { World } from "../core/World";
 import type { Entity } from "../core/Entity";
 import type { Object3D, Scene } from "three";
+import { Renderable } from "../core/Renderable";
 
-export function renderSystem(
-  _world: World,
-  _renderables: Map<Entity, Object3D>,
-) {
-  // iterate over world.positions and copy positions to renderables
+export function addRenderable(
+  world: World,
+  scene: Scene,
+  entity: Entity,
+  object3D: Object3D,
+): void {
+  world.renderables.set(entity, Renderable(object3D));
+  object3D.userData.entity = entity;
+  scene.add(object3D);
 }
 
-export function renderSystemInit(
-  _world: World,
-  _renderables: Map<Entity, Object3D>,
-  scene: Scene,
-) {
-  // iterate over world.renderables and add to scene
+export function renderSystem(world: World, _dt: number): void {
+  for (const [entity, position] of world.positions) {
+    const object3D = world.renderables.get(entity);
+    if (!object3D) continue;
+
+    object3D.position.copy(position);
+  }
 }

@@ -7,7 +7,7 @@ import { makeGrid } from "./grid";
 describe("makeGrid", () => {
   it("spawns rows * columns blocks", () => {
     const world = createWorld();
-    makeGrid(world, new Map(), new Scene(), {
+    makeGrid(world, new Scene(), {
       columns: 3,
       rows: 2,
       cellSize: 1,
@@ -23,7 +23,7 @@ describe("makeGrid", () => {
     const columns = 4;
     const rows = 3;
 
-    makeGrid(world, new Map(), new Scene(), {
+    makeGrid(world, new Scene(), {
       columns,
       rows,
       cellSize: 1,
@@ -36,7 +36,7 @@ describe("makeGrid", () => {
         expect(entity).toBeDefined();
 
         const block = world.blocks.get(entity!);
-        expect(block).toEqual({ color: block!.color, row, column });
+        expect(block).toEqual({ row, column });
 
         const [decodedRow, decodedColumn] = toRowColumn(
           toFlat(row, column, columns),
@@ -50,11 +50,10 @@ describe("makeGrid", () => {
 
   it("centers the grid around config.center", () => {
     const world = createWorld();
-    const renderables = new Map();
     const center = new Vector3(10, 5, -2);
     const cellSize = 2;
 
-    makeGrid(world, renderables, new Scene(), {
+    makeGrid(world, new Scene(), {
       columns: 3,
       rows: 3,
       cellSize,
@@ -73,7 +72,7 @@ describe("makeGrid", () => {
     const world = createWorld();
     const cellSize = 3;
 
-    makeGrid(world, new Map(), new Scene(), {
+    makeGrid(world, new Scene(), {
       columns: 2,
       rows: 2,
       cellSize,
@@ -90,17 +89,16 @@ describe("makeGrid", () => {
 
   it("registers a renderable mesh in the scene for every block", () => {
     const world = createWorld();
-    const renderables = new Map();
     const scene = new Scene();
 
-    makeGrid(world, renderables, scene, {
+    makeGrid(world, scene, {
       columns: 2,
       rows: 2,
       cellSize: 1,
       center: new Vector3(0, 0, 0),
     });
 
-    expect(renderables.size).toBe(4);
+    expect(world.renderables.size).toBe(4);
     expect(scene.children.length).toBe(4);
   });
 });

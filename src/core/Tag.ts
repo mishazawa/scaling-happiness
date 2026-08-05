@@ -1,7 +1,7 @@
 import type { Entity } from "./Entity";
 import type { World } from "./World";
 
-export type Tag = "block";
+export type Tag = "block" | "pawn" | "queued";
 
 const EMPTY_TAG_SET: ReadonlySet<Tag> = new Set();
 const EMPTY_ENTITY_SET: ReadonlySet<Entity> = new Set();

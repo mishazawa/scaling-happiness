@@ -1,5 +1,4 @@
-import { Vector3, type Object3D, type Scene } from "three";
-import type { Entity } from "../core/Entity";
+import { Vector3, type Scene } from "three";
 import type { World } from "../core/World";
 import { spawnBlock } from "./block";
 
@@ -10,12 +9,7 @@ export type Grid = {
   center: Vector3;
 };
 
-export function makeGrid(
-  world: World,
-  renderables: Map<Entity, Object3D>,
-  scene: Scene,
-  config: Grid,
-) {
+export function makeGrid(world: World, scene: Scene, config: Grid) {
   const { columns, rows, cellSize, center } = config;
 
   const originX = center.x - ((columns - 1) * cellSize) / 2;
@@ -30,7 +24,7 @@ export function makeGrid(
         originZ + row * cellSize,
       );
 
-      spawnBlock(world, renderables, scene, color, row, column, columns, position);
+      spawnBlock(world, scene, color, row, column, columns, position);
     }
   }
 }

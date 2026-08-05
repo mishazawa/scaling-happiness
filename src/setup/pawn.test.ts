@@ -2,39 +2,28 @@ import { describe, it, expect } from "vitest";
 import { Object3D, Scene, Vector3 } from "three";
 import { createWorld } from "../core/World";
 import { hasTag } from "../core/Tag";
-import { toFlat } from "../utils";
-import { spawnBlock } from "./block";
+import { spawnPawn } from "./pawn";
 
-describe("spawnBlock", () => {
-  it("registers position, block data, and grid lookup on the world", () => {
+describe("spawnPawn", () => {
+  it("registers position and color on the world", () => {
     const world = createWorld();
     const scene = new Scene();
     const position = new Vector3(1, 0, 2);
 
-    const entity = spawnBlock(world, scene, "#FFF", 1, 2, 5, position);
+    const entity = spawnPawn(world, scene, { color: "#e63946", position });
 
     expect(world.positions.get(entity)).toEqual(position);
-    expect(world.blocks.get(entity)).toEqual({
-      color: "#FFF",
-      row: 1,
-      column: 2,
-    });
-    expect(world.gridToEntity.get(toFlat(1, 2, 5))).toBe(entity);
+    expect(world.colors.get(entity)).toBe("#e63946");
   });
 
-  it("tags the entity as a block", () => {
+  it("tags the entity as a pawn", () => {
     const world = createWorld();
-    const entity = spawnBlock(
-      world,
-      new Scene(),
-      "#000",
-      0,
-      0,
-      1,
-      new Vector3(),
-    );
+    const entity = spawnPawn(world, new Scene(), {
+      color: "#000",
+      position: new Vector3(),
+    });
 
-    expect(hasTag(world, entity, "block")).toBe(true);
+    expect(hasTag(world, entity, "pawn")).toBe(true);
   });
 
   it("adds a renderable mesh positioned at the given coordinates and adds it to the scene", () => {
@@ -42,7 +31,7 @@ describe("spawnBlock", () => {
     const scene = new Scene();
     const position = new Vector3(3, 0, -4);
 
-    const entity = spawnBlock(world, scene, "#FFF", 0, 0, 1, position);
+    const entity = spawnPawn(world, scene, { color: "#FFF", position });
 
     const mesh = world.renderables.get(entity);
     expect(mesh).toBeInstanceOf(Object3D);
@@ -54,8 +43,8 @@ describe("spawnBlock", () => {
     const world = createWorld();
     const scene = new Scene();
 
-    const a = spawnBlock(world, scene, "#FFF", 0, 0, 2, new Vector3());
-    const b = spawnBlock(world, scene, "#000", 0, 1, 2, new Vector3());
+    const a = spawnPawn(world, scene, { color: "#FFF", position: new Vector3() });
+    const b = spawnPawn(world, scene, { color: "#000", position: new Vector3() });
 
     expect(a).not.toBe(b);
   });
