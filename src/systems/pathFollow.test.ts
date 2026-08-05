@@ -7,9 +7,8 @@ import { Path, PathFollower, type PathData } from "../core/Path";
 import { hasTag } from "../core/Tag";
 import { pathFollowSystem } from "./pathFollow";
 import { samplePath } from "../utils/path";
-import { TRACK_END_T, TRACK_START_T } from "../constants";
 
-function makeSquarePath() {
+function makeOpenSquarePath() {
   return Path([
     Position(0, 0, 0),
     Position(1, 0, 0),
@@ -23,16 +22,16 @@ function advance(startT: number, speed: number, dt: number, path: PathData) {
   return startT + (speed * dt) / path.total;
 }
 
-/** dt required to move a follower from TRACK_START_T to `targetT`, at `speed`. */
+/** dt required to move a follower from t=0 to `targetT`, at `speed`. */
 function dtToReach(targetT: number, speed: number, path: PathData) {
-  return ((targetT - TRACK_START_T) * path.total) / speed;
+  return (targetT * path.total) / speed;
 }
 
 describe("pathFollowSystem", () => {
-  it("advances a follower's t from TRACK_START_T and samples the matching position", () => {
+  it("advances a follower's t from 0 and samples the matching position", () => {
     const world = createWorld();
     const pathEntity = createEntity();
-    const path = makeSquarePath();
+    const path = makeOpenSquarePath();
     world.paths.set(pathEntity, path);
 
     const speed = 1;
@@ -43,10 +42,10 @@ describe("pathFollowSystem", () => {
 
     pathFollowSystem(world, dt);
 
-    const expectedT = advance(TRACK_START_T, speed, dt, path);
+    const expectedT = advance(0, speed, dt, path);
     const data = world.pathFollowers.get(follower)!;
     expect(data.t).toBeCloseTo(expectedT);
-    expect(data.done).toBe(expectedT >= TRACK_END_T);
+    expect(data.done).toBe(expectedT >= 1);
 
     const expectedPos = samplePath(path, expectedT).clone();
     const pos = world.positions.get(follower)!;
@@ -58,7 +57,7 @@ describe("pathFollowSystem", () => {
   it("lands on a path vertex when t reaches a segment boundary", () => {
     const world = createWorld();
     const pathEntity = createEntity();
-    const path = makeSquarePath();
+    const path = makeOpenSquarePath();
     world.paths.set(pathEntity, path);
 
     const speed = 2;
@@ -85,7 +84,7 @@ describe("pathFollowSystem", () => {
   it("continues sampling correctly across multiple ticks and segments", () => {
     const world = createWorld();
     const pathEntity = createEntity();
-    const path = makeSquarePath();
+    const path = makeOpenSquarePath();
     world.paths.set(pathEntity, path);
 
     const speed = 2;
@@ -110,16 +109,16 @@ describe("pathFollowSystem", () => {
     expect(pos.z).toBeCloseTo(expectedPos.z);
   });
 
-  it("clamps t to TRACK_END_T, marks the follower done, and stops moving it further", () => {
+  it("clamps t to 1 (the open path's end), marks the follower done, and stops moving it further", () => {
     const world = createWorld();
     const pathEntity = createEntity();
-    const path = makeSquarePath();
+    const path = makeOpenSquarePath();
     world.paths.set(pathEntity, path);
 
-    // any speed/dt whose raw increment overshoots TRACK_END_T from TRACK_START_T
+    // any speed/dt whose raw increment overshoots the path's end
     const speed = 100;
     const dt = 1;
-    expect(advance(TRACK_START_T, speed, dt, path)).toBeGreaterThan(TRACK_END_T);
+    expect(advance(0, speed, dt, path)).toBeGreaterThan(1);
 
     const follower = createEntity();
     world.pathFollowers.set(follower, PathFollower(pathEntity, speed));
@@ -128,10 +127,10 @@ describe("pathFollowSystem", () => {
     pathFollowSystem(world, dt);
 
     const data = world.pathFollowers.get(follower)!;
-    expect(data.t).toBe(TRACK_END_T);
+    expect(data.t).toBe(1);
     expect(data.done).toBe(true);
 
-    const expectedPos = samplePath(path, TRACK_END_T).clone();
+    const expectedPos = path.points[path.points.length - 1]; // the path's final point
     const pos = world.positions.get(follower)!;
     expect(pos.x).toBeCloseTo(expectedPos.x);
     expect(pos.y).toBeCloseTo(expectedPos.y);
@@ -140,18 +139,18 @@ describe("pathFollowSystem", () => {
     const posBefore = pos.clone();
     pathFollowSystem(world, dt);
     expect(world.positions.get(follower)!.equals(posBefore)).toBe(true);
-    expect(world.pathFollowers.get(follower)!.t).toBe(TRACK_END_T);
+    expect(world.pathFollowers.get(follower)!.t).toBe(1);
   });
 
-  it("marks the follower destroyed and emits exactly one pawn-resolved event when it completes the loop", () => {
+  it("marks the follower destroyed and emits exactly one pawn-resolved event when it completes the path", () => {
     const world = createWorld();
     const pathEntity = createEntity();
-    const path = makeSquarePath();
+    const path = makeOpenSquarePath();
     world.paths.set(pathEntity, path);
 
     const speed = 100;
     const dt = 1;
-    expect(advance(TRACK_START_T, speed, dt, path)).toBeGreaterThan(TRACK_END_T);
+    expect(advance(0, speed, dt, path)).toBeGreaterThan(1);
 
     const follower = createEntity();
     world.pathFollowers.set(follower, PathFollower(pathEntity, speed));
@@ -172,7 +171,7 @@ describe("pathFollowSystem", () => {
   it("moves multiple followers on the same path independently", () => {
     const world = createWorld();
     const pathEntity = createEntity();
-    const path = makeSquarePath();
+    const path = makeOpenSquarePath();
     world.paths.set(pathEntity, path);
 
     const slowSpeed = 1;
@@ -189,8 +188,8 @@ describe("pathFollowSystem", () => {
 
     pathFollowSystem(world, dt);
 
-    const expectedSlowT = advance(TRACK_START_T, slowSpeed, dt, path);
-    const expectedFastT = advance(TRACK_START_T, fastSpeed, dt, path);
+    const expectedSlowT = advance(0, slowSpeed, dt, path);
+    const expectedFastT = advance(0, fastSpeed, dt, path);
     expect(world.pathFollowers.get(slow)!.t).toBeCloseTo(expectedSlowT);
     expect(world.pathFollowers.get(fast)!.t).toBeCloseTo(expectedFastT);
 
@@ -224,7 +223,7 @@ describe("pathFollowSystem", () => {
   it("does not throw when the follower entity has no position component", () => {
     const world = createWorld();
     const pathEntity = createEntity();
-    world.paths.set(pathEntity, makeSquarePath());
+    world.paths.set(pathEntity, makeOpenSquarePath());
 
     const follower = createEntity();
     world.pathFollowers.set(follower, PathFollower(pathEntity, 1));
