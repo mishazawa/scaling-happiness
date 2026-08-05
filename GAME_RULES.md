@@ -59,15 +59,23 @@ if the pawn succeeds. A failed pawn's cost is never returned.
 ## Win / lose conditions
 
 - **Win**: every block on the grid has been destroyed (grid fully cleared).
-- **Lose**: lives reach 0 before the grid is fully cleared.
+- **Lose**: lives reach 0 and there are no lives available to spawn another
+  pawn while blocks remain on the grid.
+- A pawn can only be spawned if the player has at least 1 life available to
+  spend.
 
 ## Strategy implications
 
 - The player should release pawns whose color still has reachable blocks
   (i.e. blocks that are currently the frontmost block in some lane, viewed
-  from the track), so the pawn can deplete its ammo before completing a lap.
+  from the track), so the pawn can deplete its ammo before completing a lap
+  and get its spent life refunded.
 - Releasing a pawn of a color with no currently reachable blocks guarantees
-  that pawn will lap the track with leftover ammo and cost a life.
+  that pawn will lap the track with leftover ammo, permanently losing the
+  life spent to spawn it.
 - Timing and order of release matters: as other pawns clear blocks, new
   blocks become reachable in their lanes, which can make a previously
   "doomed" pawn viable if it hasn't completed its lap yet.
+- Because spawning itself costs a life, the player must also manage how many
+  pawns are in flight at once — spawning too many simultaneously risks
+  running out of lives to spend even before any of them fail.
