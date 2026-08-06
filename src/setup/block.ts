@@ -1,7 +1,6 @@
 import {
   BoxGeometry,
   Mesh,
-  MeshStandardMaterial,
   type Scene,
   type Vector3,
 } from "three";
@@ -11,21 +10,12 @@ import { Position } from "../core/Position";
 import type { World } from "../core/World";
 import { addTag } from "../core/Tag";
 import { addRenderable } from "../render/renderable";
+import { standardMaterial } from "../render/materials";
 import { toFlat } from "../utils/gridMath";
 import type { BlockColor } from "../core/Block";
 
 const BLOCK_GEOMETRY = new BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 
-const materialsByColor = new Map<BlockColor, MeshStandardMaterial>();
-
-function getBlockMaterial(color: BlockColor): MeshStandardMaterial {
-  let material = materialsByColor.get(color);
-  if (!material) {
-    material = new MeshStandardMaterial({ color });
-    materialsByColor.set(color, material);
-  }
-  return material;
-}
 
 export function spawnBlock(
   world: World,
@@ -45,7 +35,7 @@ export function spawnBlock(
 
   addTag(world, entity, "block");
 
-  const mesh = new Mesh(BLOCK_GEOMETRY, getBlockMaterial(color));
+  const mesh = new Mesh(BLOCK_GEOMETRY, standardMaterial(color));
   mesh.position.copy(position);
   mesh.castShadow = true;
   mesh.receiveShadow = true;

@@ -1,6 +1,5 @@
 import {
   Mesh,
-  MeshStandardMaterial,
   SphereGeometry,
   type Scene,
   type Vector3,
@@ -12,20 +11,10 @@ import { PositionTween } from "../core/Tween";
 import { addTag } from "../core/Tag";
 import type { World } from "../core/World";
 import { addRenderable } from "../render/renderable";
-import type { BlockColor } from "../core/Block";
+import { standardMaterial } from "../render/materials";
 
 const PROJECTILE_GEOMETRY = new SphereGeometry(PROJECTILE_RADIUS, 8, 6);
 
-const materialsByColor = new Map<BlockColor, MeshStandardMaterial>();
-
-function getProjectileMaterial(color: BlockColor): MeshStandardMaterial {
-  let material = materialsByColor.get(color);
-  if (!material) {
-    material = new MeshStandardMaterial({ color });
-    materialsByColor.set(color, material);
-  }
-  return material;
-}
 
 /** Spawns a visual-only tween from `from` to `to`; `targetCell` is resolved by destructionSystem once the tween completes. */
 export function spawnProjectile(
@@ -46,7 +35,7 @@ export function spawnProjectile(
 
   addTag(world, entity, "projectile");
 
-  const mesh = new Mesh(PROJECTILE_GEOMETRY, getProjectileMaterial("#FFF"));
+  const mesh = new Mesh(PROJECTILE_GEOMETRY, standardMaterial("#FFF"));
   mesh.position.copy(from);
 
   addRenderable(world, scene, entity, mesh);

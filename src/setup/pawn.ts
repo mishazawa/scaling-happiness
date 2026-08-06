@@ -1,6 +1,5 @@
 import {
   Mesh,
-  MeshStandardMaterial,
   SphereGeometry,
   type Scene,
   type Vector3,
@@ -11,6 +10,7 @@ import { Position } from "../core/Position";
 import type { World } from "../core/World";
 import { addTag } from "../core/Tag";
 import { addRenderable } from "../render/renderable";
+import { standardMaterial } from "../render/materials";
 import type { BlockColor } from "../core/Block";
 
 export type SpawnPawnConfig = {
@@ -26,16 +26,6 @@ export function randomPawnColor(): BlockColor {
   return PAWN_COLORS[Math.floor(Math.random() * PAWN_COLORS.length)];
 }
 
-const materialsByColor = new Map<BlockColor, MeshStandardMaterial>();
-
-function getPawnMaterial(color: BlockColor): MeshStandardMaterial {
-  let material = materialsByColor.get(color);
-  if (!material) {
-    material = new MeshStandardMaterial({ color });
-    materialsByColor.set(color, material);
-  }
-  return material;
-}
 
 export function spawnPawn(
   world: World,
@@ -50,7 +40,7 @@ export function spawnPawn(
 
   addTag(world, entity, "pawn");
 
-  const mesh = new Mesh(PAWN_GEOMETRY, getPawnMaterial(color));
+  const mesh = new Mesh(PAWN_GEOMETRY, standardMaterial(color));
   mesh.position.copy(position);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
