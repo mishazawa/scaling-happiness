@@ -8,8 +8,9 @@ type ColorSpec = string;
 /**
  * Shared material cache, keyed by colour.
  *
- * Intentionally never cleared: only the non-instanced scene dressing draws with
- * these, so the cache reaches a handful of entries during the first game and
+ * Intentionally never cleared: the non-instanced scene dressing draws with
+ * these, as does the imported track until it has real materials, so the cache
+ * reaches a handful of entries during the first game and
  * never grows — restarts reuse the same materials rather than accumulating new
  * ones. Disposal would also be unsafe here, since a restart tears the scene down
  * while these materials are still referenced by the objects being removed.

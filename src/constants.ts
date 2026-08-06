@@ -16,7 +16,7 @@ const GRID_WORLD_SIZE = GRID_COLUMNS * BLOCK_SIZE;
 const GRID_HALF_SIZE = GRID_WORLD_SIZE / 2;
 
 // Space reserved around the play field for the track to run through.
-export const TRACK_PADDING = 1;
+export const TRACK_PADDING = 2.5;
 const TRACK_HALF_SIZE = GRID_HALF_SIZE + TRACK_PADDING;
 
 /**
@@ -54,7 +54,7 @@ const CAMERA_DEPTH_TO_SCREEN_Y = CAMERA_TILT_Y / CAMERA_TILT_LENGTH;
 // Frustum width is sized to fit the grid + its track padding exactly; height
 // follows from the locked aspect ratio, so the play field is always fully
 // visible with no wasted horizontal space.
-const CAMERA_HALF_WIDTH = TRACK_HALF_SIZE + 1;
+const CAMERA_HALF_WIDTH = TRACK_HALF_SIZE + TRACK_PADDING / 2;
 const CAMERA_HALF_HEIGHT = CAMERA_HALF_WIDTH / ASPECT_RATIO;
 export const CAMERA_FRUSTUM_SIZE = CAMERA_HALF_HEIGHT * 2;
 
@@ -277,6 +277,19 @@ export const BLOCK_COLOR_SLOT = 1;
  */
 export const PAWN_CAPACITY = 256;
 export const BLOCK_CAPACITY = GRID_COLUMNS * GRID_ROWS;
+// The track is scenery: one instance, drawn once, never spawned or despawned.
+export const TRACK_CAPACITY = 1;
+
+/**
+ * Placeholder look for the imported track mesh, until it gets real materials.
+ *
+ * The mesh carries no `_color_id`, so — like the block bubbles — every vertex is
+ * stamped with one slot; and it draws with a plain `standardMaterial` rather
+ * than the palette one, whose idle breathing would pulse a 13-unit-wide piece of
+ * scenery in and out by 10%.
+ */
+export const TRACK_COLOR_SLOT = 0;
+export const TRACK_DUMMY_COLOR = "#6E7A87";
 
 export const SHADER_BREATH_AMP = 0.1;
 export const SHADER_BREATH_FREQ = 8.9;

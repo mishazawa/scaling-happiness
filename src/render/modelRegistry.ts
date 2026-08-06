@@ -4,6 +4,7 @@ import {
   InstancedMesh,
   Mesh,
   type BufferGeometry,
+  type Material,
   type Object3D,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -81,12 +82,18 @@ function flattenToGeometry(root: Object3D): BufferGeometry {
  * Every model shares one `paletteMaterial()`; per-object variation lives
  * entirely in the attributes allocated here. Capacity is fixed: the buffers are
  * sized once and the render system throws if the game ever tries to exceed them.
+ *
+ * `targetRadius: null` keeps the authored scale (see `prepareGeometry`), and
+ * `material` swaps the palette shader out. Both exist for the track, which is
+ * modelled in world coordinates and — being scenery, not a creature — must not
+ * pick up the palette material's idle breathing, which would pulse its size.
  */
 export function registerModel(
   id: ModelId,
   root: Object3D,
   capacity: number,
-  targetRadius: number,
+  targetRadius: number | null,
+  material: Material = paletteMaterial(),
 ): RegisteredModel {
   const prepared = prepareGeometry(flattenToGeometry(root), targetRadius);
 
@@ -97,7 +104,7 @@ export function registerModel(
   prepared.setAttribute("aRow", rows);
   prepared.setAttribute("aPhase", phases);
 
-  const mesh = new InstancedMesh(prepared, paletteMaterial(), capacity);
+  const mesh = new InstancedMesh(prepared, material, capacity);
   // Nothing is drawn until the render system packs slots on the first frame.
   mesh.count = 0;
   mesh.instanceMatrix.setUsage(DynamicDrawUsage);

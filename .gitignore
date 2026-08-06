@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 .serena/
 .claude/
+
+__pycache__/
+
+models/out/
+
+*.blend1

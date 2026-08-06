@@ -1,8 +1,16 @@
-import { Vector3 } from "three";
+import { Mesh, Vector3, type Object3D } from "three";
 import { Path, type PathData } from "../core/Path";
+import { createEntity, type Entity } from "../core/Entity";
+import { Model } from "../core/Model";
+import { Position } from "../core/Position";
+import { addTag } from "../core/Tag";
+import type { World } from "../core/World";
+import { tagColorSlot } from "../utils/geometry";
 import { locateSegment, roundCorners } from "../utils/path";
 import {
+  LIGHT_PALETTE_SLOT,
   TRACK_CHECKPOINTS,
+  TRACK_COLOR_SLOT,
   TRACK_CORNER_RADIUS,
   TRACK_CORNER_SEGMENTS,
   TRACK_END_T,
@@ -99,4 +107,46 @@ export function makePathAroundTheGrid(): PathData {
   return Path(
     roundCorners(trackPoints, TRACK_CORNER_RADIUS, TRACK_CORNER_SEGMENTS),
   );
+}
+
+/**
+ * Stamps a dummy colour slot across the imported track mesh, so it satisfies
+ * `prepareGeometry`'s `_color_id` contract without being authored for the
+ * palette yet — the same trick `makeBubbleMesh` plays for a procedural sphere,
+ * done here by traversal because the model arrives as a loaded scene graph.
+ *
+ * Mutates the cached asset's geometry in place. Safe because the track is
+ * registered exactly once, at startup, and nothing else reads that asset.
+ *
+ * The glTF holds two meshes, `TrackMoving` and `TrackStatic`; registration
+ * merges them into one instanced draw. If the moving half ever has to animate
+ * separately, that becomes two model ids rather than one.
+ */
+export function prepareTrackModel(root: Object3D): Object3D {
+  root.traverse((object) => {
+    if (object instanceof Mesh) tagColorSlot(object.geometry, TRACK_COLOR_SLOT);
+  });
+  return root;
+}
+
+/**
+ * The track mesh as a world entity: one instance, parked at the origin.
+ *
+ * No position or scale of its own beyond that — the mesh was swept along the
+ * very path `makePathAroundTheGrid` builds, in game coordinates, so it lands on
+ * the pawns' line only if it is registered unnormalized (`targetRadius: null`)
+ * and drawn at the world centre the grid is centred on.
+ *
+ * Created per game rather than at registration time: `initGame` rebuilds the
+ * world, and an entity created outside it would vanish on the first restart.
+ * The palette name is inert — the dummy material ignores `aRow`.
+ */
+export function spawnTrack(world: World): Entity {
+  const entity = createEntity();
+
+  world.positions.set(entity, Position(0, 0, 0));
+  addTag(world, entity, "track");
+  world.models.set(entity, Model("track", LIGHT_PALETTE_SLOT));
+
+  return entity;
 }

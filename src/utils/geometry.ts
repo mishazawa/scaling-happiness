@@ -33,11 +33,13 @@ export function tagColorSlot(
  *   slot-0-coloured geometry, so it throws.
  * - Scale is normalized to `targetRadius`, which keeps the per-frame instance
  *   matrix down to a yaw and a translation instead of carrying a scale field
- *   through the ECS.
+ *   through the ECS. Pass `null` for a model authored *in world coordinates* —
+ *   the track is swept along the very path `setup/track.ts` builds, so any
+ *   normalization would pull it off the line it was modelled on.
  */
 export function prepareGeometry(
   geometry: BufferGeometry,
-  targetRadius: number,
+  targetRadius: number | null,
 ): BufferGeometry {
   const colorId = geometry.getAttribute(COLOR_ATTRIBUTE);
   if (!colorId)
@@ -48,7 +50,7 @@ export function prepareGeometry(
 
   geometry.computeBoundingSphere();
   const radius = geometry.boundingSphere?.radius ?? 0;
-  if (radius > 0) {
+  if (targetRadius !== null && radius > 0) {
     const scale = targetRadius / radius;
     geometry.scale(scale, scale, scale);
     geometry.computeBoundingSphere();

@@ -40,4 +40,19 @@ describe("prepareGeometry", () => {
     expect(small.boundingSphere!.radius).toBeCloseTo(PAWN_MODEL_RADIUS, 5);
     expect(large.boundingSphere!.radius).toBeCloseTo(PAWN_MODEL_RADIUS, 5);
   });
+
+  it("keeps the authored scale when no target radius is given", () => {
+    // What the track needs: it is modelled in world coordinates along the very
+    // path pawns walk, so normalizing it would pull it off that line.
+    const box = taggedBox(10);
+    const before = box.boundingSphere?.radius ?? null;
+    expect(before).toBeNull();
+
+    const prepared = prepareGeometry(box, null);
+
+    expect(prepared.boundingSphere!.radius).toBeCloseTo(
+      Math.sqrt(3) * 5, // half-diagonal of a 10-unit cube
+      5,
+    );
+  });
 });
