@@ -7,6 +7,7 @@ import type { PathData, PathFollowerData } from "./Path";
 import type { Event } from "./Event";
 import type { AmmoData } from "./Ammo";
 import type { PositionTweenData } from "./Tween";
+import type { RotationData } from "./Rotation";
 import type { CountdownData } from "./Countdown";
 import { LIFES_COUNT } from "../constants";
 import type { ModelData } from "./Model";
@@ -27,6 +28,8 @@ export type World = {
   lastFiredLanes: Map<Entity, number>;
   ammo: Map<Entity, AmmoData>;
   positionTweens: Map<Entity, PositionTweenData>;
+  /** Which way an entity faces. Yaw only — see `core/Rotation.ts`. */
+  rotations: Map<Entity, RotationData>;
   projectileTargets: Map<Entity, number>;
   countdowns: Map<Entity, CountdownData>;
   events: Event[];
@@ -60,6 +63,7 @@ export function createWorld(): World {
     lastFiredLanes: new Map(),
     ammo: new Map(),
     positionTweens: new Map(),
+    rotations: new Map(),
     projectileTargets: new Map(),
     countdowns: new Map(),
     events: [],

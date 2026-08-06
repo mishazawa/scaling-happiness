@@ -32,7 +32,8 @@ export function tagColorSlot(
  *   common glTF export mistake and otherwise shows up as uniformly
  *   slot-0-coloured geometry, so it throws.
  * - Scale is normalized to `targetRadius`, which keeps the per-frame instance
- *   matrix a pure translation instead of carrying a scale field through the ECS.
+ *   matrix down to a yaw and a translation instead of carrying a scale field
+ *   through the ECS.
  */
 export function prepareGeometry(
   geometry: BufferGeometry,

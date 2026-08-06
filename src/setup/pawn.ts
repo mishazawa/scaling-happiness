@@ -9,6 +9,7 @@ import {
 import { createEntity, type Entity } from "../core/Entity";
 import { Model, type PaletteName } from "../core/Model";
 import { Position } from "../core/Position";
+import { Rotation } from "../core/Rotation";
 import { addTag } from "../core/Tag";
 import type { World } from "../core/World";
 import type { Flag } from "../core/Flag";
@@ -62,6 +63,10 @@ export function spawnPawn(
   world.flags.set(entity, flag);
   world.ammo.set(entity, PAWN_AMMO);
   world.models.set(entity, Model("pawn", palette));
+  // Unrotated while queued — the same identity transform pawns were drawn with
+  // before rotation existed, so the queues look untouched. `spawnSystem` snaps
+  // it to the track the moment the pawn joins the path.
+  world.rotations.set(entity, Rotation());
 
   return entity;
 }

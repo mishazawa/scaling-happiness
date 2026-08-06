@@ -7,6 +7,7 @@ import type { World } from "../core/World";
 import { releasePawnFromQueue, spawnQueuedPawn } from "../setup/queue";
 import { SPAWN_COOLDOWN, SPAWN_TRANSIT_DURATION } from "../constants";
 import type { SystemContext } from "./context";
+import { snapToPathDirection } from "./facing";
 
 /**
  * Owns `world.pathFollowers`, queue occupancy (`world.queues` /
@@ -46,6 +47,10 @@ export function spawnSystem(world: World, ctx: SystemContext): void {
 
     removeTag(world, event.entity, "spawning");
     world.pathFollowers.set(event.entity, PathFollower(ctx.pathEntity));
+
+    const path = world.paths.get(ctx.pathEntity);
+    if (path) snapToPathDirection(world, event.entity, path, 0);
+
     pushEvent(world, { type: "pawn-spawned", entity: event.entity });
   }
 }

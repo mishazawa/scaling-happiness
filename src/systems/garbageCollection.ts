@@ -35,6 +35,7 @@ function destroyEntity(world: World, ctx: SystemContext, entity: Entity): void {
   world.lastFiredLanes.delete(entity);
   world.ammo.delete(entity);
   world.positionTweens.delete(entity);
+  world.rotations.delete(entity);
   world.projectileTargets.delete(entity);
 
   const queueId = getQueueId(world, entity);

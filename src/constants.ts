@@ -70,6 +70,13 @@ export const PAWN_RADIUS = 1;
 export const PAWN_SPEED = 10;
 export const PAWN_AMMO = 20;
 
+// How fast a pawn swings toward the direction it wants to face, in rad/s. A
+// quarter turn (the track's corners, and roughly the swing onto a target) takes
+// TURN_QUARTER_TIME seconds; expressing it that way keeps the tuning in the
+// units the turn is actually judged in.
+const TURN_QUARTER_TIME = 0.1;
+export const PAWN_TURN_SPEED = Math.PI / 2 / TURN_QUARTER_TIME;
+
 export const QUEUE_DIRECTION: [number, number, number] = [0, 0, 1];
 // Depth spacing between pawns within a single queue.
 export const QUEUE_SPACING = 2.5;
@@ -183,6 +190,19 @@ export const COLOR_ATTRIBUTE = "_color_id";
  */
 export const PAWN_MODEL_RADIUS = PAWN_RADIUS;
 export const BLOCK_MODEL_RADIUS = BLOCK_SIZE / 2;
+
+/**
+ * Yaw, in radians, that turns a model's authored forward axis into world +Z —
+ * the axis `yawFromDirection` measures headings from. It exists so a model
+ * exported facing some other way costs one constant rather than an offset at
+ * every site that computes a heading.
+ *
+ * Zero is an *inference*, not a measurement: the fish's long axis is z, and the
+ * flat, tall profile at its -z end reads as a caudal fin, which puts the nose at
+ * +z. That was never confirmed on screen. If the fish swims backwards, this is
+ * `Math.PI`; if it swims sideways, `±Math.PI / 2`.
+ */
+export const MODEL_FORWARD_YAW_OFFSET = 0;
 
 /** How round the block bubbles are. Low enough that 676 of them stay cheap. */
 export const BLOCK_SEGMENTS = 12;

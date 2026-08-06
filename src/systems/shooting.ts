@@ -79,6 +79,12 @@ export function shootingSystem(
             toFlat(block.row, block.column, columns),
           );
 
+          // Taking a shot turns the pawn to the field for good — from here on
+          // `facingSystem` squares it up to the grid every frame instead of
+          // steering it along the track. Which block it hit doesn't enter into
+          // it: the aim is a major axis, not a bearing on a target.
+          addTag(world, entity, "aiming");
+
           const depleted = depleteAmmo(world, entity);
           if (depleted) {
             markDestroyed(world, entity);

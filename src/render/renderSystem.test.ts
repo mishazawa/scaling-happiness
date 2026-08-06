@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   BoxGeometry,
   BufferAttribute,
+  Euler,
   Matrix4,
   Mesh,
   Scene,
@@ -169,6 +170,45 @@ describe("renderSystem", () => {
     }
 
     expect(() => renderSystem(world, 0)).toThrow(/capacity/);
+  });
+
+  it("writes an entity's yaw into its instance matrix", () => {
+    const world = createWorld();
+    const pawn = spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(1, 0, 0),
+    });
+    world.rotations.get(pawn)!.yaw = Math.PI / 2;
+
+    renderSystem(world, 0);
+
+    const m = new Matrix4();
+    getModel("pawn").mesh.getMatrixAt(0, m);
+    // Yaw must not disturb the translation column the position pass wrote.
+    expect(new Vector3().setFromMatrixPosition(m).x).toBe(1);
+    expect(new Euler().setFromRotationMatrix(m).y).toBeCloseTo(Math.PI / 2, 6);
+  });
+
+  it("leaves rotation-less entities on a pure translation", () => {
+    const world = createWorld();
+    spawnBlock(world, {
+      flag: "light",
+      palette: "koi",
+      row: 0,
+      column: 0,
+      totalColumns: 1,
+      position: new Vector3(3, 0, 0),
+    });
+
+    renderSystem(world, 0);
+
+    const m = new Matrix4();
+    getModel("block").mesh.getMatrixAt(0, m);
+    const euler = new Euler().setFromRotationMatrix(m);
+    expect(euler.x).toBeCloseTo(0, 6);
+    expect(euler.y).toBeCloseTo(0, 6);
+    expect(euler.z).toBeCloseTo(0, 6);
   });
 
   it("still syncs entities that own an Object3D", () => {

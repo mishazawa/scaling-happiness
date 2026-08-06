@@ -42,6 +42,9 @@ export function renderSystem(world: World, dt: number): void {
     if (!object3D) continue;
 
     object3D.position.copy(position);
+
+    const rotation = world.rotations.get(entity);
+    if (rotation) object3D.rotation.y = rotation.yaw;
   }
 
   const counts = new Map<ModelId, number>();
@@ -61,7 +64,11 @@ export function renderSystem(world: World, dt: number): void {
         `instance capacity exceeded for model "${modelId}": ${model.capacity}`,
       );
 
-    matrix.makeTranslation(position.x, position.y, position.z);
+    // Yaw first, then the translation column: `makeRotationY` zeroes that
+    // column, so `setPosition` has to come second. Entities without a rotation
+    // (blocks) fall back to identity, i.e. the pure translation this was.
+    matrix.makeRotationY(world.rotations.get(entity)?.yaw ?? 0);
+    matrix.setPosition(position.x, position.y, position.z);
     model.mesh.setMatrixAt(slot, matrix);
     model.rows.array[slot] = PALETTES_IDX[palette];
     model.phases.array[slot] = phaseForEntity(entity);

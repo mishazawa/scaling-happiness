@@ -118,3 +118,28 @@ export function samplePath(path: PathData, t: number): Vector3 {
 
   return _tempVec.copy(points[index]).lerp(points[index + 1], alpha);
 }
+
+const _tempDir = new Vector3();
+
+/**
+ * Direction of travel at fraction `t` — the unit tangent of the segment `t`
+ * lands on, not a smoothed one. That is deliberate: the corners have already
+ * been subdivided into `TRACK_CORNER_SEGMENTS` chords by `roundCorners`, so the
+ * tangent steps round a corner in small increments, and whoever follows it
+ * (`facingSystem`) rate-limits its turn anyway.
+ *
+ * Returns a shared temporary, on its own vector so a caller may hold a
+ * `samplePath` result and a direction at the same time. Zero-length when the
+ * path has no segment to speak of.
+ */
+export function samplePathDirection(path: PathData, t: number): Vector3 {
+  const { points, segLengths, total } = path;
+
+  if (points.length < 2 || segLengths.length === 0)
+    return _tempDir.set(0, 0, 0);
+
+  const { index } = locateSegment(segLengths, total, t);
+  _tempDir.copy(points[index + 1]).sub(points[index]);
+
+  return _tempDir.lengthSq() > 0 ? _tempDir.normalize() : _tempDir;
+}

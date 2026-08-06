@@ -22,6 +22,7 @@ import { renderSystem } from "./render/renderSystem";
 import { pathFollowSystem } from "./systems/pathFollow";
 import { timerSystem } from "./systems/timer";
 import { shootingSystem } from "./systems/shooting";
+import { facingSystem } from "./systems/facing";
 import { handlePointerClick } from "./render/interaction";
 import { spawnSystem } from "./systems/spawn";
 import { lifeSystem } from "./systems/life";
@@ -145,6 +146,9 @@ async function main() {
       destructionSystem(world);
       spawnSystem(world, ctx);
       lifeSystem(world);
+      // After shooting (which sets the aim) and before rendering (which draws
+      // the yaw), so a turn is never a frame behind what caused it.
+      facingSystem(world, GRID_PARAMETERS, dt);
 
       renderSystem(world, dt);
       garbageCollectionSystem(world, ctx);

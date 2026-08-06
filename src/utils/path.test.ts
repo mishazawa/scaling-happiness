@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Vector3 } from "three";
-import { roundCorners } from "./path";
+import { Path } from "../core/Path";
+import { roundCorners, samplePath, samplePathDirection } from "./path";
 
 describe("roundCorners", () => {
   const corner = () => [
@@ -45,5 +46,33 @@ describe("roundCorners", () => {
 
     expect(rounded[1].x).toBeCloseTo(1);
     expect(rounded[1].z).toBeCloseTo(0);
+  });
+});
+
+describe("samplePathDirection", () => {
+  const lPath = () =>
+    Path([new Vector3(0, 0, 0), new Vector3(10, 0, 0), new Vector3(10, 0, 10)]);
+
+  it("returns the unit tangent of the segment t lands on", () => {
+    const path = lPath();
+
+    expect(samplePathDirection(path, 0).toArray()).toEqual([1, 0, 0]);
+    expect(samplePathDirection(path, 0.9).toArray()).toEqual([0, 0, 1]);
+  });
+
+  it("has no direction to give for a degenerate path", () => {
+    expect(samplePathDirection(Path([]), 0).lengthSq()).toBe(0);
+    expect(samplePathDirection(Path([new Vector3()]), 0).lengthSq()).toBe(0);
+  });
+
+  it("survives a caller holding a sampled position at the same time", () => {
+    // The two share a module-level temporary each; one must not clobber the
+    // other, since facingSystem reads a position and a heading together.
+    const path = lPath();
+    const position = samplePath(path, 0.25);
+    const direction = samplePathDirection(path, 0.25);
+
+    expect(position.toArray()).toEqual([5, 0, 0]);
+    expect(direction.toArray()).toEqual([1, 0, 0]);
   });
 });
