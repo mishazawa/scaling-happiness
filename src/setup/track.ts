@@ -1,8 +1,8 @@
 import { Vector3 } from "three";
 import { Path, type PathData } from "../core/Path";
-import type { Grid } from "../core/Grid";
 import { locateSegment, roundCorners } from "../utils/path";
 import {
+  TRACK_CHECKPOINTS,
   TRACK_CORNER_RADIUS,
   TRACK_CORNER_SEGMENTS,
   TRACK_END_T,
@@ -76,22 +76,14 @@ function sliceTrack(
 
 /**
  * The track is an open path, not the full loop around the grid: it's cut out
- * of the grid's closed boundary at TRACK_START_T..TRACK_END_T, so pawns
- * enter and exit partway along a side rather than walking the whole
+ * of the closed loop through TRACK_CHECKPOINTS at TRACK_START_T..TRACK_END_T,
+ * so pawns enter and exit partway along a side rather than walking the whole
  * perimeter back to their starting corner.
+ *
+ * The corners themselves are authored in `constants.ts`; this only shapes them.
  */
-export function makePathAroundTheGrid(grid: Grid, padding: number): PathData {
-  const { columns, rows, cellSize, center } = grid;
-
-  const halfWidth = (columns * cellSize) / 2 + padding;
-  const halfDepth = (rows * cellSize) / 2 + padding;
-
-  const perimeter = [
-    new Vector3(center.x - halfWidth, center.y, center.z - halfDepth),
-    new Vector3(center.x + halfWidth, center.y, center.z - halfDepth),
-    new Vector3(center.x + halfWidth, center.y, center.z + halfDepth),
-    new Vector3(center.x - halfWidth, center.y, center.z + halfDepth),
-  ].reverse();
+export function makePathAroundTheGrid(): PathData {
+  const perimeter = TRACK_CHECKPOINTS.map(([x, y, z]) => new Vector3(x, y, z));
 
   const { segLengths, total } = closedPerimeterMetrics(perimeter);
   const trackPoints = sliceTrack(

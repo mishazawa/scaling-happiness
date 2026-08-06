@@ -19,6 +19,25 @@ const GRID_HALF_SIZE = GRID_WORLD_SIZE / 2;
 export const TRACK_PADDING = 1;
 const TRACK_HALF_SIZE = GRID_HALF_SIZE + TRACK_PADDING;
 
+/**
+ * The corners the track runs through, as `[x, y, z]` triples — the shape pawns
+ * walk, before `makePathAroundTheGrid` slices it open and fillets the turns.
+ *
+ * Plain numbers, not `Vector3`: this file is the bottom layer and imports
+ * nothing, `three` included, so the geometry stays data that any layer can read
+ * and only `setup/track.ts` pays to turn into vectors.
+ *
+ * Order is the direction of travel, and the list is *closed* — the last corner
+ * runs back to the first. The grid is square (GRID_ROWS = GRID_COLUMNS) and
+ * centred on the origin, which is why one half-extent covers all four.
+ */
+export const TRACK_CHECKPOINTS: [number, number, number][] = [
+  [-TRACK_HALF_SIZE, 0, TRACK_HALF_SIZE],
+  [TRACK_HALF_SIZE, 0, TRACK_HALF_SIZE],
+  [TRACK_HALF_SIZE, 0, -TRACK_HALF_SIZE],
+  [-TRACK_HALF_SIZE, 0, -TRACK_HALF_SIZE],
+];
+
 // The game screen is locked to a 9:16 (portrait) frame, letterboxed to fit
 // whatever viewport it's shown in.
 export const ASPECT_RATIO = 9 / 16;

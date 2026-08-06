@@ -10,7 +10,6 @@ import {
   LIGHT_PALETTE_SLOT,
   PAWN_CAPACITY,
   PAWN_MODEL_RADIUS,
-  TRACK_PADDING,
 } from "./constants";
 import { setupLight } from "./setup/light";
 import { setupGround } from "./setup/ground";
@@ -109,7 +108,7 @@ async function main() {
     world = createWorld();
 
     makeGrid(world, GRID_PARAMETERS);
-    const pd = makePathAroundTheGrid(GRID_PARAMETERS, TRACK_PADDING);
+    const pd = makePathAroundTheGrid();
     const pathEntity = createEntity();
     world.paths.set(pathEntity, pd);
 
