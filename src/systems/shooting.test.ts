@@ -8,7 +8,7 @@ import { addTag, hasTag } from "../core/Tag";
 import { spawnBlock } from "../setup/block";
 import type { Grid } from "../core/Grid";
 import type { SystemContext } from "./context";
-import { toFlat } from "../utils";
+import { toFlat } from "../utils/gridMath";
 import { shootingSystem } from "./shooting";
 
 function makeGrid(): Grid {

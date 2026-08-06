@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Scene, Vector3 } from "three";
 import { createWorld } from "../core/World";
-import { toFlat, toRowColumn } from "../utils";
+import { toFlat, toRowColumn } from "../utils/gridMath";
 import { makeGrid } from "./grid";
 
 describe("makeGrid", () => {

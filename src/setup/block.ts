@@ -11,7 +11,7 @@ import { Position } from "../core/Position";
 import type { World } from "../core/World";
 import { addTag } from "../core/Tag";
 import { addRenderable } from "../render/renderable";
-import { toFlat } from "../utils";
+import { toFlat } from "../utils/gridMath";
 import type { BlockColor } from "../core/Block";
 
 const BLOCK_GEOMETRY = new BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);

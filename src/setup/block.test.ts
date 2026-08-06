@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Object3D, Scene, Vector3 } from "three";
 import { createWorld } from "../core/World";
 import { hasTag } from "../core/Tag";
-import { toFlat } from "../utils";
+import { toFlat } from "../utils/gridMath";
 import { spawnBlock } from "./block";
 
 describe("spawnBlock", () => {

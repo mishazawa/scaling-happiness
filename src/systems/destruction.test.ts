@@ -5,7 +5,7 @@ import { createEntity } from "../core/Entity";
 import { addTag, hasTag } from "../core/Tag";
 import { pushEvent } from "../core/Event";
 import { spawnBlock } from "../setup/block";
-import { toFlat } from "../utils";
+import { toFlat } from "../utils/gridMath";
 import { destructionSystem } from "./destruction";
 
 describe("destructionSystem", () => {

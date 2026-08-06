@@ -4,7 +4,7 @@ import { pushEvent } from "../core/Event";
 import { addTag, hasTag } from "../core/Tag";
 import type { World } from "../core/World";
 import type { Grid } from "../core/Grid";
-import { toFlat } from "../utils";
+import { toFlat } from "../utils/gridMath";
 import { markDestroyed } from "../core/destroy";
 import { spawnProjectile } from "../setup/projectile";
 import type { SystemContext } from "./context";
