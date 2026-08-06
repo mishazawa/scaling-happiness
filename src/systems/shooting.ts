@@ -4,7 +4,7 @@ import { pushEvent } from "../core/Event";
 import { addTag, hasTag } from "../core/Tag";
 import type { World } from "../core/World";
 import type { Grid } from "../core/Grid";
-import { toFlat } from "../utils/gridMath";
+import { toFlat, worldToLane } from "../utils/gridMath";
 import { markDestroyed } from "../core/destroy";
 import { spawnProjectile } from "../setup/projectile";
 import type { SystemContext } from "./context";
@@ -22,10 +22,8 @@ export function shootingSystem(
   grid: Grid,
   ctx: SystemContext,
 ): void {
-  const { columns, rows, cellSize, center } = grid;
+  const { columns, rows, center } = grid;
 
-  const originX = center.x - ((columns - 1) * cellSize) / 2;
-  const originZ = center.z - ((rows - 1) * cellSize) / 2;
   for (const [entity, follower] of world.pathFollowers) {
     if (follower.done) continue;
 
@@ -36,12 +34,9 @@ export function shootingSystem(
     const horizontal = side === "top" || side === "bottom";
     const sideIndex = SIDES.indexOf(side);
 
-    const axisCoord = horizontal ? position.x : position.z;
-    const axisOrigin = horizontal ? originX : originZ;
-    const axisCount = horizontal ? columns : rows;
-
-    const raw = Math.round((axisCoord - axisOrigin) / cellSize);
-    const lane = Math.min(axisCount - 1, Math.max(0, raw));
+    const lane = horizontal
+      ? worldToLane(grid, position.x, "x")
+      : worldToLane(grid, position.z, "z");
 
     const forward = side === "bottom" || side === "left";
 
