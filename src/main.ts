@@ -10,8 +10,10 @@ import {
   BLOCK_SIZE,
   CAMERA_FRUSTUM_SIZE,
   CAMERA_POSITION,
+  CAMERA_TARGET,
   GRID_COLUMNS,
   GRID_ROWS,
+  TRACK_PADDING,
 } from "./constants";
 import { setupLight } from "./setup/light";
 import { setupGround } from "./setup/ground";
@@ -33,8 +35,11 @@ import type { SystemContext } from "./systems/context";
 import { DEBUG_pathVisualizer, makePathAroundTheGrid } from "./utils/path";
 import { createQueues } from "./utils/queue";
 
-function updateCameraFrustum(camera: OrthographicCamera) {
-  const aspect = window.innerWidth / window.innerHeight;
+function updateCameraFrustum(
+  camera: OrthographicCamera,
+  container: HTMLElement,
+) {
+  const aspect = container.clientWidth / container.clientHeight;
   const halfHeight = CAMERA_FRUSTUM_SIZE / 2;
   const halfWidth = halfHeight * aspect;
 
@@ -67,22 +72,25 @@ function main() {
   const scene = new Scene();
   const camera = new OrthographicCamera();
   camera.position.set(...CAMERA_POSITION);
-  camera.lookAt(0, 0, 0);
-  updateCameraFrustum(camera);
+  camera.lookAt(...CAMERA_TARGET);
+  updateCameraFrustum(camera, container);
 
   setupLight(scene);
   setupGround(scene);
 
   const renderer = new WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(container.clientWidth, container.clientHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   container.appendChild(renderer.domElement);
 
-  window.addEventListener("resize", () => {
-    updateCameraFrustum(camera);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
+  function handleResize() {
+    updateCameraFrustum(camera, container);
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  }
+
+  window.addEventListener("resize", handleResize);
+  new ResizeObserver(handleResize).observe(container);
 
   let world = createWorld();
   let ctx: SystemContext;
@@ -95,7 +103,7 @@ function main() {
     world = createWorld();
 
     makeGrid(world, scene, GRID_PARAMETERS);
-    const pd = makePathAroundTheGrid(GRID_PARAMETERS, 1);
+    const pd = makePathAroundTheGrid(GRID_PARAMETERS, TRACK_PADDING);
     const pathEntity = createEntity();
     world.paths.set(pathEntity, pd);
 
