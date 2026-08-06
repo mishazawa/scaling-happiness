@@ -31,7 +31,6 @@ function getProjectileMaterial(color: BlockColor): MeshStandardMaterial {
 export function spawnProjectile(
   world: World,
   scene: Scene,
-  color: BlockColor,
   from: Vector3,
   to: Vector3,
   targetCell: number,

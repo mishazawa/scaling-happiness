@@ -76,7 +76,6 @@ export function shootingSystem(
           spawnProjectile(
             world,
             ctx.scene,
-            world.colors.get(entity)!,
             shooterPosition,
             blockPosition,
             toFlat(block.row, block.column, columns),
