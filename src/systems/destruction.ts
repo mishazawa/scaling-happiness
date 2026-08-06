@@ -1,7 +1,7 @@
 import { readEvents } from "../core/Event";
 import { hasTag } from "../core/Tag";
 import type { World } from "../core/World";
-import { markDestroyed } from "../setup/destroy";
+import { markDestroyed } from "../core/destroy";
 
 /**
  * Resolves projectiles whose flight tween has finished into a block hit.

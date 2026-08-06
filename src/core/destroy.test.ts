@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { createWorld } from "../core/World";
-import { createEntity } from "../core/Entity";
-import { hasTag } from "../core/Tag";
+import { createWorld } from "./World";
+import { createEntity } from "./Entity";
+import { hasTag } from "./Tag";
 import { markDestroyed } from "./destroy";
 
 describe("markDestroyed", () => {

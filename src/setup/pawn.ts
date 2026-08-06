@@ -11,7 +11,7 @@ import { Position } from "../core/Position";
 import type { World } from "../core/World";
 import { addTag } from "../core/Tag";
 import { addRenderable } from "../systems/render";
-import type { BlockColor } from "./block";
+import type { BlockColor } from "../core/Block";
 
 export type SpawnPawnConfig = {
   color: BlockColor;

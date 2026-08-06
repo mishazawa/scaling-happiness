@@ -12,7 +12,7 @@ import { createEntity } from "../core/Entity";
 import { Path, type PathData } from "../core/Path";
 import type { World } from "../core/World";
 import { addRenderable } from "../systems/render";
-import type { Grid } from "../setup/grid";
+import type { Grid } from "../core/Grid";
 import {
   TRACK_CORNER_RADIUS,
   TRACK_CORNER_SEGMENTS,

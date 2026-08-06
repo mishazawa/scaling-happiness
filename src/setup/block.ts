@@ -12,13 +12,7 @@ import type { World } from "../core/World";
 import { addTag } from "../core/Tag";
 import { addRenderable } from "../systems/render";
 import { toFlat } from "../utils";
-
-export type BlockColor = string;
-
-export type BlockData = {
-  column: number;
-  row: number;
-};
+import type { BlockColor } from "../core/Block";
 
 const BLOCK_GEOMETRY = new BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 

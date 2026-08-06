@@ -1,6 +1,6 @@
 import type { Vector3, Object3D } from "three";
 import type { Entity } from "./Entity";
-import type { BlockColor, BlockData } from "../setup/block";
+import type { BlockColor, BlockData } from "./Block";
 import type { Tag } from "./Tag";
 import type { PathData, PathFollowerData } from "./Path";
 import type { Event } from "./Event";

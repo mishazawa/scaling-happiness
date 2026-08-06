@@ -1,7 +1,7 @@
 import { Scene, Vector3 } from "three";
 import type { World } from "../core/World";
 import { spawnBlock } from "../setup/block";
-import type { Grid } from "../setup/grid";
+import type { Grid } from "../core/Grid";
 import { GRID_CLUSTER } from "../constants";
 
 export function makeGrid(world: World, scene: Scene, config: Grid) {

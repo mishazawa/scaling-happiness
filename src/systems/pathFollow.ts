@@ -1,6 +1,6 @@
 import type { World } from "../core/World";
 import { pushEvent } from "../core/Event";
-import { markDestroyed } from "../setup/destroy";
+import { markDestroyed } from "../core/destroy";
 import { samplePath } from "../utils/path";
 
 /** Produces (via destroy.ts / core/Event.ts): destroy tag, pawn-resolved. */

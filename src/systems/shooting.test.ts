@@ -6,7 +6,7 @@ import { Position } from "../core/Position";
 import { PathFollower } from "../core/Path";
 import { addTag, hasTag } from "../core/Tag";
 import { spawnBlock } from "../setup/block";
-import type { Grid } from "../setup/grid";
+import type { Grid } from "../core/Grid";
 import type { SystemContext } from "./context";
 import { toFlat } from "../utils";
 import { shootingSystem } from "./shooting";

@@ -1,6 +1,6 @@
-import type { Entity } from "../core/Entity";
-import { addTag } from "../core/Tag";
-import type { World } from "../core/World";
+import type { Entity } from "./Entity";
+import { addTag } from "./Tag";
+import type { World } from "./World";
 
 /**
  * Sole writer of the "destroy" tag. Every current caller (pathFollowSystem,

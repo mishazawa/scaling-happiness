@@ -12,7 +12,7 @@ import { PositionTween } from "../core/Tween";
 import { addTag } from "../core/Tag";
 import type { World } from "../core/World";
 import { addRenderable } from "../systems/render";
-import type { BlockColor } from "./block";
+import type { BlockColor } from "../core/Block";
 
 const PROJECTILE_GEOMETRY = new SphereGeometry(PROJECTILE_RADIUS, 8, 6);
 

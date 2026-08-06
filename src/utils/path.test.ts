@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Vector3 } from "three";
 import { makePathAroundTheGrid, roundCorners } from "./path";
 import { TRACK_END_T, TRACK_START_T } from "../constants";
-import type { Grid } from "../setup/grid";
+import type { Grid } from "../core/Grid";
 
 const grid: Grid = { columns: 10, rows: 6, cellSize: 1, center: new Vector3() };
 const padding = 1;
