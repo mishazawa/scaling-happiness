@@ -17,6 +17,7 @@ function makeGrid(): Grid {
     rows: 3,
     cellSize: 1,
     center: new Vector3(0, 0, 0),
+    palette: ["koi", "tide"],
   };
 }
 

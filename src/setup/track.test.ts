@@ -4,7 +4,15 @@ import { makePathAroundTheGrid } from "./track";
 import { TRACK_END_T, TRACK_START_T } from "../constants";
 import type { Grid } from "../core/Grid";
 
-const grid: Grid = { columns: 10, rows: 6, cellSize: 1, center: new Vector3() };
+// The palette is required by Grid but never read here — the track is pure
+// geometry around the play field.
+const grid: Grid = {
+  columns: 10,
+  rows: 6,
+  cellSize: 1,
+  center: new Vector3(),
+  palette: ["koi", "tide"],
+};
 const padding = 1;
 
 describe("makePathAroundTheGrid", () => {

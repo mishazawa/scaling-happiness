@@ -1,5 +1,3 @@
-import type { PaletteName } from "./core/Model";
-
 export const LIGHT_MAIN_POSITION: [number, number, number] = [20, 40, 20];
 export const BLOCK_SIZE = 0.4;
 export const GRID_COLUMNS = 26;
@@ -130,6 +128,11 @@ const ACCENT_COLOR = 0xfa6781;
 const BLACK_COLOR = 0x0a1a2e;
 const WHITE_COLOR = 0xffffff;
 
+/**
+ * One palette per entry: the three shared colours plus this palette's own main
+ * one. Adding a key here adds a palette everywhere — the texture grows a row,
+ * `PALETTES_IDX` grows an entry, and `PaletteName` (`core/Model.ts`) widens.
+ */
 const MAIN_COLORS = {
   koi: 0xff3b77,
   tide: 0x52656b,
@@ -137,27 +140,34 @@ const MAIN_COLORS = {
   poster: 0x0d8aa6,
 };
 
+/**
+ * Palette names, in declaration order. The whole palette system keys off this
+ * type: a plain `Object.entries` reduce would infer `{}` here and collapse
+ * `PaletteName` to `never`, which type-checks at every call site while silently
+ * accepting nothing.
+ */
+type MainColorName = keyof typeof MAIN_COLORS;
+
+const PALETTE_NAMES = Object.keys(MAIN_COLORS) as MainColorName[];
+
 // assemble palette
-export const PALETTES = Object.entries(MAIN_COLORS).reduce(
-  (acc, e) => ({
-    ...acc,
-    ...{ [e[0]]: [ACCENT_COLOR, e[1], BLACK_COLOR, WHITE_COLOR] },
-  }),
-  {},
-);
+export const PALETTES = Object.fromEntries(
+  PALETTE_NAMES.map((name) => [
+    name,
+    [ACCENT_COLOR, MAIN_COLORS[name], BLACK_COLOR, WHITE_COLOR],
+  ]),
+) as Record<MainColorName, number[]>;
 
 const LIGHT_IDX = 0;
 const DARK_IDX = 2;
 
-export const LIGHT_PALETTE_SLOT = Object.keys(PALETTES)[
-  LIGHT_IDX
-] as PaletteName;
-export const DARK_PALETTE_SLOT = Object.keys(PALETTES)[DARK_IDX] as PaletteName;
+export const LIGHT_PALETTE_SLOT = PALETTE_NAMES[LIGHT_IDX];
+export const DARK_PALETTE_SLOT = PALETTE_NAMES[DARK_IDX];
 
-export const PALETTES_IDX = Object.keys(PALETTES).reduce(
-  (acc, k, i) => ({ ...acc, ...{ [k]: i } }),
-  {},
-) as Record<PaletteName, number>;
+/** Row each palette occupies in the lookup texture — its declaration order. */
+export const PALETTES_IDX = Object.fromEntries(
+  PALETTE_NAMES.map((name, i) => [name, i]),
+) as Record<MainColorName, number>;
 
 /**
  * Per-vertex colour-region tag exported from Blender. `prepareGeometry` aliases

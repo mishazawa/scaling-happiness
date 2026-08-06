@@ -3,6 +3,15 @@ import { Vector3 } from "three";
 import { createWorld } from "../core/World";
 import { toFlat, toRowColumn } from "../utils/gridMath";
 import { makeGrid } from "./grid";
+import type { PaletteName } from "../core/Model";
+import { FLAG_DARK, FLAG_LIGHT, GRID_CLUSTER } from "../constants";
+
+/**
+ * The two palettes the checkerboard alternates between. Distinct from each
+ * other, and unrelated to the flags, so nothing here can pass by conflating the
+ * two halves of a block's identity.
+ */
+const PALETTE: [PaletteName, PaletteName] = ["koi", "tide"];
 
 describe("makeGrid", () => {
   it("spawns rows * columns blocks", () => {
@@ -12,6 +21,7 @@ describe("makeGrid", () => {
       rows: 2,
       cellSize: 1,
       center: new Vector3(0, 0, 0),
+      palette: PALETTE,
     });
 
     expect(world.blocks.size).toBe(6);
@@ -28,6 +38,7 @@ describe("makeGrid", () => {
       rows,
       cellSize: 1,
       center: new Vector3(0, 0, 0),
+      palette: PALETTE,
     });
 
     for (let row = 0; row < rows; row++) {
@@ -58,6 +69,7 @@ describe("makeGrid", () => {
       rows: 3,
       cellSize,
       center,
+      palette: PALETTE,
     });
 
     const middleEntity = world.gridToEntity.get(toFlat(1, 1, 3));
@@ -77,6 +89,7 @@ describe("makeGrid", () => {
       rows: 2,
       cellSize,
       center: new Vector3(0, 0, 0),
+      palette: PALETTE,
     });
 
     const a = world.positions.get(world.gridToEntity.get(toFlat(0, 0, 2))!)!;
@@ -95,9 +108,51 @@ describe("makeGrid", () => {
       rows: 2,
       cellSize: 1,
       center: new Vector3(0, 0, 0),
+      palette: PALETTE,
     });
 
     expect(world.models.size).toBe(4);
     expect(world.renderables.size).toBe(0);
+  });
+
+  it("draws with the palettes the config supplies, not a built-in pair", () => {
+    const world = createWorld();
+    const columns = GRID_CLUSTER * 2;
+    const palette: [PaletteName, PaletteName] = ["mermaid", "poster"];
+
+    makeGrid(world, {
+      columns,
+      rows: 1,
+      cellSize: 1,
+      center: new Vector3(0, 0, 0),
+      palette,
+    });
+
+    // Column 0 and column GRID_CLUSTER fall in adjacent clusters, so they land
+    // on opposite squares of the checkerboard.
+    const first = world.gridToEntity.get(toFlat(0, 0, columns))!;
+    const next = world.gridToEntity.get(toFlat(0, GRID_CLUSTER, columns))!;
+
+    expect(world.models.get(first)?.palette).toBe(palette[0]);
+    expect(world.models.get(next)?.palette).toBe(palette[1]);
+  });
+
+  it("alternates the matching flag alongside the palette", () => {
+    const world = createWorld();
+    const columns = GRID_CLUSTER * 2;
+
+    makeGrid(world, {
+      columns,
+      rows: 1,
+      cellSize: 1,
+      center: new Vector3(0, 0, 0),
+      palette: PALETTE,
+    });
+
+    const first = world.gridToEntity.get(toFlat(0, 0, columns))!;
+    const next = world.gridToEntity.get(toFlat(0, GRID_CLUSTER, columns))!;
+
+    expect(world.flags.get(first)).toBe(FLAG_LIGHT);
+    expect(world.flags.get(next)).toBe(FLAG_DARK);
   });
 });
