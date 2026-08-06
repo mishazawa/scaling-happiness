@@ -78,6 +78,11 @@ const TURN_QUARTER_TIME = 0.1;
 export const PAWN_TURN_SPEED = Math.PI / 2 / TURN_QUARTER_TIME;
 
 export const QUEUE_DIRECTION: [number, number, number] = [0, 0, 1];
+// Which way a pawn faces while it waits its turn. A queue runs down the screen
+// along QUEUE_DIRECTION (+z), so a half turn from the model's own forward axis
+// points the pawns back up it — facing the grid they are queuing for, and each
+// other's tails rather than the camera.
+export const QUEUE_PAWN_YAW = Math.PI;
 // Depth spacing between pawns within a single queue.
 export const QUEUE_SPACING = 2.5;
 export const QUEUE_VERTICAL_SPACING = 1;

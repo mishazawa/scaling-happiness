@@ -2,7 +2,12 @@ import { describe, it, expect } from "vitest";
 import { Vector3 } from "three";
 import { createWorld } from "../core/World";
 import { hasTag } from "../core/Tag";
-import { FLAG_DARK, FLAG_LIGHT, PAWN_AMMO } from "../constants";
+import {
+  FLAG_DARK,
+  FLAG_LIGHT,
+  PAWN_AMMO,
+  QUEUE_PAWN_YAW,
+} from "../constants";
 import { randomPawnKind, spawnPawn } from "./pawn";
 
 describe("spawnPawn", () => {
@@ -75,6 +80,20 @@ describe("spawnPawn", () => {
 
     expect(world.models.get(a)?.palette).toBe("koi");
     expect(world.models.get(b)?.palette).toBe("tide");
+  });
+
+  it("faces the pawn up its queue while it waits", () => {
+    const world = createWorld();
+    const entity = spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(),
+    });
+
+    const rotation = world.rotations.get(entity)!;
+    expect(rotation.yaw).toBeCloseTo(QUEUE_PAWN_YAW, 6);
+    // Already there, so facingSystem has no turn to play out on a queued pawn.
+    expect(rotation.target).toBeCloseTo(QUEUE_PAWN_YAW, 6);
   });
 
   it("gives the pawn its starting ammo count", () => {

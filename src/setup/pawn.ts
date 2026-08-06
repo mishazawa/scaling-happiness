@@ -5,6 +5,7 @@ import {
   FLAG_LIGHT,
   LIGHT_PALETTE_SLOT,
   PAWN_AMMO,
+  QUEUE_PAWN_YAW,
 } from "../constants";
 import { createEntity, type Entity } from "../core/Entity";
 import { Model, type PaletteName } from "../core/Model";
@@ -63,10 +64,9 @@ export function spawnPawn(
   world.flags.set(entity, flag);
   world.ammo.set(entity, PAWN_AMMO);
   world.models.set(entity, Model("pawn", palette));
-  // Unrotated while queued — the same identity transform pawns were drawn with
-  // before rotation existed, so the queues look untouched. `spawnSystem` snaps
-  // it to the track the moment the pawn joins the path.
-  world.rotations.set(entity, Rotation());
+  // Facing up its queue while it waits; `spawnSystem` snaps it to the track the
+  // moment the pawn joins the path.
+  world.rotations.set(entity, Rotation(QUEUE_PAWN_YAW));
 
   return entity;
 }
