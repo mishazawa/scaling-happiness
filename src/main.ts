@@ -1,16 +1,7 @@
-import {
-  OrthographicCamera,
-  Scene,
-  Timer,
-  Vector3,
-  WebGLRenderer,
-} from "three";
+import { Scene, Timer, Vector3 } from "three";
 import "./style.css";
 import {
   BLOCK_SIZE,
-  CAMERA_FRUSTUM_SIZE,
-  CAMERA_POSITION,
-  CAMERA_TARGET,
   GRID_COLUMNS,
   GRID_ROWS,
   TRACK_PADDING,
@@ -35,32 +26,17 @@ import type { SystemContext } from "./systems/context";
 import { makePathAroundTheGrid } from "./setup/track";
 import { DEBUG_pathVisualizer } from "./setup/debugPath";
 import { createQueues } from "./setup/queue";
-
-function updateCameraFrustum(
-  camera: OrthographicCamera,
-  container: HTMLElement,
-) {
-  const aspect = container.clientWidth / container.clientHeight;
-  const halfHeight = CAMERA_FRUSTUM_SIZE / 2;
-  const halfWidth = halfHeight * aspect;
-
-  camera.left = -halfWidth;
-  camera.right = halfWidth;
-  camera.top = halfHeight;
-  camera.bottom = -halfHeight;
-  camera.near = 0.1;
-  camera.far = 1000;
-  camera.updateProjectionMatrix();
-}
-
-const GRID_PARAMETERS = {
-  columns: GRID_COLUMNS,
-  rows: GRID_ROWS,
-  cellSize: BLOCK_SIZE,
-  center: new Vector3(0, 0, 0),
-};
+import { createCamera, updateCameraFrustum } from "./render/camera";
+import { createRenderer } from "./render/renderer";
 
 function main() {
+  const GRID_PARAMETERS = {
+    columns: GRID_COLUMNS,
+    rows: GRID_ROWS,
+    cellSize: BLOCK_SIZE,
+    center: new Vector3(0, 0, 0),
+  };
+
   const container = document.querySelector<HTMLDivElement>("#app")!;
   const endScreen = document.querySelector<HTMLDivElement>("#end-screen")!;
   const endScreenMessage = document.querySelector<HTMLHeadingElement>(
@@ -71,19 +47,12 @@ function main() {
 
   const clock = new Timer();
   const scene = new Scene();
-  const camera = new OrthographicCamera();
-  camera.position.set(...CAMERA_POSITION);
-  camera.lookAt(...CAMERA_TARGET);
-  updateCameraFrustum(camera, container);
+  const camera = createCamera(container);
 
   setupLight(scene);
   setupGround(scene);
 
-  const renderer = new WebGLRenderer({ antialias: true });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.shadowMap.enabled = true;
-  container.appendChild(renderer.domElement);
+  const renderer = createRenderer(container);
 
   function handleResize() {
     updateCameraFrustum(camera, container);

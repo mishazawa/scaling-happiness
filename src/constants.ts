@@ -37,6 +37,10 @@ const CAMERA_HALF_WIDTH = TRACK_HALF_SIZE + 1;
 const CAMERA_HALF_HEIGHT = CAMERA_HALF_WIDTH / ASPECT_RATIO;
 export const CAMERA_FRUSTUM_SIZE = CAMERA_HALF_HEIGHT * 2;
 
+// Clip planes. Generous either side of the tilted camera's distance to the grid.
+export const CAMERA_NEAR = 0.1;
+export const CAMERA_FAR = 1000;
+
 // Breathing room between the screen's top edge and the track.
 const SCREEN_TOP_MARGIN = 5;
 const screenTopZ = -TRACK_HALF_SIZE - SCREEN_TOP_MARGIN;
