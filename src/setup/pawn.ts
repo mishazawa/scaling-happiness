@@ -1,21 +1,14 @@
-import {
-  Mesh,
-  SphereGeometry,
-  type Scene,
-  type Vector3,
-} from "three";
+import { SphereGeometry, type Scene, type Vector3 } from "three";
 import {
   BLOCK_COLOR_DARK,
   BLOCK_COLOR_LIGHT,
   PAWN_AMMO,
   PAWN_RADIUS,
 } from "../constants";
-import { createEntity, type Entity } from "../core/Entity";
-import { Position } from "../core/Position";
+import type { Entity } from "../core/Entity";
 import type { World } from "../core/World";
-import { addTag } from "../core/Tag";
-import { addRenderable } from "../render/renderable";
 import { standardMaterial } from "../render/materials";
+import { createMeshEntity } from "./meshEntity";
 import type { BlockColor } from "../core/Block";
 
 export type SpawnPawnConfig = {
@@ -31,26 +24,22 @@ export function randomPawnColor(): BlockColor {
   return PAWN_COLORS[Math.floor(Math.random() * PAWN_COLORS.length)];
 }
 
-
 export function spawnPawn(
   world: World,
   scene: Scene,
   { color, position }: SpawnPawnConfig,
 ): Entity {
-  const entity = createEntity();
+  const entity = createMeshEntity(
+    world,
+    scene,
+    "pawn",
+    PAWN_GEOMETRY,
+    standardMaterial(color),
+    position,
+  );
 
-  world.positions.set(entity, Position(position.x, position.y, position.z));
   world.colors.set(entity, color);
   world.ammo.set(entity, PAWN_AMMO);
-
-  addTag(world, entity, "pawn");
-
-  const mesh = new Mesh(PAWN_GEOMETRY, standardMaterial(color));
-  mesh.position.copy(position);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-
-  addRenderable(world, scene, entity, mesh);
 
   return entity;
 }
