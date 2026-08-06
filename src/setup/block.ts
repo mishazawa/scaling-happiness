@@ -10,7 +10,7 @@ import { createEntity, type Entity } from "../core/Entity";
 import { Position } from "../core/Position";
 import type { World } from "../core/World";
 import { addTag } from "../core/Tag";
-import { addRenderable } from "../systems/render";
+import { addRenderable } from "../render/renderable";
 import { toFlat } from "../utils";
 import type { BlockColor } from "../core/Block";
 

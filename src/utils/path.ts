@@ -11,7 +11,7 @@ import type { Entity } from "../core/Entity";
 import { createEntity } from "../core/Entity";
 import { Path, type PathData } from "../core/Path";
 import type { World } from "../core/World";
-import { addRenderable } from "../systems/render";
+import { addRenderable } from "../render/renderable";
 import type { Grid } from "../core/Grid";
 import {
   TRACK_CORNER_RADIUS,
