@@ -1,4 +1,4 @@
-import { Scene, Timer, Vector3 } from "three";
+import { Scene, Timer, Vector3, type Mesh } from "three";
 import "./style.css";
 import {
   BLOCK_SIZE,
@@ -28,9 +28,11 @@ import { DEBUG_pathVisualizer } from "./setup/debugPath";
 import { createQueues } from "./setup/queue";
 import { createCamera, updateCameraFrustum } from "./render/camera";
 import { createRenderer } from "./render/renderer";
-import { loadAssets, type AssetId } from "./setup/assets";
+import { getAssetById, loadAssets, type AssetId } from "./setup/assets";
+import { paletteMaterial } from "./render/materials";
 
 import FISH_MESH from "./assets/fish.glb";
+import { makePaletteDataTexture } from "./utils/paletteTexture";
 
 export const MANIFEST: Record<AssetId, string> = {
   pawn: FISH_MESH,
@@ -52,7 +54,24 @@ async function main() {
   const repeatButton =
     document.querySelector<HTMLButtonElement>("#repeat-game")!;
 
+  const dataTexture = makePaletteDataTexture();
+
   await loadAssets(MANIFEST);
+
+  // The loaded mesh is what carries the colour-slot attribute the palette
+  // shader reads, so it swaps its authored materials for the palette one.
+  // Blender exports the slot as `_COLOR_ID`, which GLTFLoader lowercases to
+  // `_color_id`; alias it to the `aID` name the shader declares.
+  const paletteMat = paletteMaterial(dataTexture);
+  getAssetById("pawn").traverse((object) => {
+    const mesh = object as Mesh;
+    if (!mesh.isMesh) return;
+
+    const colorId = mesh.geometry.getAttribute("_color_id");
+    if (colorId) mesh.geometry.setAttribute("aID", colorId);
+
+    mesh.material = paletteMat;
+  });
 
   const clock = new Timer();
   const scene = new Scene();
@@ -109,7 +128,10 @@ async function main() {
       world.status === "won" ? "You win!" : "Game over";
     endScreen.classList.remove("hidden");
   }
-
+  const f = getAssetById("pawn");
+  f.position.set(0, 2, 0);
+  f.scale.setScalar(3);
+  scene.add(f);
   function animate() {
     requestAnimationFrame(animate);
     const dt = clock.getDelta();

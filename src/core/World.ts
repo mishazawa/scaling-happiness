@@ -30,7 +30,6 @@ export type World = {
   events: Event[];
   lifes: number;
   status: GameStatus;
-  palettes: Map<Entity, string>;
   models: Map<Entity, { assetId: AssetId; scale?: number; paletteId: Entity }>;
 };
 
@@ -57,5 +56,6 @@ export function createWorld(): World {
     projectileTargets: new Map(),
     countdowns: new Map(),
     events: [],
+    models: new Map(),
   };
 }
