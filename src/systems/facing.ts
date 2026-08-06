@@ -29,6 +29,10 @@ import { samplePathDirection } from "../utils/path";
  */
 export function facingSystem(world: World, grid: Grid, dt: number): void {
   for (const [entity, rotation] of world.rotations) {
+    // A dying pawn's yaw belongs to its death spin (a rotation tween, ticked by
+    // timerSystem); stepping it toward a heading here would cancel the spin out.
+    if (hasTag(world, entity, "dying")) continue;
+
     if (hasTag(world, entity, "aiming")) {
       const position = world.positions.get(entity);
       if (position) {

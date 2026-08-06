@@ -6,7 +6,7 @@ import type { Tag } from "./Tag";
 import type { PathData, PathFollowerData } from "./Path";
 import type { Event } from "./Event";
 import type { AmmoData } from "./Ammo";
-import type { PositionTweenData } from "./Tween";
+import type { PositionTweenData, ScalarTweenData } from "./Tween";
 import type { RotationData } from "./Rotation";
 import type { CountdownData } from "./Countdown";
 import { LIFES_COUNT } from "../constants";
@@ -30,6 +30,15 @@ export type World = {
   positionTweens: Map<Entity, PositionTweenData>;
   /** Which way an entity faces. Yaw only — see `core/Rotation.ts`. */
   rotations: Map<Entity, RotationData>;
+  /** Uniform draw scale; absent means `DEFAULT_SCALE` (`core/Scale.ts`). */
+  scales: Map<Entity, number>;
+  /** Drives `scales`. Its completion is what ends the death animation. */
+  scaleTweens: Map<Entity, ScalarTweenData>;
+  /**
+   * Drives `rotations.yaw` directly, bypassing the turn-toward-target stepping
+   * `facingSystem` does — a death spin is a fixed sweep, not a heading.
+   */
+  rotationTweens: Map<Entity, ScalarTweenData>;
   projectileTargets: Map<Entity, number>;
   countdowns: Map<Entity, CountdownData>;
   events: Event[];
@@ -64,6 +73,9 @@ export function createWorld(): World {
     ammo: new Map(),
     positionTweens: new Map(),
     rotations: new Map(),
+    scales: new Map(),
+    scaleTweens: new Map(),
+    rotationTweens: new Map(),
     projectileTargets: new Map(),
     countdowns: new Map(),
     events: [],

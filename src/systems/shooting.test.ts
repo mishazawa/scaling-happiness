@@ -297,7 +297,7 @@ describe("shootingSystem", () => {
     expect(world.events).toEqual([]);
   });
 
-  it("destroys the pawn and emits a depleted pawn-resolved once ammo runs out on a hit", () => {
+  it("resolves the pawn as depleted — without destroying it — once ammo runs out on a hit", () => {
     const world = createWorld();
     const grid = makeGrid();
     const block = makeBlock(world, 0, 1, new Vector3(0, 0, -1));
@@ -309,7 +309,8 @@ describe("shootingSystem", () => {
 
     expect(hasTag(world, block, "targeted")).toBe(true);
     expect(hasTag(world, block, "destroy")).toBe(false);
-    expect(hasTag(world, pawn, "destroy")).toBe(true);
+    // Teardown is deathSystem's, after the death animation — see systems/death.ts.
+    expect(hasTag(world, pawn, "destroy")).toBe(false);
     expect(world.events).toEqual([
       { type: "pawn-resolved", entity: pawn, depleted: true },
     ]);

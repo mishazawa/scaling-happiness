@@ -5,6 +5,7 @@ import {
   Euler,
   Matrix4,
   Mesh,
+  Quaternion,
   Scene,
   Vector3,
 } from "three";
@@ -188,6 +189,51 @@ describe("renderSystem", () => {
     // Yaw must not disturb the translation column the position pass wrote.
     expect(new Vector3().setFromMatrixPosition(m).x).toBe(1);
     expect(new Euler().setFromRotationMatrix(m).y).toBeCloseTo(Math.PI / 2, 6);
+  });
+
+  it("writes an entity's uniform scale into its instance matrix, alongside its yaw", () => {
+    const world = createWorld();
+    const pawn = spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(1, 0, 0),
+    });
+    world.rotations.get(pawn)!.yaw = Math.PI / 2;
+    world.scales.set(pawn, 0.25);
+
+    renderSystem(world, 0);
+
+    const m = new Matrix4();
+    getModel("pawn").mesh.getMatrixAt(0, m);
+    // Decomposed, not read off the raw basis: `setFromRotationMatrix` assumes
+    // unscaled columns and reads a scaled matrix as a different rotation.
+    const translation = new Vector3();
+    const rotation = new Quaternion();
+    const scale = new Vector3();
+    m.decompose(translation, rotation, scale);
+
+    // T·R·S: the scale must not shrink the translation or skew the rotation.
+    expect(translation.x).toBe(1);
+    expect(new Euler().setFromQuaternion(rotation).y).toBeCloseTo(
+      Math.PI / 2,
+      6,
+    );
+    expect(scale.toArray()).toEqual([0.25, 0.25, 0.25]);
+  });
+
+  it("leaves scale-less entities at full size", () => {
+    const world = createWorld();
+    spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(1, 0, 0),
+    });
+
+    renderSystem(world, 0);
+
+    const m = new Matrix4();
+    getModel("pawn").mesh.getMatrixAt(0, m);
+    expect(new Vector3().setFromMatrixScale(m).toArray()).toEqual([1, 1, 1]);
   });
 
   it("leaves rotation-less entities on a pure translation", () => {

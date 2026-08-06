@@ -28,6 +28,7 @@ import { spawnSystem } from "./systems/spawn";
 import { lifeSystem } from "./systems/life";
 import { garbageCollectionSystem } from "./systems/garbageCollection";
 import { destructionSystem } from "./systems/destruction";
+import { deathSystem } from "./systems/death";
 import { clearEventsSystem } from "./systems/clearEvents";
 import { gameStatusSystem } from "./systems/gameStatus";
 import type { SystemContext } from "./systems/context";
@@ -144,6 +145,10 @@ async function main() {
       shootingSystem(world, GRID_PARAMETERS, ctx);
       timerSystem(world, dt);
       destructionSystem(world);
+      // Paired with destructionSystem: both turn a finished tween into a
+      // teardown. After the two systems that resolve pawns and after
+      // timerSystem, which is what completes the animation deathSystem starts.
+      deathSystem(world);
       spawnSystem(world, ctx);
       lifeSystem(world);
       // After shooting (which sets the aim) and before rendering (which draws

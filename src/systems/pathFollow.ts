@@ -1,9 +1,12 @@
 import type { World } from "../core/World";
 import { pushEvent } from "../core/Event";
-import { markDestroyed } from "../core/destroy";
 import { samplePath } from "../utils/path";
 
-/** Produces (via destroy.ts / core/Event.ts): destroy tag, pawn-resolved. */
+/**
+ * Produces (via core/Event.ts): pawn-resolved, when a follower runs out of
+ * track. Reaching the end resolves the pawn but does not destroy it —
+ * `deathSystem` owns everything from the event to the teardown.
+ */
 export function pathFollowSystem(world: World, dt: number) {
   for (const [entity, follower] of world.pathFollowers) {
     if (follower.done) continue;
@@ -16,7 +19,6 @@ export function pathFollowSystem(world: World, dt: number) {
     if (follower.t >= 1) {
       follower.t = 1;
       follower.done = true;
-      markDestroyed(world, entity);
       pushEvent(world, { type: "pawn-resolved", entity, depleted: false });
     }
 

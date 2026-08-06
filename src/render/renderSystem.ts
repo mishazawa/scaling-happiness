@@ -1,12 +1,14 @@
-import { Matrix4 } from "three";
+import { Matrix4, Vector3 } from "three";
 import { PALETTES_IDX } from "../constants";
 import type { Entity } from "../core/Entity";
 import type { ModelId } from "../core/Model";
+import { DEFAULT_SCALE } from "../core/Scale";
 import type { World } from "../core/World";
 import { uniforms } from "./materials";
 import { getModel, registeredModels } from "./modelRegistry";
 
 const matrix = new Matrix4();
+const scaleVec = new Vector3();
 
 /**
  * Idle-animation offset for an entity, in radians.
@@ -45,6 +47,8 @@ export function renderSystem(world: World, dt: number): void {
 
     const rotation = world.rotations.get(entity);
     if (rotation) object3D.rotation.y = rotation.yaw;
+
+    object3D.scale.setScalar(world.scales.get(entity) ?? DEFAULT_SCALE);
   }
 
   const counts = new Map<ModelId, number>();
@@ -64,10 +68,14 @@ export function renderSystem(world: World, dt: number): void {
         `instance capacity exceeded for model "${modelId}": ${model.capacity}`,
       );
 
-    // Yaw first, then the translation column: `makeRotationY` zeroes that
-    // column, so `setPosition` has to come second. Entities without a rotation
-    // (blocks) fall back to identity, i.e. the pure translation this was.
+    // Yaw, then scale, then the translation column, composing to T·R·S — a
+    // uniform scale about the model's own origin, with the rotation unscaled.
+    // `makeRotationY` zeroes the translation column, so `setPosition` has to
+    // come last. Entities without a rotation or scale (blocks) fall back to
+    // identity, i.e. the pure translation this was.
     matrix.makeRotationY(world.rotations.get(entity)?.yaw ?? 0);
+    const scale = world.scales.get(entity) ?? DEFAULT_SCALE;
+    if (scale !== DEFAULT_SCALE) matrix.scale(scaleVec.setScalar(scale));
     matrix.setPosition(position.x, position.y, position.z);
     model.mesh.setMatrixAt(slot, matrix);
     model.rows.array[slot] = PALETTES_IDX[palette];

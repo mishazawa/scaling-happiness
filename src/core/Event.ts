@@ -15,7 +15,8 @@ export type Event =
   | { type: "queue-clicked"; queue: QueueId }
   | { type: "pawn-spawned"; entity: Entity }
   | { type: "pawn-resolved"; entity: Entity; depleted: boolean }
-  | { type: "position-tween-complete"; entity: Entity };
+  | { type: "position-tween-complete"; entity: Entity }
+  | { type: "scale-tween-complete"; entity: Entity };
 
 export function pushEvent(world: World, event: Event): void {
   world.events.push(event);
@@ -38,6 +39,7 @@ export function readEvents<T extends Event["type"]>(
 export const EVENT_CONSUMERS = {
   "queue-clicked": "spawnSystem",
   "pawn-spawned": "lifeSystem",
-  "pawn-resolved": "lifeSystem",
+  "pawn-resolved": "lifeSystem, deathSystem",
   "position-tween-complete": "spawnSystem, destructionSystem",
+  "scale-tween-complete": "deathSystem",
 } satisfies Record<Event["type"], string>;

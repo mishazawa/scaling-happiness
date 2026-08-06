@@ -119,7 +119,7 @@ export const QUEUE_POSITION: [number, number, number] = [
 ];
 
 export const SPAWN_TRANSIT_DURATION = 0.1;
-export const SPAWN_COOLDOWN = 0.1;
+export const SPAWN_COOLDOWN = 0.25;
 export const TRACK_START_T = 0.02;
 export const TRACK_END_T = 1 - TRACK_START_T;
 
@@ -132,6 +132,21 @@ export const TRACK_CORNER_RADIUS = 1;
 // Line segments generated per rounded corner. 0 (or a 0 radius) turns rounding
 // off and restores hard corners.
 export const TRACK_CORNER_SEGMENTS = 8;
+
+// A pawn that has resolved — out of ammo, or off the end of the track — spins
+// up and shrinks away instead of vanishing on the frame it died. Three tweens,
+// all of PAWN_DEATH_DURATION; the scale one is the animation's clock, so the
+// duration is what the disappearance is parametrized by and the two speeds
+// below are free to be tuned without changing how long a death takes.
+export const PAWN_DEATH_DURATION = SPAWN_COOLDOWN;
+// Spin about world +Y, rad/s. Multiplied by the duration into a fixed sweep.
+export const PAWN_DEATH_SPIN_SPEED = Math.PI * 4;
+// Rise along world +Y, units/s — over the duration above, a little under a
+// pawn's own diameter, so it lifts clear of the track without leaving frame.
+export const PAWN_DEATH_RISE_SPEED = 10;
+// Scale the pawn shrinks to. Zero: "complete disappearance", by the time the
+// tween that ends the animation ends.
+export const PAWN_DEATH_END_SCALE = 0;
 
 export const PROJECTILE_DURATION = 0.05;
 export const PROJECTILE_RADIUS = 0.1;
@@ -188,8 +203,10 @@ export const PALETTES_IDX = Object.fromEntries(
 export const COLOR_ATTRIBUTE = "_color_id";
 
 /**
- * Models are normalized into a bounding radius at registration, so the ECS never
- * carries a per-entity scale. The pawn's matches the sphere it used to be drawn
+ * Models are normalized into a bounding radius at registration, so an entity's
+ * size is settled before the ECS sees it — the per-entity `scales` component
+ * only ever multiplies this, and only while something animates it (see
+ * `core/Scale.ts`). The pawn's radius matches the sphere it used to be drawn
  * as, keeping the track and queue layout unchanged; the block's fills its grid
  * cell, so the bubbles sit shoulder to shoulder.
  */

@@ -142,7 +142,7 @@ describe("pathFollowSystem", () => {
     expect(world.pathFollowers.get(follower)!.t).toBe(1);
   });
 
-  it("marks the follower destroyed and emits exactly one pawn-resolved event when it completes the path", () => {
+  it("resolves the follower — without destroying it — exactly once when it completes the path", () => {
     const world = createWorld();
     const pathEntity = createEntity();
     const path = makeOpenSquarePath();
@@ -157,7 +157,8 @@ describe("pathFollowSystem", () => {
     world.positions.set(follower, Position(0, 0, 0));
 
     pathFollowSystem(world, dt);
-    expect(hasTag(world, follower, "destroy")).toBe(true);
+    // Teardown is deathSystem's, after the death animation — see systems/death.ts.
+    expect(hasTag(world, follower, "destroy")).toBe(false);
     expect(world.events).toEqual([
       { type: "pawn-resolved", entity: follower, depleted: false },
     ]);

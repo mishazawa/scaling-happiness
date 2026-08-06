@@ -6,13 +6,16 @@ import type { World } from "./World";
  * without knowing an entity's full component set. Two kinds share this union:
  *  - kind tags ("block", "pawn", "projectile"): what an entity fundamentally
  *    is, set once.
- *  - state tags ("queued", "spawning", "aiming", "targeted", "destroy"): a
- *    transient condition, added and removed as state changes (e.g. "queued"
- *    marks an entity as clickable while it waits in a queue; "spawning" marks a
- *    pawn mid-tween on its way from queue to track; "aiming" marks a pawn that
- *    has taken its first shot and so faces the field from then on rather than
- *    the track; "targeted" marks a block with a projectile in flight toward it
- *    — it occludes its lane and cannot be fired on again; "destroy" marks it
+ *  - state tags ("queued", "spawning", "aiming", "dying", "targeted",
+ *    "destroy"): a transient condition, added and removed as state changes
+ *    (e.g. "queued" marks an entity as clickable while it waits in a queue;
+ *    "spawning" marks a pawn mid-tween on its way from queue to track;
+ *    "aiming" marks a pawn that has taken its first shot and so faces the
+ *    field from then on rather than the track; "dying" marks a pawn playing
+ *    out its death animation — already resolved as far as the game rules go,
+ *    so the systems that steer a live pawn leave it to its tweens;
+ *    "targeted" marks a block with a projectile in flight toward it — it
+ *    occludes its lane and cannot be fired on again; "destroy" marks it
  *    for garbageCollectionSystem to remove on the next pass).
  */
 export type Tag =
@@ -22,6 +25,7 @@ export type Tag =
   | "queued"
   | "spawning"
   | "aiming"
+  | "dying"
   | "targeted"
   | "destroy";
 

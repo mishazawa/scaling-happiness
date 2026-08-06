@@ -5,17 +5,17 @@ import { addTag, hasTag } from "../core/Tag";
 import type { World } from "../core/World";
 import type { Grid } from "../core/Grid";
 import { toFlat, worldToLane } from "../utils/gridMath";
-import { markDestroyed } from "../core/destroy";
 import { spawnProjectile } from "../setup/projectile";
 import type { SystemContext } from "./context";
 
 type Side = "top" | "right" | "bottom" | "left";
 
 /**
- * Produces (via destroy.ts / core/Event.ts): "targeted" tag, "destroy" tag
- * on the shooter (ammo depleted), pawn-resolved. Blocks are never destroyed
- * here directly — a hit tags the block "targeted" and spawns a projectile;
- * destructionSystem applies the actual destroy once the projectile lands.
+ * Produces (via core/Event.ts): "targeted" and "aiming" tags, pawn-resolved
+ * (ammo depleted). Nothing is destroyed here directly. A hit tags the block
+ * "targeted" and spawns a projectile, and destructionSystem applies the actual
+ * destroy once the projectile lands; a depleted shooter is resolved, and
+ * deathSystem takes it from there once its death animation has played.
  */
 export function shootingSystem(
   world: World,
@@ -87,7 +87,6 @@ export function shootingSystem(
 
           const depleted = depleteAmmo(world, entity);
           if (depleted) {
-            markDestroyed(world, entity);
             pushEvent(world, { type: "pawn-resolved", entity, depleted });
             break;
           }
