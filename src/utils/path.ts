@@ -13,7 +13,12 @@ import { Path, type PathData } from "../core/Path";
 import type { World } from "../core/World";
 import { addRenderable } from "../systems/render";
 import type { Grid } from "../setup/grid";
-import { TRACK_END_T, TRACK_START_T } from "../constants";
+import {
+  TRACK_CORNER_RADIUS,
+  TRACK_CORNER_SEGMENTS,
+  TRACK_END_T,
+  TRACK_START_T,
+} from "../constants";
 
 /**
  * Locates the point at fraction `t` around the *closed* perimeter defined by
@@ -87,6 +92,74 @@ function sliceTrack(
   return track;
 }
 
+/** Quadratic Bézier point at `t`, with `control` as the (sharp) corner. */
+function quadraticAt(
+  start: Vector3,
+  control: Vector3,
+  end: Vector3,
+  t: number,
+): Vector3 {
+  const u = 1 - t;
+  return new Vector3(
+    u * u * start.x + 2 * u * t * control.x + t * t * end.x,
+    u * u * start.y + 2 * u * t * control.y + t * t * end.y,
+    u * u * start.z + 2 * u * t * control.z + t * t * end.z,
+  );
+}
+
+/**
+ * Replaces every *interior* vertex with a short arc, turning hard corners into
+ * fillets. The endpoints are left exactly where they were (pawns are spawned
+ * onto `points[0]` and resolved at the last point), and the arcs are sampled
+ * once here rather than in the frame loop — `Path()` re-measures the resulting
+ * chords, so followers keep moving at a constant arc-length speed.
+ *
+ * The arcs are quadratic Béziers, not true circular fillets: sampling them at
+ * a uniform parameter isn't uniform in arc length, but since the chord lengths
+ * are what drive `samplePath`, the pawn's speed stays correct either way.
+ */
+export function roundCorners(
+  points: Vector3[],
+  radius: number,
+  segments: number,
+): Vector3[] {
+  if (radius <= 0 || segments <= 0 || points.length < 3) return points;
+
+  const rounded: Vector3[] = [points[0].clone()];
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const corner = points[i];
+    const toPrev = points[i - 1].clone().sub(corner);
+    const toNext = points[i + 1].clone().sub(corner);
+    const prevLength = toPrev.length();
+    const nextLength = toNext.length();
+
+    if (prevLength === 0 || nextLength === 0) {
+      rounded.push(corner.clone());
+      continue;
+    }
+
+    // Never eat more than half of either neighbouring segment, so adjacent
+    // corners can't overlap however short the segments get.
+    const r = Math.min(radius, prevLength / 2, nextLength / 2);
+
+    const start = corner
+      .clone()
+      .addScaledVector(toPrev.divideScalar(prevLength), r);
+    const end = corner
+      .clone()
+      .addScaledVector(toNext.divideScalar(nextLength), r);
+
+    for (let s = 0; s <= segments; s++) {
+      rounded.push(quadraticAt(start, corner, end, s / segments));
+    }
+  }
+
+  rounded.push(points[points.length - 1].clone());
+
+  return rounded;
+}
+
 /**
  * The track is an open path, not the full loop around the grid: it's cut out
  * of the grid's closed boundary at TRACK_START_T..TRACK_END_T, so pawns
@@ -115,7 +188,11 @@ export function makePathAroundTheGrid(grid: Grid, padding: number): PathData {
     TRACK_END_T,
   );
 
-  return Path(trackPoints);
+  // Rounding runs after the slice, so TRACK_START_T/TRACK_END_T still cut the
+  // sharp perimeter and the entry/exit points stay exactly where they were.
+  return Path(
+    roundCorners(trackPoints, TRACK_CORNER_RADIUS, TRACK_CORNER_SEGMENTS),
+  );
 }
 
 export function DEBUG_pathVisualizer(

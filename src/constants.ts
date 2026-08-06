@@ -98,5 +98,15 @@ export const SPAWN_COOLDOWN = 0.1;
 export const TRACK_START_T = 0.02;
 export const TRACK_END_T = 1 - TRACK_START_T;
 
+// Track corners are rounded (filleted) instead of snapping 90°. The radius is
+// in world units, measured from the sharp corner back along each adjoining
+// segment. Ceiling is ~1.6: a fillet pulls the path toward the grid's corner
+// block by r * (√2 - 1), and with TRACK_PADDING = 1 the diagonal gap is only
+// √2 ≈ 1.414, so past that a pawn (PAWN_RADIUS) starts clipping the corner.
+export const TRACK_CORNER_RADIUS = 1;
+// Line segments generated per rounded corner. 0 (or a 0 radius) turns rounding
+// off and restores hard corners.
+export const TRACK_CORNER_SEGMENTS = 8;
+
 export const PROJECTILE_DURATION = 0.05;
 export const PROJECTILE_RADIUS = 0.1;
