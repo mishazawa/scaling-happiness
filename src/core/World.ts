@@ -8,6 +8,7 @@ import type { AmmoData } from "./Ammo";
 import type { PositionTweenData } from "./Tween";
 import type { CountdownData } from "./Countdown";
 import { LIFES_COUNT } from "../constants";
+import type { AssetId } from "../setup/assets";
 
 export type World = {
   positions: Map<Entity, Vector3>;
@@ -29,6 +30,8 @@ export type World = {
   events: Event[];
   lifes: number;
   status: GameStatus;
+  palettes: Map<Entity, string>;
+  models: Map<Entity, { assetId: AssetId; scale?: number; paletteId: Entity }>;
 };
 
 export type GameStatus = "playing" | "won" | "lost";

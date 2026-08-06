@@ -28,8 +28,15 @@ import { DEBUG_pathVisualizer } from "./setup/debugPath";
 import { createQueues } from "./setup/queue";
 import { createCamera, updateCameraFrustum } from "./render/camera";
 import { createRenderer } from "./render/renderer";
+import { loadAssets, type AssetId } from "./setup/assets";
 
-function main() {
+import FISH_MESH from "./assets/fish.glb";
+
+export const MANIFEST: Record<AssetId, string> = {
+  pawn: FISH_MESH,
+};
+
+async function main() {
   const GRID_PARAMETERS = {
     columns: GRID_COLUMNS,
     rows: GRID_ROWS,
@@ -44,6 +51,8 @@ function main() {
   )!;
   const repeatButton =
     document.querySelector<HTMLButtonElement>("#repeat-game")!;
+
+  await loadAssets(MANIFEST);
 
   const clock = new Timer();
   const scene = new Scene();

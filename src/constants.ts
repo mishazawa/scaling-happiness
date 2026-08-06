@@ -120,3 +120,13 @@ export const TRACK_CORNER_SEGMENTS = 8;
 
 export const PROJECTILE_DURATION = 0.05;
 export const PROJECTILE_RADIUS = 0.1;
+
+export const PALETTES = {
+  yellow: [0xf2c14e, 0xd94f4f, 0xffffff, 0x101018],
+  blue: [0x4e8ef2, 0xd94f4f, 0xffffff, 0x101018],
+};
+
+export const PALETTES_IDX = {
+  yellow: 0,
+  blue: 1,
+};
