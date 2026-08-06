@@ -4,7 +4,11 @@ import {
   type Scene,
   type Vector3,
 } from "three";
-import { PROJECTILE_DURATION, PROJECTILE_RADIUS } from "../constants";
+import {
+  PROJECTILE_COLOR,
+  PROJECTILE_DURATION,
+  PROJECTILE_RADIUS,
+} from "../constants";
 import { createEntity, type Entity } from "../core/Entity";
 import { Position } from "../core/Position";
 import { PositionTween } from "../core/Tween";
@@ -35,7 +39,7 @@ export function spawnProjectile(
 
   addTag(world, entity, "projectile");
 
-  const mesh = new Mesh(PROJECTILE_GEOMETRY, standardMaterial("#FFF"));
+  const mesh = new Mesh(PROJECTILE_GEOMETRY, standardMaterial(PROJECTILE_COLOR));
   mesh.position.copy(from);
 
   addRenderable(world, scene, entity, mesh);

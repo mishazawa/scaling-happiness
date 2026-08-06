@@ -2,7 +2,11 @@ import type { Scene } from "three";
 import type { World } from "../core/World";
 import { spawnBlock } from "./block";
 import type { Grid } from "../core/Grid";
-import { GRID_CLUSTER } from "../constants";
+import {
+  BLOCK_COLOR_DARK,
+  BLOCK_COLOR_LIGHT,
+  GRID_CLUSTER,
+} from "../constants";
 import { cellToWorld } from "../utils/gridMath";
 
 export function makeGrid(world: World, scene: Scene, config: Grid) {
@@ -12,7 +16,7 @@ export function makeGrid(world: World, scene: Scene, config: Grid) {
     for (let column = 0; column < columns; column++) {
       const checkerRow = Math.floor(row / GRID_CLUSTER);
       const checkerColumn = Math.floor(column / GRID_CLUSTER);
-      const color = (checkerRow + checkerColumn) % 2 === 0 ? "#FFF" : "#000";
+      const color = (checkerRow + checkerColumn) % 2 === 0 ? BLOCK_COLOR_LIGHT : BLOCK_COLOR_DARK;
 
       const position = cellToWorld(config, row, column);
 

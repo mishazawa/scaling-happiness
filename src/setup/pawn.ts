@@ -4,7 +4,12 @@ import {
   type Scene,
   type Vector3,
 } from "three";
-import { PAWN_AMMO, PAWN_RADIUS } from "../constants";
+import {
+  BLOCK_COLOR_DARK,
+  BLOCK_COLOR_LIGHT,
+  PAWN_AMMO,
+  PAWN_RADIUS,
+} from "../constants";
 import { createEntity, type Entity } from "../core/Entity";
 import { Position } from "../core/Position";
 import type { World } from "../core/World";
@@ -20,7 +25,7 @@ export type SpawnPawnConfig = {
 
 const PAWN_GEOMETRY = new SphereGeometry(PAWN_RADIUS, 16, 12);
 
-const PAWN_COLORS: BlockColor[] = ["#FFF", "#000"];
+const PAWN_COLORS: BlockColor[] = [BLOCK_COLOR_LIGHT, BLOCK_COLOR_DARK];
 
 export function randomPawnColor(): BlockColor {
   return PAWN_COLORS[Math.floor(Math.random() * PAWN_COLORS.length)];

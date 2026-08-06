@@ -4,6 +4,12 @@ export const GRID_COLUMNS = 26;
 export const GRID_ROWS = GRID_COLUMNS;
 export const GROUND_COLOR = "#444";
 
+// The game's whole palette. Blocks alternate between these two, pawns are drawn
+// from the same pair, and colour matching is a string compare against them.
+export const BLOCK_COLOR_LIGHT = "#FFF";
+export const BLOCK_COLOR_DARK = "#000";
+export const PROJECTILE_COLOR = BLOCK_COLOR_LIGHT;
+
 const GRID_WORLD_SIZE = GRID_COLUMNS * BLOCK_SIZE;
 const GRID_HALF_SIZE = GRID_WORLD_SIZE / 2;
 
