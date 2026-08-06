@@ -12,7 +12,9 @@ import { timerSystem } from "./timer";
 import type { SystemContext } from "./context";
 import { SPAWN_TRANSIT_DURATION } from "../constants";
 
-function setupPath(world: ReturnType<typeof createWorld>): SystemContext["pathEntity"] {
+function setupPath(
+  world: ReturnType<typeof createWorld>,
+): SystemContext["pathEntity"] {
   const pathEntity = createEntity();
   world.paths.set(
     pathEntity,
@@ -28,8 +30,8 @@ describe("spawnSystem", () => {
     const pathEntity = setupPath(world);
     const ctx: SystemContext = { scene, pathEntity };
 
-    const queueId = spawnQueue(world, new Vector3());
-    const pawn = spawnPawn(world, scene, {
+    const queueId = spawnQueue(world, scene, new Vector3());
+    const pawn = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });
@@ -53,8 +55,8 @@ describe("spawnSystem", () => {
     const pathEntity = setupPath(world);
     const ctx: SystemContext = { scene, pathEntity };
 
-    const queueId = spawnQueue(world, new Vector3());
-    const pawn = spawnPawn(world, scene, {
+    const queueId = spawnQueue(world, scene, new Vector3());
+    const pawn = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });
@@ -80,12 +82,12 @@ describe("spawnSystem", () => {
     const pathEntity = setupPath(world);
     const ctx: SystemContext = { scene, pathEntity };
 
-    const queueId = spawnQueue(world, new Vector3());
-    const pawnA = spawnPawn(world, scene, {
+    const queueId = spawnQueue(world, scene, new Vector3());
+    const pawnA = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });
-    const pawnB = spawnPawn(world, scene, {
+    const pawnB = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });
@@ -110,9 +112,9 @@ describe("spawnSystem", () => {
     const pathEntity = setupPath(world);
     const ctx: SystemContext = { scene, pathEntity };
 
-    const emptyQueue = spawnQueue(world, new Vector3());
-    const queueId = spawnQueue(world, new Vector3(1, 0, 0));
-    const pawn = spawnPawn(world, scene, {
+    const emptyQueue = spawnQueue(world, scene, new Vector3());
+    const queueId = spawnQueue(world, scene, new Vector3(1, 0, 0));
+    const pawn = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });
@@ -132,13 +134,13 @@ describe("spawnSystem", () => {
     const ctx: SystemContext = { scene, pathEntity };
     world.lifes = 1;
 
-    const queueA = spawnQueue(world, new Vector3());
-    const queueB = spawnQueue(world, new Vector3(1, 0, 0));
-    const pawnA = spawnPawn(world, scene, {
+    const queueA = spawnQueue(world, scene, new Vector3());
+    const queueB = spawnQueue(world, scene, new Vector3(1, 0, 0));
+    const pawnA = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });
-    const pawnB = spawnPawn(world, scene, {
+    const pawnB = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });
@@ -161,8 +163,8 @@ describe("spawnSystem", () => {
     const ctx: SystemContext = { scene, pathEntity };
     world.lifes = 0;
 
-    const queueId = spawnQueue(world, new Vector3());
-    const pawn = spawnPawn(world, scene, {
+    const queueId = spawnQueue(world, scene, new Vector3());
+    const pawn = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });
@@ -182,13 +184,13 @@ describe("spawnSystem", () => {
     const ctx: SystemContext = { scene, pathEntity };
     world.lifes = 1;
 
-    const queueA = spawnQueue(world, new Vector3());
-    const queueB = spawnQueue(world, new Vector3(1, 0, 0));
-    const pawnA = spawnPawn(world, scene, {
+    const queueA = spawnQueue(world, scene, new Vector3());
+    const queueB = spawnQueue(world, scene, new Vector3(1, 0, 0));
+    const pawnA = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });
-    const pawnB = spawnPawn(world, scene, {
+    const pawnB = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });

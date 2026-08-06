@@ -1,7 +1,17 @@
 import type { Object3D } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import type { ModelId } from "../core/Model";
 
-export type AssetId = "pawn";
+/**
+ * Assets are keyed by the model ids they back — one glTF file per model. Only
+ * the *authored* models appear here; procedural ones (the block bubbles) are
+ * built in code and never touch the loader. `Extract` keeps this a checked
+ * subset of `ModelId` rather than a second union that can drift out of sync.
+ *
+ * Rendering resources are built from these by `render/modelRegistry.ts`; this
+ * module only loads and caches the raw scene graphs.
+ */
+export type AssetId = Extract<ModelId, "pawn">;
 
 const cache = new Map<AssetId, Object3D>();
 

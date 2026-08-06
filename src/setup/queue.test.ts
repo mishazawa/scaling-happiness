@@ -17,10 +17,10 @@ describe("queue", () => {
     const world = createWorld();
     const scene = new Scene();
     const base = new Vector3(0, 0, 0);
-    const queueId = spawnQueue(world, base);
+    const queueId = spawnQueue(world, scene, base);
 
-    const a = spawnPawn(world, scene, { color: "#FFF", position: base });
-    const b = spawnPawn(world, scene, { color: "#FFF", position: base });
+    const a = spawnPawn(world, { color: "#FFF", position: base });
+    const b = spawnPawn(world, { color: "#FFF", position: base });
 
     addPawnToQueue(world, queueId, a);
     addPawnToQueue(world, queueId, b);
@@ -45,10 +45,10 @@ describe("queue", () => {
     const world = createWorld();
     const scene = new Scene();
     const base = new Vector3(0, 0, 0);
-    const queueId = spawnQueue(world, base);
+    const queueId = spawnQueue(world, scene, base);
 
-    const a = spawnPawn(world, scene, { color: "#FFF", position: base });
-    const b = spawnPawn(world, scene, { color: "#FFF", position: base });
+    const a = spawnPawn(world, { color: "#FFF", position: base });
+    const b = spawnPawn(world, { color: "#FFF", position: base });
     addPawnToQueue(world, queueId, a);
     addPawnToQueue(world, queueId, b);
 
@@ -66,7 +66,7 @@ describe("queue", () => {
 
   it("returns undefined when releasing from an empty queue", () => {
     const world = createWorld();
-    const queueId = spawnQueue(world, new Vector3());
+    const queueId = spawnQueue(world, new Scene(), new Vector3());
 
     expect(releasePawnFromQueue(world, queueId)).toBeUndefined();
   });
@@ -75,9 +75,9 @@ describe("queue", () => {
     const world = createWorld();
     const scene = new Scene();
     const base = new Vector3(1, 0, -3);
-    const queueId = spawnQueue(world, base);
+    const queueId = spawnQueue(world, scene, base);
 
-    const pawn = spawnQueuedPawn(world, scene, queueId);
+    const pawn = spawnQueuedPawn(world, queueId);
 
     expect(world.positions.get(pawn)).toEqual(base);
     expect(hasTag(world, pawn, "queued")).toBe(true);
@@ -88,14 +88,14 @@ describe("queue", () => {
   it("replenishes the queue: releasing a pawn and spawning a new one keeps the queue size stable", () => {
     const world = createWorld();
     const scene = new Scene();
-    const queueId = spawnQueue(world, new Vector3());
+    const queueId = spawnQueue(world, scene, new Vector3());
 
-    spawnQueuedPawn(world, scene, queueId);
-    spawnQueuedPawn(world, scene, queueId);
-    spawnQueuedPawn(world, scene, queueId);
+    spawnQueuedPawn(world, queueId);
+    spawnQueuedPawn(world, queueId);
+    spawnQueuedPawn(world, queueId);
 
     const released = releasePawnFromQueue(world, queueId);
-    spawnQueuedPawn(world, scene, queueId);
+    spawnQueuedPawn(world, queueId);
 
     expect(released).toBeDefined();
     expect(world.queues.get(queueId)?.length).toBe(3);

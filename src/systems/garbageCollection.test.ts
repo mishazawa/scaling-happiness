@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Scene, Vector3 } from "three";
+import { Mesh, Scene, Vector3 } from "three";
 import { createWorld } from "../core/World";
 import { createEntity } from "../core/Entity";
 import { addTag, hasTag } from "../core/Tag";
@@ -9,6 +9,7 @@ import { spawnPawn } from "../setup/pawn";
 import { spawnBlock } from "../setup/block";
 import { spawnQueue, addPawnToQueue } from "../setup/queue";
 import { getQueueId } from "../core/Queue";
+import { addRenderable } from "../render/renderable";
 import { garbageCollectionSystem } from "./garbageCollection";
 import type { SystemContext } from "./context";
 
@@ -18,18 +19,37 @@ describe("garbageCollectionSystem", () => {
     const scene = new Scene();
     const ctx: SystemContext = { scene, pathEntity: createEntity() };
 
-    const pawn = spawnPawn(world, scene, {
+    // Pawns and blocks are instanced now; a queue's invisible pick box is the
+    // remaining kind of entity that owns an Object3D.
+    const entity = createEntity();
+    const mesh = new Mesh();
+    addRenderable(world, scene, entity, mesh);
+    expect(scene.children).toContain(mesh);
+
+    addTag(world, entity, "destroy");
+    garbageCollectionSystem(world, ctx);
+
+    expect(scene.children).not.toContain(mesh);
+    expect(world.renderables.has(entity)).toBe(false);
+  });
+
+  it("clears the model component of a destroyed instanced entity", () => {
+    // Pawns have no Object3D at all — the render system repacks instance slots
+    // from world.models every frame, so a stale entry keeps a dead pawn drawn.
+    const world = createWorld();
+    const scene = new Scene();
+    const ctx: SystemContext = { scene, pathEntity: createEntity() };
+
+    const pawn = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });
-    const mesh = world.renderables.get(pawn);
-    expect(scene.children).toContain(mesh);
+    expect(world.models.has(pawn)).toBe(true);
 
     addTag(world, pawn, "destroy");
     garbageCollectionSystem(world, ctx);
 
-    expect(scene.children).not.toContain(mesh);
-    expect(world.renderables.has(pawn)).toBe(false);
+    expect(world.models.has(pawn)).toBe(false);
   });
 
   it("deletes the entity from positions, colors, pathFollowers, ammo, and tags", () => {
@@ -37,7 +57,7 @@ describe("garbageCollectionSystem", () => {
     const scene = new Scene();
     const ctx: SystemContext = { scene, pathEntity: createEntity() };
 
-    const pawn = spawnPawn(world, scene, {
+    const pawn = spawnPawn(world, {
       color: "#000",
       position: new Vector3(1, 2, 3),
     });
@@ -81,7 +101,7 @@ describe("garbageCollectionSystem", () => {
     const scene = new Scene();
     const ctx: SystemContext = { scene, pathEntity: createEntity() };
 
-    const block = spawnBlock(world, scene, "#FFF", 1, 2, 5, new Vector3());
+    const block = spawnBlock(world, "#FFF", 1, 2, 5, new Vector3());
     expect(world.gridToEntity.size).toBe(1);
 
     addTag(world, block, "destroy");
@@ -96,8 +116,8 @@ describe("garbageCollectionSystem", () => {
     const scene = new Scene();
     const ctx: SystemContext = { scene, pathEntity: createEntity() };
 
-    const queueId = spawnQueue(world, new Vector3());
-    const pawn = spawnPawn(world, scene, {
+    const queueId = spawnQueue(world, scene, new Vector3());
+    const pawn = spawnPawn(world, {
       color: "#FFF",
       position: new Vector3(),
     });
@@ -113,7 +133,10 @@ describe("garbageCollectionSystem", () => {
 
   it("is a no-op when there are no destroy-tagged entities", () => {
     const world = createWorld();
-    const ctx: SystemContext = { scene: new Scene(), pathEntity: createEntity() };
+    const ctx: SystemContext = {
+      scene: new Scene(),
+      pathEntity: createEntity(),
+    };
 
     expect(() => garbageCollectionSystem(world, ctx)).not.toThrow();
   });

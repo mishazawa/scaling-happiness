@@ -22,9 +22,14 @@ function destroyEntity(world: World, ctx: SystemContext, entity: Entity): void {
     world.renderables.delete(entity);
   }
 
+  // Instance slots are repacked from world.models every frame, so a stale entry
+  // here is enough to keep a dead entity on screen.
+  world.models.delete(entity);
+
   world.positions.delete(entity);
   world.blocks.delete(entity);
   world.colors.delete(entity);
+  world.countdowns.delete(entity);
   world.paths.delete(entity);
   world.pathFollowers.delete(entity);
   world.lastFiredLanes.delete(entity);

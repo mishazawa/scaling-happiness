@@ -34,15 +34,15 @@ describe("makePaletteDataTexture", () => {
       });
     }
 
-    // yellow is row 0 — the bottom row, since DataTexture does not flip Y.
+    // koi is row 0 — the bottom row, since DataTexture does not flip Y.
     expect(texture.flipY).toBe(false);
-    expect(pixel(data, width, 0, 0)).toEqual([0xf2, 0xc1, 0x4e, 255]);
+    expect(pixel(data, width, 0, 0)).toEqual([0xfa, 0x67, 0x81, 255]);
   });
 
   it("follows PALETTES_IDX rather than declaration order", () => {
     const texture = makePaletteDataTexture(
-      { yellow: [0x010203], blue: [0x040506] },
-      { yellow: 1, blue: 0 },
+      { koi: [0x010203], tide: [0x040506] },
+      { koi: 1, tide: 0 },
     );
     const { width, data } = texture.image;
 
@@ -52,8 +52,8 @@ describe("makePaletteDataTexture", () => {
 
   it("sizes to the longest palette and pads short rows with opaque black", () => {
     const texture = makePaletteDataTexture(
-      { yellow: [0xff0000, 0x00ff00, 0x0000ff], blue: [0x123456] },
-      { yellow: 0, blue: 1 },
+      { koi: [0xff0000, 0x00ff00, 0x0000ff], tide: [0x123456] },
+      { koi: 0, tide: 1 },
     );
     const { width, height, data } = texture.image;
 

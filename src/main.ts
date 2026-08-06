@@ -1,14 +1,19 @@
-import { Scene, Timer, Vector3, type Mesh } from "three";
+import { Scene, Timer, Vector3 } from "three";
 import "./style.css";
 import {
+  BLOCK_CAPACITY,
+  BLOCK_MODEL_RADIUS,
   BLOCK_SIZE,
   GRID_COLUMNS,
   GRID_ROWS,
+  PAWN_CAPACITY,
+  PAWN_MODEL_RADIUS,
   TRACK_PADDING,
 } from "./constants";
 import { setupLight } from "./setup/light";
 import { setupGround } from "./setup/ground";
 import { makeGrid } from "./setup/grid";
+import { makeBubbleMesh } from "./setup/block";
 import { createEntity } from "./core/Entity";
 import { createWorld } from "./core/World";
 import { renderSystem } from "./render/renderSystem";
@@ -29,10 +34,9 @@ import { createQueues } from "./setup/queue";
 import { createCamera, updateCameraFrustum } from "./render/camera";
 import { createRenderer } from "./render/renderer";
 import { getAssetById, loadAssets, type AssetId } from "./setup/assets";
-import { paletteMaterial } from "./render/materials";
+import { registerModel } from "./render/modelRegistry";
 
 import FISH_MESH from "./assets/fish.glb";
-import { makePaletteDataTexture } from "./utils/paletteTexture";
 
 export const MANIFEST: Record<AssetId, string> = {
   pawn: FISH_MESH,
@@ -54,24 +58,7 @@ async function main() {
   const repeatButton =
     document.querySelector<HTMLButtonElement>("#repeat-game")!;
 
-  const dataTexture = makePaletteDataTexture();
-
   await loadAssets(MANIFEST);
-
-  // The loaded mesh is what carries the colour-slot attribute the palette
-  // shader reads, so it swaps its authored materials for the palette one.
-  // Blender exports the slot as `_COLOR_ID`, which GLTFLoader lowercases to
-  // `_color_id`; alias it to the `aID` name the shader declares.
-  const paletteMat = paletteMaterial(dataTexture);
-  getAssetById("pawn").traverse((object) => {
-    const mesh = object as Mesh;
-    if (!mesh.isMesh) return;
-
-    const colorId = mesh.geometry.getAttribute("_color_id");
-    if (colorId) mesh.geometry.setAttribute("aID", colorId);
-
-    mesh.material = paletteMat;
-  });
 
   const clock = new Timer();
   const scene = new Scene();
@@ -79,6 +66,21 @@ async function main() {
 
   setupLight(scene);
   setupGround(scene);
+
+  // Registered and added to the scene once, outside initGame: an instanced mesh
+  // is a rendering resource shared by every entity of its model, not world
+  // state. The render system repacks the slots from zero each frame, so a
+  // restart clears them with no teardown.
+  scene.add(
+    registerModel(
+      "pawn",
+      getAssetById("pawn"),
+      PAWN_CAPACITY,
+      PAWN_MODEL_RADIUS,
+    ).mesh,
+    registerModel("block", makeBubbleMesh(), BLOCK_CAPACITY, BLOCK_MODEL_RADIUS)
+      .mesh,
+  );
 
   const renderer = createRenderer(container);
 
@@ -100,7 +102,7 @@ async function main() {
 
     world = createWorld();
 
-    makeGrid(world, scene, GRID_PARAMETERS);
+    makeGrid(world, GRID_PARAMETERS);
     const pd = makePathAroundTheGrid(GRID_PARAMETERS, TRACK_PADDING);
     const pathEntity = createEntity();
     world.paths.set(pathEntity, pd);
@@ -128,10 +130,6 @@ async function main() {
       world.status === "won" ? "You win!" : "Game over";
     endScreen.classList.remove("hidden");
   }
-  const f = getAssetById("pawn");
-  f.position.set(0, 2, 0);
-  f.scale.setScalar(3);
-  scene.add(f);
   function animate() {
     requestAnimationFrame(animate);
     const dt = clock.getDelta();

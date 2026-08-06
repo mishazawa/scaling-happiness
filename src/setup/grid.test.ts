@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Scene, Vector3 } from "three";
+import { Vector3 } from "three";
 import { createWorld } from "../core/World";
 import { toFlat, toRowColumn } from "../utils/gridMath";
 import { makeGrid } from "./grid";
@@ -7,7 +7,7 @@ import { makeGrid } from "./grid";
 describe("makeGrid", () => {
   it("spawns rows * columns blocks", () => {
     const world = createWorld();
-    makeGrid(world, new Scene(), {
+    makeGrid(world, {
       columns: 3,
       rows: 2,
       cellSize: 1,
@@ -23,7 +23,7 @@ describe("makeGrid", () => {
     const columns = 4;
     const rows = 3;
 
-    makeGrid(world, new Scene(), {
+    makeGrid(world, {
       columns,
       rows,
       cellSize: 1,
@@ -53,7 +53,7 @@ describe("makeGrid", () => {
     const center = new Vector3(10, 5, -2);
     const cellSize = 2;
 
-    makeGrid(world, new Scene(), {
+    makeGrid(world, {
       columns: 3,
       rows: 3,
       cellSize,
@@ -72,7 +72,7 @@ describe("makeGrid", () => {
     const world = createWorld();
     const cellSize = 3;
 
-    makeGrid(world, new Scene(), {
+    makeGrid(world, {
       columns: 2,
       rows: 2,
       cellSize,
@@ -87,18 +87,17 @@ describe("makeGrid", () => {
     expect(c.z - a.z).toBeCloseTo(cellSize);
   });
 
-  it("registers a renderable mesh in the scene for every block", () => {
+  it("registers every block as an instance rather than its own Object3D", () => {
     const world = createWorld();
-    const scene = new Scene();
 
-    makeGrid(world, scene, {
+    makeGrid(world, {
       columns: 2,
       rows: 2,
       cellSize: 1,
       center: new Vector3(0, 0, 0),
     });
 
-    expect(world.renderables.size).toBe(4);
-    expect(scene.children.length).toBe(4);
+    expect(world.models.size).toBe(4);
+    expect(world.renderables.size).toBe(0);
   });
 });

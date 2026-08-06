@@ -8,7 +8,7 @@ import type { AmmoData } from "./Ammo";
 import type { PositionTweenData } from "./Tween";
 import type { CountdownData } from "./Countdown";
 import { LIFES_COUNT } from "../constants";
-import type { AssetId } from "../setup/assets";
+import type { ModelData } from "./Model";
 
 export type World = {
   positions: Map<Entity, Vector3>;
@@ -30,7 +30,12 @@ export type World = {
   events: Event[];
   lifes: number;
   status: GameStatus;
-  models: Map<Entity, { assetId: AssetId; scale?: number; paletteId: Entity }>;
+  /**
+   * Instanced-mesh entities: names only, resolved against the model registry
+   * and palette at draw time. Mutually exclusive with `renderables` — an entity
+   * is drawn either as its own `Object3D` or as an instance, never both.
+   */
+  models: Map<Entity, ModelData>;
 };
 
 export type GameStatus = "playing" | "won" | "lost";

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Scene, Vector3 } from "three";
+import { Vector3 } from "three";
 import { createWorld } from "../core/World";
 import { createEntity } from "../core/Entity";
 import { addTag, hasTag } from "../core/Tag";
@@ -11,15 +11,7 @@ import { destructionSystem } from "./destruction";
 describe("destructionSystem", () => {
   it("destroys the projectile and the block at its target cell once the tween completes", () => {
     const world = createWorld();
-    const block = spawnBlock(
-      world,
-      new Scene(),
-      "#FFF",
-      0,
-      1,
-      3,
-      new Vector3(0, 0, -1),
-    );
+    const block = spawnBlock(world, "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
     addTag(world, block, "targeted");
 
     const projectile = createEntity();

@@ -38,7 +38,7 @@ export function spawnSystem(world: World, ctx: SystemContext): void {
     addTag(world, released, "spawning");
 
     world.countdowns.set(event.queue, Countdown(SPAWN_COOLDOWN));
-    spawnQueuedPawn(world, ctx.scene, event.queue);
+    spawnQueuedPawn(world, event.queue);
   }
 
   for (const event of readEvents(world, "position-tween-complete")) {

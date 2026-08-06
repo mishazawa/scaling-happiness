@@ -1,7 +1,6 @@
 import { Raycaster, Vector2, type Camera } from "three";
 import type { Entity } from "../core/Entity";
-import { getQueueId, type QueueId } from "../core/Queue";
-import { hasTag } from "../core/Tag";
+import type { QueueId } from "../core/Queue";
 import type { World } from "../core/World";
 import { pushEvent } from "../core/Event";
 
@@ -24,14 +23,15 @@ export function handlePointerClick(
     false,
   );
 
+  // The hit object is a queue's invisible pick box (see setup/queue.ts), so the
+  // entity behind it *is* the queue — no member lookup needed. This means the
+  // whole queue footprint is clickable, not just the pawns standing in it; an
+  // empty queue still fires the event and spawnSystem no-ops on it.
   for (const hit of hits) {
     const entity = hit.object.userData.entity as Entity | undefined;
-    if (entity === undefined || !hasTag(world, entity, "queued")) continue;
+    if (entity === undefined || !world.queues.has(entity)) continue;
 
-    const queueId = getQueueId(world, entity) as QueueId | undefined;
-    if (queueId === undefined) continue;
-
-    pushEvent(world, { type: "queue-clicked", queue: queueId });
+    pushEvent(world, { type: "queue-clicked", queue: entity as QueueId });
     return;
   }
 }

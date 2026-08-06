@@ -2,7 +2,7 @@ export const LIGHT_MAIN_POSITION: [number, number, number] = [20, 40, 20];
 export const BLOCK_SIZE = 0.4;
 export const GRID_COLUMNS = 26;
 export const GRID_ROWS = GRID_COLUMNS;
-export const GROUND_COLOR = "#444";
+export const GROUND_COLOR = "#B8B89F";
 
 // The game's whole palette. Blocks alternate between these two, pawns are drawn
 // from the same pair, and colour matching is a string compare against them.
@@ -64,14 +64,14 @@ const screenBottomZ =
 // Ground plane just needs to cover everything the camera can see.
 export const GROUND_SIZE = Math.ceil(screenBottomZ) * 2 + 4;
 
-export const PAWN_RADIUS = 0.75;
+export const PAWN_RADIUS = 1;
 export const PAWN_SPEED = 10;
 export const PAWN_AMMO = 20;
 
 export const QUEUE_DIRECTION: [number, number, number] = [0, 0, 1];
 // Depth spacing between pawns within a single queue.
-export const QUEUE_SPACING = 2;
-export const QUEUE_VERTICAL_SPACING = 3;
+export const QUEUE_SPACING = 2.5;
+export const QUEUE_VERTICAL_SPACING = 1;
 export const QUEUE_INITIAL_SIZE = 5;
 export const NUMBER_OF_QUEUES = 4;
 export const GRID_CLUSTER = 2;
@@ -92,15 +92,16 @@ const PAWN_RADIUS_AS_Z_DISTANCE = PAWN_RADIUS / CAMERA_DEPTH_TO_SCREEN_Y;
 // screen's bottom edge.
 const lastVisiblePawnZ = screenBottomZ - PAWN_RADIUS_AS_Z_DISTANCE;
 const firstHiddenPawnZ = screenBottomZ + PAWN_RADIUS_AS_Z_DISTANCE;
-// The 3rd queue slot (index 2) must land at or before lastVisiblePawnZ (to be
-// fully visible) while the 4th (index 2 + QUEUE_SPACING) lands at or after
-// firstHiddenPawnZ (to be fully hidden); centering it between those two
-// requirements splits the margin evenly.
-const thirdPawnZ = (lastVisiblePawnZ + (firstHiddenPawnZ - QUEUE_SPACING)) / 2;
+// How many queue slots are on screen. The last visible slot must land at or
+// before lastVisiblePawnZ (to be fully visible) while the next one lands at or
+// after firstHiddenPawnZ (to be fully hidden); centering it between those two
+// requirements splits the margin evenly. Also sizes the queue's click box.
+export const QUEUE_VISIBLE_SLOTS = 3;
+const lastSlotZ = (lastVisiblePawnZ + (firstHiddenPawnZ - QUEUE_SPACING)) / 2;
 export const QUEUE_POSITION: [number, number, number] = [
   0,
   0,
-  thirdPawnZ - 2 * QUEUE_SPACING,
+  lastSlotZ - (QUEUE_VISIBLE_SLOTS - 1) * QUEUE_SPACING,
 ];
 
 export const SPAWN_TRANSIT_DURATION = 0.1;
@@ -122,11 +123,63 @@ export const PROJECTILE_DURATION = 0.05;
 export const PROJECTILE_RADIUS = 0.1;
 
 export const PALETTES = {
-  yellow: [0xf2c14e, 0xd94f4f, 0xffffff, 0x101018],
-  blue: [0x4e8ef2, 0xd94f4f, 0xffffff, 0x101018],
+  koi: [0xfa6781, 0xff3b77, 0x0a1a2e, 0xffffff], // gold koi + complementary blue
+  tide: [0xfa6781, 0x52656b, 0x0a1a2e, 0xffffff], // ocean blue + complementary coral
+  mermaid: [0xa41dad, 0xfdcb2a, 0xeb11fa, 0x21c7a3, 0x03ad88], // ocean blue + complementary coral
+  poster: [0x592abf, 0x0d8aa6, 0xf2be5c, 0xbf9663, 0xf23535],
 };
 
 export const PALETTES_IDX = {
-  yellow: 0,
-  blue: 1,
+  koi: 0,
+  tide: 1,
+  mermaid: 2,
+  poster: 3,
 };
+
+/**
+ * Per-vertex colour-region tag exported from Blender. `prepareGeometry` aliases
+ * it to `aID`, the name the palette shader declares.
+ */
+export const COLOR_ATTRIBUTE = "_color_id";
+
+/**
+ * Models are normalized into a bounding radius at registration, so the ECS never
+ * carries a per-entity scale. The pawn's matches the sphere it used to be drawn
+ * as, keeping the track and queue layout unchanged; the block's fills its grid
+ * cell, so the bubbles sit shoulder to shoulder.
+ */
+export const PAWN_MODEL_RADIUS = PAWN_RADIUS;
+export const BLOCK_MODEL_RADIUS = BLOCK_SIZE / 2;
+
+/** How round the block bubbles are. Low enough that 676 of them stay cheap. */
+export const BLOCK_SEGMENTS = 12;
+
+/**
+ * Palette slot the block bubbles draw with. Unlike the fish, which carries a
+ * per-vertex `_color_id` from Blender, a procedural sphere is one flat region,
+ * so every vertex gets this slot.
+ */
+export const BLOCK_COLOR_SLOT = 1;
+
+/**
+ * Which palette row a pawn of a given `BlockColor` draws with.
+ *
+ * Gameplay still matches pawns to blocks by `BlockColor` string equality, so
+ * this is a purely visual mapping — the fish's hue deliberately does *not* agree
+ * with the block's until blocks migrate to the palette too.
+ */
+export const PALETTE_FOR_COLOR: Record<string, keyof typeof PALETTES> = {
+  [BLOCK_COLOR_LIGHT]: "poster",
+  [BLOCK_COLOR_DARK]: "mermaid",
+};
+
+/**
+ * Instanced draw capacity, fixed per model. Exceeding one is a bug in the game
+ * rules that bound it, not a condition to recover from, so the render system
+ * throws rather than growing the buffers.
+ */
+export const PAWN_CAPACITY = 256;
+export const BLOCK_CAPACITY = GRID_COLUMNS * GRID_ROWS;
+
+export const SHADER_BREATH_AMP = 0.1;
+export const SHADER_BREATH_FREQ = 8.9;
