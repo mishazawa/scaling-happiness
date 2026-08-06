@@ -1,6 +1,6 @@
 import { Scene, Vector3 } from "three";
 import type { World } from "../core/World";
-import { spawnBlock } from "../setup/block";
+import { spawnBlock } from "./block";
 import type { Grid } from "../core/Grid";
 import { GRID_CLUSTER } from "../constants";
 

@@ -17,7 +17,7 @@ import {
 } from "./constants";
 import { setupLight } from "./setup/light";
 import { setupGround } from "./setup/ground";
-import { makeGrid } from "./utils/grid";
+import { makeGrid } from "./setup/grid";
 import { createEntity } from "./core/Entity";
 import { createWorld } from "./core/World";
 import { renderSystem } from "./render/renderSystem";
@@ -32,8 +32,9 @@ import { destructionSystem } from "./systems/destruction";
 import { clearEventsSystem } from "./systems/clearEvents";
 import { gameStatusSystem } from "./systems/gameStatus";
 import type { SystemContext } from "./systems/context";
-import { DEBUG_pathVisualizer, makePathAroundTheGrid } from "./utils/path";
-import { createQueues } from "./utils/queue";
+import { makePathAroundTheGrid } from "./setup/track";
+import { DEBUG_pathVisualizer } from "./setup/debugPath";
+import { createQueues } from "./setup/queue";
 
 function updateCameraFrustum(
   camera: OrthographicCamera,

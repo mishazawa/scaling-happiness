@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { Scene, Vector3 } from "three";
 import { createWorld } from "../core/World";
 import { toFlat, toRowColumn } from "../utils";
-import { makeGrid } from "../utils/grid";
+import { makeGrid } from "./grid";
 
 describe("makeGrid", () => {
   it("spawns rows * columns blocks", () => {
