@@ -25,6 +25,13 @@ export type World = {
   renderables: Map<Entity, Object3D>;
   queues: Map<Entity, Entity[]>;
   queueMembership: Map<Entity, Entity>;
+  /**
+   * The queue a pawn left, kept only while it is in transit to the track.
+   * That queue closes up behind the pawn when it lands, not when it is
+   * clicked, and by then the pawn is no longer a member — so its origin can't
+   * be recovered from `queueMembership` any more.
+   */
+  spawnOrigins: Map<Entity, Entity>;
   lastFiredLanes: Map<Entity, number>;
   ammo: Map<Entity, AmmoData>;
   positionTweens: Map<Entity, PositionTweenData>;
@@ -69,6 +76,7 @@ export function createWorld(): World {
     renderables: new Map(),
     queues: new Map(),
     queueMembership: new Map(),
+    spawnOrigins: new Map(),
     lastFiredLanes: new Map(),
     ammo: new Map(),
     positionTweens: new Map(),

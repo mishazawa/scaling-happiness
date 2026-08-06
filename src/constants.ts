@@ -120,6 +120,21 @@ export const QUEUE_POSITION: [number, number, number] = [
 
 export const SPAWN_TRANSIT_DURATION = 0.1;
 export const SPAWN_COOLDOWN = 0.25;
+// How long the queue takes to close up behind a released pawn — every pawn in
+// it slides a slot forward over this long, rather than snapping.
+//
+// The slide doesn't begin the moment the pawn is clicked: it waits until that
+// pawn has finished its SPAWN_TRANSIT_DURATION hop onto the track, so the queue
+// only makes room once the room is actually free. The whole wait from click to
+// settled queue is therefore SPAWN_TRANSIT_DURATION + this.
+//
+// Free to tune on its own — deliberately a plain value rather than derived from
+// the two constants around it, which have their own jobs (click pacing, hop
+// length). At 0.15 the queue happens to settle just as SPAWN_COOLDOWN lifts and
+// the next click becomes legal, which is a nice place to be but not a
+// constraint. A zero (or negative) duration would complete on the tween's first
+// tick, i.e. teleport, which is the behaviour this exists to replace.
+export const QUEUE_ADVANCE_DURATION = 0.15;
 export const TRACK_START_T = 0.02;
 export const TRACK_END_T = 1 - TRACK_START_T;
 

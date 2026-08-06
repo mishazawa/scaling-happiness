@@ -5,12 +5,17 @@ import { createEntity } from "../core/Entity";
 import { Path } from "../core/Path";
 import { pushEvent, readEvents } from "../core/Event";
 import { hasTag } from "../core/Tag";
-import { spawnQueue, addPawnToQueue } from "../setup/queue";
+import { spawnQueue, addPawnToQueue, spawnQueuedPawn } from "../setup/queue";
 import { spawnPawn } from "../setup/pawn";
 import { spawnSystem } from "./spawn";
 import { timerSystem } from "./timer";
 import type { SystemContext } from "./context";
-import { SPAWN_TRANSIT_DURATION } from "../constants";
+import {
+  QUEUE_ADVANCE_DURATION,
+  QUEUE_DIRECTION,
+  QUEUE_SPACING,
+  SPAWN_TRANSIT_DURATION,
+} from "../constants";
 
 function setupPath(
   world: ReturnType<typeof createWorld>,
@@ -46,7 +51,8 @@ describe("spawnSystem", () => {
     expect(world.positionTweens.has(pawn)).toBe(true);
     expect(world.pathFollowers.has(pawn)).toBe(false);
     expect(readEvents(world, "pawn-spawned")).toEqual([]);
-    expect(world.queues.get(queueId)?.length).toBe(1); // replenished
+    expect(world.queues.get(queueId)?.length).toBe(0); // not replenished yet
+    expect(world.spawnOrigins.get(pawn)).toBe(queueId);
     expect(world.countdowns.has(queueId)).toBe(true);
   });
 
@@ -76,6 +82,53 @@ describe("spawnSystem", () => {
     expect(readEvents(world, "pawn-spawned")).toEqual([
       { type: "pawn-spawned", entity: pawn },
     ]);
+  });
+
+  it("holds the queue still until the released pawn lands, then slides it up a slot", () => {
+    const world = createWorld();
+    const scene = new Scene();
+    const pathEntity = setupPath(world);
+    const ctx: SystemContext = { scene, pathEntity };
+
+    const base = new Vector3(0, 0, 0);
+    const queueId = spawnQueue(world, scene, base);
+    for (let i = 0; i < 3; i++) spawnQueuedPawn(world, queueId);
+    const [, second, third] = [...world.queues.get(queueId)!];
+    const secondStart = world.positions.get(second)!.clone();
+
+    pushEvent(world, { type: "queue-clicked", queue: queueId });
+    spawnSystem(world, ctx);
+
+    // Mid-transit: the queue has neither closed up nor been replenished.
+    expect(world.queues.get(queueId)).toEqual([second, third]);
+    expect(world.positions.get(second)).toEqual(secondStart);
+    expect(world.positionTweens.has(second)).toBe(false);
+
+    world.events = [];
+    timerSystem(world, SPAWN_TRANSIT_DURATION);
+    spawnSystem(world, ctx);
+
+    // Landed: back to three, and everyone is sliding rather than teleporting.
+    const members = world.queues.get(queueId)!;
+    expect(members).toHaveLength(3);
+    expect(members.slice(0, 2)).toEqual([second, third]);
+    expect(world.positions.get(second)).toEqual(secondStart);
+    for (const member of members) {
+      expect(world.positionTweens.get(member)!.duration).toBe(
+        QUEUE_ADVANCE_DURATION,
+      );
+    }
+
+    timerSystem(world, QUEUE_ADVANCE_DURATION);
+
+    // Settled exactly on the slot layout, with no tweens left over.
+    const direction = new Vector3(...QUEUE_DIRECTION);
+    members.forEach((member, index) => {
+      const slot = base.clone().addScaledVector(direction, QUEUE_SPACING * index);
+      expect(world.positions.get(member)).toEqual(slot);
+      expect(world.positionTweens.has(member)).toBe(false);
+    });
+    expect(world.spawnOrigins.size).toBe(0);
   });
 
   it("ignores a second click on the same queue during its cooldown", () => {

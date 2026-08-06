@@ -40,6 +40,7 @@ function destroyEntity(world: World, ctx: SystemContext, entity: Entity): void {
   world.scaleTweens.delete(entity);
   world.rotationTweens.delete(entity);
   world.projectileTargets.delete(entity);
+  world.spawnOrigins.delete(entity);
 
   const queueId = getQueueId(world, entity);
   if (queueId !== undefined) {

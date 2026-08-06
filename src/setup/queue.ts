@@ -8,6 +8,7 @@ import {
 import {
   NUMBER_OF_QUEUES,
   PAWN_RADIUS,
+  QUEUE_ADVANCE_DURATION,
   QUEUE_COLUMN_SPACING,
   QUEUE_DIRECTION,
   QUEUE_INITIAL_SIZE,
@@ -20,6 +21,7 @@ import { createEntity, type Entity } from "../core/Entity";
 import { Position } from "../core/Position";
 import { addTag, removeTag } from "../core/Tag";
 import { dequeue, enqueue, type QueueId } from "../core/Queue";
+import { PositionTween } from "../core/Tween";
 import type { World } from "../core/World";
 import { addRenderable } from "../render/renderable";
 import { randomPawnKind, spawnPawn } from "./pawn";
@@ -69,6 +71,23 @@ export function spawnQueue(
   return entity;
 }
 
+/** Where the `index`th pawn of a queue based at `base` stands. */
+function slotPosition(base: Vector3, index: number, out = new Vector3()) {
+  return out.copy(base).addScaledVector(DIRECTION, QUEUE_SPACING * index);
+}
+
+/**
+ * The one place a pawn becomes a queue member. Positioning is deliberately not
+ * part of it — a pawn joins either by being placed (`addPawnToQueue`, at
+ * construction) or by sliding in (`advanceQueue`), and keeping the membership
+ * bookkeeping in one function is what stops the two paths drifting apart.
+ */
+function joinQueue(world: World, queueId: QueueId, pawn: Entity): void {
+  enqueue(world, queueId, pawn);
+  addTag(world, pawn, "queued");
+}
+
+/** Snaps every member onto its slot. For building a queue, not for moving one. */
 function layoutQueue(world: World, queueId: QueueId): void {
   const members = world.queues.get(queueId);
   const base = world.positions.get(queueId);
@@ -78,7 +97,28 @@ function layoutQueue(world: World, queueId: QueueId): void {
     const pos = world.positions.get(member);
     if (!pos) return;
 
-    pos.copy(base).addScaledVector(DIRECTION, QUEUE_SPACING * index);
+    slotPosition(base, index, pos);
+  });
+}
+
+/**
+ * Sends every member toward its slot over `QUEUE_ADVANCE_DURATION`, from
+ * wherever it currently stands. A pawn already mid-slide just gets a new tween
+ * from its current position, so a second advance never snaps it back.
+ */
+function tweenQueueIntoLayout(world: World, queueId: QueueId): void {
+  const members = world.queues.get(queueId);
+  const base = world.positions.get(queueId);
+  if (!members || !base) return;
+
+  members.forEach((member, index) => {
+    const pos = world.positions.get(member);
+    if (!pos) return;
+
+    world.positionTweens.set(
+      member,
+      PositionTween(pos, slotPosition(base, index), QUEUE_ADVANCE_DURATION),
+    );
   });
 }
 
@@ -87,11 +127,15 @@ export function addPawnToQueue(
   queueId: QueueId,
   pawn: Entity,
 ): void {
-  enqueue(world, queueId, pawn);
-  addTag(world, pawn, "queued");
+  joinQueue(world, queueId, pawn);
   layoutQueue(world, queueId);
 }
 
+/**
+ * Takes the front pawn out of the queue and leaves the rest exactly where they
+ * stand. Closing the gap is `advanceQueue`'s job, and it only happens once the
+ * released pawn has reached the track — see `spawnSystem`.
+ */
 export function releasePawnFromQueue(
   world: World,
   queueId: QueueId,
@@ -100,11 +144,35 @@ export function releasePawnFromQueue(
   if (pawn === undefined) return undefined;
 
   removeTag(world, pawn, "queued");
-  layoutQueue(world, queueId);
 
   return pawn;
 }
 
+/**
+ * Closes the gap left by a released pawn: a fresh pawn joins the back and the
+ * whole queue slides one slot forward together.
+ *
+ * The new pawn is spawned one slot *behind* the place it will end up so that it
+ * slides in with everybody else rather than popping into existence at the tail.
+ * Both are off screen (`QUEUE_VISIBLE_SLOTS` is smaller than a queue), which is
+ * exactly why it can afford to be created there.
+ */
+export function advanceQueue(world: World, queueId: QueueId): Entity {
+  const base = world.positions.get(queueId) ?? new Vector3();
+  const members = world.queues.get(queueId) ?? [];
+
+  const pawn = spawnPawn(world, {
+    ...randomPawnKind(),
+    position: slotPosition(base, members.length + 1),
+  });
+  joinQueue(world, queueId, pawn);
+
+  tweenQueueIntoLayout(world, queueId);
+
+  return pawn;
+}
+
+/** Places a pawn straight onto the back of a queue. Used to build one. */
 export function spawnQueuedPawn(world: World, queueId: QueueId): Entity {
   const position = world.positions.get(queueId) ?? new Vector3();
 
