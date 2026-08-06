@@ -69,6 +69,36 @@ export function roundCorners(
   return rounded;
 }
 
+/**
+ * Walks `segLengths` to find which segment fraction `t` lands on, and how far
+ * along it. Purely scalar — the caller looks up the points and interpolates,
+ * which is what lets the open and closed walks share this despite differing in
+ * wrap semantics and in whether they may return a shared vector.
+ */
+export function locateSegment(
+  segLengths: number[],
+  total: number,
+  t: number,
+): { index: number; alpha: number } {
+  let distance = Math.min(Math.max(t, 0), 1) * total;
+
+  for (let i = 0; i < segLengths.length; i++) {
+    const segLength = segLengths[i];
+    const isLastSegment = i === segLengths.length - 1;
+
+    if (distance <= segLength || isLastSegment) {
+      return {
+        index: i,
+        alpha: segLength > 0 ? Math.min(distance / segLength, 1) : 0,
+      };
+    }
+
+    distance -= segLength;
+  }
+
+  return { index: 0, alpha: 0 };
+}
+
 const _tempVec = new Vector3();
 
 /**
@@ -82,22 +112,9 @@ export function samplePath(path: PathData, t: number): Vector3 {
 
   if (points.length === 0) return _tempVec.set(0, 0, 0);
   if (points.length === 1) return _tempVec.copy(points[0]);
+  if (segLengths.length === 0) return _tempVec.copy(points[points.length - 1]);
 
-  let distance = Math.min(Math.max(t, 0), 1) * total;
+  const { index, alpha } = locateSegment(segLengths, total, t);
 
-  for (let i = 0; i < segLengths.length; i++) {
-    const segLength = segLengths[i];
-    const isLastSegment = i === segLengths.length - 1;
-
-    if (distance <= segLength || isLastSegment) {
-      const start = points[i];
-      const end = points[i + 1];
-      const alpha = segLength > 0 ? Math.min(distance / segLength, 1) : 0;
-      return _tempVec.copy(start).lerp(end, alpha);
-    }
-
-    distance -= segLength;
-  }
-
-  return _tempVec.copy(points[points.length - 1]);
+  return _tempVec.copy(points[index]).lerp(points[index + 1], alpha);
 }

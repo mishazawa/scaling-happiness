@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 import { Path, type PathData } from "../core/Path";
 import type { Grid } from "../core/Grid";
-import { roundCorners } from "../utils/path";
+import { locateSegment, roundCorners } from "../utils/path";
 import {
   TRACK_CORNER_RADIUS,
   TRACK_CORNER_SEGMENTS,
@@ -24,23 +24,13 @@ function locateOnClosedPerimeter(
   total: number,
   t: number,
 ): { point: Vector3; segmentIndex: number } {
-  let distance = Math.min(Math.max(t, 0), 1) * total;
+  const { index, alpha } = locateSegment(segLengths, total, t);
 
-  for (let i = 0; i < segLengths.length; i++) {
-    const segLength = segLengths[i];
-    const isLastSegment = i === segLengths.length - 1;
+  // Wraps: on a closed perimeter the last segment runs back to points[0].
+  const start = points[index];
+  const end = points[(index + 1) % points.length];
 
-    if (distance <= segLength || isLastSegment) {
-      const start = points[i];
-      const end = points[(i + 1) % points.length];
-      const alpha = segLength > 0 ? Math.min(distance / segLength, 1) : 0;
-      return { point: start.clone().lerp(end, alpha), segmentIndex: i };
-    }
-
-    distance -= segLength;
-  }
-
-  return { point: points[0].clone(), segmentIndex: 0 };
+  return { point: start.clone().lerp(end, alpha), segmentIndex: index };
 }
 
 function closedPerimeterMetrics(points: Vector3[]): {
