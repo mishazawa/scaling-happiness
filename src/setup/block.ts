@@ -3,7 +3,6 @@ import {
   BLOCK_COLOR_SLOT,
   BLOCK_SEGMENTS,
   BLOCK_MODEL_RADIUS,
-  PALETTE_FOR_COLOR,
 } from "../constants";
 import { createEntity, type Entity } from "../core/Entity";
 import { Model } from "../core/Model";
@@ -12,7 +11,8 @@ import { addTag } from "../core/Tag";
 import type { World } from "../core/World";
 import { tagColorSlot } from "../utils/geometry";
 import { toFlat } from "../utils/gridMath";
-import type { BlockColor } from "../core/Block";
+import type { Flag } from "../core/Flag";
+import type { PaletteName } from "../core/Model";
 
 /**
  * The source geometry for every block: a bubble.
@@ -31,30 +31,34 @@ export function makeBubbleMesh(): Mesh {
   );
 }
 
+export type SpawnBlockConfig = {
+  /** What pawns must match to shoot this block. */
+  flag: Flag;
+  /** How the block is drawn. Chosen by the caller, never derived from `flag`. */
+  palette: PaletteName;
+  row: number;
+  column: number;
+  totalColumns: number;
+  position: Vector3;
+};
+
 /**
  * Blocks are drawn as instances, so — like pawns — there is no `Object3D` and
- * nothing to add to the scene. `world.colors` stays as the gameplay truth:
- * `shootingSystem` matches pawn to block by `BlockColor` string equality, and
- * the palette is only how the block is drawn.
+ * nothing to add to the scene. The two identities are independent components:
+ * `world.flags` is what `shootingSystem` compares, `world.models` is only how
+ * the block looks.
  */
 export function spawnBlock(
   world: World,
-  color: BlockColor,
-  row: number,
-  column: number,
-  totalColumns: number,
-  position: Vector3,
+  { flag, palette, row, column, totalColumns, position }: SpawnBlockConfig,
 ): Entity {
-  const palette = PALETTE_FOR_COLOR[color];
-  if (!palette) throw new Error(`no palette mapped for block colour: ${color}`);
-
   const entity = createEntity();
 
   world.positions.set(entity, Position(position.x, position.y, position.z));
   addTag(world, entity, "block");
 
   world.blocks.set(entity, { row, column });
-  world.colors.set(entity, color);
+  world.flags.set(entity, flag);
   world.gridToEntity.set(toFlat(row, column, totalColumns), entity);
   world.models.set(entity, Model("block", palette));
 

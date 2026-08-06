@@ -28,7 +28,7 @@ function destroyEntity(world: World, ctx: SystemContext, entity: Entity): void {
 
   world.positions.delete(entity);
   world.blocks.delete(entity);
-  world.colors.delete(entity);
+  world.flags.delete(entity);
   world.countdowns.delete(entity);
   world.paths.delete(entity);
   world.pathFollowers.delete(entity);

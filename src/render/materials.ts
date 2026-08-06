@@ -1,20 +1,22 @@
 import { MeshStandardMaterial, Vector2 } from "three";
-import type { BlockColor } from "../core/Block";
 import { makePaletteDataTexture } from "../utils/paletteTexture";
 import { SHADER_BREATH_AMP, SHADER_BREATH_FREQ } from "../constants";
+
+/** Anything `MeshStandardMaterial` accepts as a colour, e.g. `"#FFF"`. */
+type ColorSpec = string;
 
 /**
  * Shared material cache, keyed by colour.
  *
- * Intentionally never cleared: the game's whole palette is the two checkerboard
- * colours, so this reaches two entries during the first game and never grows —
- * restarts reuse the same materials rather than accumulating new ones. Disposal
- * would also be unsafe here, since a restart tears the scene down while these
- * materials are still referenced by the objects being removed.
+ * Intentionally never cleared: only the non-instanced scene dressing draws with
+ * these, so the cache reaches a handful of entries during the first game and
+ * never grows — restarts reuse the same materials rather than accumulating new
+ * ones. Disposal would also be unsafe here, since a restart tears the scene down
+ * while these materials are still referenced by the objects being removed.
  */
-const materialsByColor = new Map<BlockColor, MeshStandardMaterial>();
+const materialsByColor = new Map<ColorSpec, MeshStandardMaterial>();
 
-export function standardMaterial(color: BlockColor): MeshStandardMaterial {
+export function standardMaterial(color: ColorSpec): MeshStandardMaterial {
   let material = materialsByColor.get(color);
   if (!material) {
     material = new MeshStandardMaterial({ color });

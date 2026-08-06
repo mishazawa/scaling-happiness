@@ -57,8 +57,16 @@ describe("renderSystem", () => {
 
   it("packs instances into consecutive slots from zero", () => {
     const world = createWorld();
-    spawnPawn(world, { color: "#FFF", position: new Vector3(1, 0, 0) });
-    spawnPawn(world, { color: "#000", position: new Vector3(2, 0, 0) });
+    spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(1, 0, 0),
+    });
+    spawnPawn(world, {
+      flag: "dark",
+      palette: "tide",
+      position: new Vector3(2, 0, 0),
+    });
 
     renderSystem(world, 0);
 
@@ -70,8 +78,16 @@ describe("renderSystem", () => {
 
   it("writes the palette row per instance", () => {
     const world = createWorld();
-    spawnPawn(world, { color: "#FFF", position: new Vector3() });
-    spawnPawn(world, { color: "#000", position: new Vector3() });
+    spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(),
+    });
+    spawnPawn(world, {
+      flag: "dark",
+      palette: "tide",
+      position: new Vector3(),
+    });
 
     renderSystem(world, 0);
 
@@ -82,8 +98,16 @@ describe("renderSystem", () => {
 
   it("derives the animation phase from the entity id, deterministically", () => {
     const world = createWorld();
-    const a = spawnPawn(world, { color: "#FFF", position: new Vector3() });
-    const b = spawnPawn(world, { color: "#FFF", position: new Vector3() });
+    const a = spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(),
+    });
+    const b = spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(),
+    });
 
     renderSystem(world, 0);
 
@@ -98,8 +122,16 @@ describe("renderSystem", () => {
     // spawn would follow the wrong entity as soon as anything ahead of it dies.
     const world = createWorld();
     const ctx = { scene: new Scene(), pathEntity: createEntity() };
-    const first = spawnPawn(world, { color: "#FFF", position: new Vector3() });
-    const second = spawnPawn(world, { color: "#FFF", position: new Vector3() });
+    const first = spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(),
+    });
+    const second = spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(),
+    });
 
     renderSystem(world, 0);
     markDestroyed(world, first);
@@ -113,7 +145,11 @@ describe("renderSystem", () => {
 
   it("drops the draw count to zero when the last instance dies", () => {
     const world = createWorld();
-    spawnPawn(world, { color: "#FFF", position: new Vector3() });
+    spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(),
+    });
     renderSystem(world, 0);
     expect(getModel("pawn").mesh.count).toBe(1);
 
@@ -125,7 +161,11 @@ describe("renderSystem", () => {
   it("throws loudly rather than silently dropping instances past capacity", () => {
     const world = createWorld();
     for (let i = 0; i <= CAPACITY; i++) {
-      spawnPawn(world, { color: "#FFF", position: new Vector3() });
+      spawnPawn(world, {
+        flag: "light",
+        palette: "koi",
+        position: new Vector3(),
+      });
     }
 
     expect(() => renderSystem(world, 0)).toThrow(/capacity/);
@@ -150,9 +190,27 @@ describe("renderSystem", () => {
     // Pawns and blocks share the repack loop but not their buffers; a single
     // running counter would interleave them into each other's meshes.
     const world = createWorld();
-    spawnPawn(world, { color: "#FFF", position: new Vector3(1, 0, 0) });
-    spawnBlock(world, "#FFF", 0, 0, 2, new Vector3(7, 0, 0));
-    spawnBlock(world, "#000", 0, 1, 2, new Vector3(8, 0, 0));
+    spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: new Vector3(1, 0, 0),
+    });
+    spawnBlock(world, {
+      flag: "light",
+      palette: "koi",
+      row: 0,
+      column: 0,
+      totalColumns: 2,
+      position: new Vector3(7, 0, 0),
+    });
+    spawnBlock(world, {
+      flag: "dark",
+      palette: "tide",
+      row: 0,
+      column: 1,
+      totalColumns: 2,
+      position: new Vector3(8, 0, 0),
+    });
 
     renderSystem(world, 0);
 

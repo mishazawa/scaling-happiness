@@ -27,9 +27,13 @@ describe("paletteMaterial", () => {
   it("binds the palette texture and its dimensions as uniforms", () => {
     const shader = compileHook(paletteMaterial());
 
-    expect(shader.uniforms.uPalette.value).toBe(uniforms.uPalette.value);
-    expect(shader.uniforms.uPaletteSize.value.x).toBe(4);
-    expect(shader.uniforms.uPaletteSize.value.y).toBe(2);
+    const texture = uniforms.uPalette.value;
+
+    expect(shader.uniforms.uPalette.value).toBe(texture);
+    // The size uniform has to track the texture that was actually built, or the
+    // shader samples the wrong texel for every instance.
+    expect(shader.uniforms.uPaletteSize.value.x).toBe(texture.image.width);
+    expect(shader.uniforms.uPaletteSize.value.y).toBe(texture.image.height);
   });
 
   it("shares the uniform objects by reference across every compiled program", () => {

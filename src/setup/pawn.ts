@@ -1,26 +1,40 @@
 import type { Vector3 } from "three";
 import {
-  BLOCK_COLOR_DARK,
-  BLOCK_COLOR_LIGHT,
-  PALETTE_FOR_COLOR,
+  DARK_PALETTE_SLOT,
+  FLAG_DARK,
+  FLAG_LIGHT,
+  LIGHT_PALETTE_SLOT,
   PAWN_AMMO,
 } from "../constants";
 import { createEntity, type Entity } from "../core/Entity";
-import { Model } from "../core/Model";
+import { Model, type PaletteName } from "../core/Model";
 import { Position } from "../core/Position";
 import { addTag } from "../core/Tag";
 import type { World } from "../core/World";
-import type { BlockColor } from "../core/Block";
+import type { Flag } from "../core/Flag";
 
 export type SpawnPawnConfig = {
-  color: BlockColor;
+  /** Which blocks this pawn is allowed to shoot. */
+  flag: Flag;
+  /** How the pawn is drawn. Chosen by the caller, never derived from `flag`. */
+  palette: PaletteName;
   position: Vector3;
 };
 
-const PAWN_COLORS: BlockColor[] = [BLOCK_COLOR_LIGHT, BLOCK_COLOR_DARK];
+export type PawnKind = { flag: Flag; palette: PaletteName };
 
-export function randomPawnColor(): BlockColor {
-  return PAWN_COLORS[Math.floor(Math.random() * PAWN_COLORS.length)];
+/**
+ * The pawns the game deals out. Each entry states its palette outright — the
+ * pairing is an authoring choice made here, not a lookup, so a flag's look can
+ * be changed without touching anything that matches on it.
+ */
+const PAWN_KINDS: PawnKind[] = [
+  { flag: FLAG_LIGHT, palette: LIGHT_PALETTE_SLOT },
+  { flag: FLAG_DARK, palette: DARK_PALETTE_SLOT },
+];
+
+export function randomPawnKind(): PawnKind {
+  return PAWN_KINDS[Math.floor(Math.random() * PAWN_KINDS.length)];
 }
 
 /**
@@ -29,8 +43,8 @@ export function randomPawnColor(): BlockColor {
  * to register as a renderable. The `models` component is the whole visual state;
  * `renderSystem` packs it into the shared `InstancedMesh` each frame.
  *
- * `world.colors` stays because `shootingSystem` still matches pawns to blocks by
- * `BlockColor`, and blocks haven't migrated to the palette yet.
+ * `world.flags` is the gameplay half of that split: `shootingSystem` compares a
+ * pawn's flag with a block's, and never looks at either one's palette.
  *
  * The position is copied, never aliased: `spawnQueuedPawn` passes a queue's live
  * position straight through, and storing it by reference would make every pawn
@@ -38,19 +52,14 @@ export function randomPawnColor(): BlockColor {
  */
 export function spawnPawn(
   world: World,
-  { color, position }: SpawnPawnConfig,
+  { flag, palette, position }: SpawnPawnConfig,
 ): Entity {
-  // An unmapped colour would otherwise reach the render system as an undefined
-  // palette row and write NaN into the instance buffer — no error, just row 0.
-  const palette = PALETTE_FOR_COLOR[color];
-  if (!palette) throw new Error(`no palette mapped for pawn colour: ${color}`);
-
   const entity = createEntity();
 
   world.positions.set(entity, Position(position.x, position.y, position.z));
   addTag(world, entity, "pawn");
 
-  world.colors.set(entity, color);
+  world.flags.set(entity, flag);
   world.ammo.set(entity, PAWN_AMMO);
   world.models.set(entity, Model("pawn", palette));
 

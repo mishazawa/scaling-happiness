@@ -19,8 +19,12 @@ describe("makePaletteDataTexture", () => {
     const texture = makePaletteDataTexture();
     const { width, height, data } = texture.image;
 
-    expect(width).toBe(4);
-    expect(height).toBe(2);
+    // Derived, not hardcoded: adding a palette (or a longer one) should grow the
+    // texture, not fail here.
+    expect(width).toBe(
+      Math.max(...Object.values(PALETTES).map((colors) => colors.length)),
+    );
+    expect(height).toBe(Math.max(...Object.values(PALETTES_IDX)) + 1);
 
     for (const [name, row] of Object.entries(PALETTES_IDX)) {
       const colors = PALETTES[name as keyof typeof PALETTES];

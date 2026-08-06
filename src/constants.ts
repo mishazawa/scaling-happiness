@@ -1,14 +1,18 @@
+import type { PaletteName } from "./core/Model";
+
 export const LIGHT_MAIN_POSITION: [number, number, number] = [20, 40, 20];
 export const BLOCK_SIZE = 0.4;
 export const GRID_COLUMNS = 26;
 export const GRID_ROWS = GRID_COLUMNS;
 export const GROUND_COLOR = "#B8B89F";
 
-// The game's whole palette. Blocks alternate between these two, pawns are drawn
-// from the same pair, and colour matching is a string compare against them.
-export const BLOCK_COLOR_LIGHT = "#FFF";
-export const BLOCK_COLOR_DARK = "#000";
-export const PROJECTILE_COLOR = BLOCK_COLOR_LIGHT;
+// The game's whole matching vocabulary. Blocks alternate between these two flags
+// and pawns are drawn from the same pair; `shootingSystem` compares them as
+// strings. They say nothing about how an entity looks — see `core/Flag.ts`.
+export const FLAG_LIGHT = "light";
+export const FLAG_DARK = "dark";
+
+export const PROJECTILE_COLOR = "#FFF";
 
 const GRID_WORLD_SIZE = GRID_COLUMNS * BLOCK_SIZE;
 const GRID_HALF_SIZE = GRID_WORLD_SIZE / 2;
@@ -122,19 +126,38 @@ export const TRACK_CORNER_SEGMENTS = 8;
 export const PROJECTILE_DURATION = 0.05;
 export const PROJECTILE_RADIUS = 0.1;
 
-export const PALETTES = {
-  koi: [0xfa6781, 0xff3b77, 0x0a1a2e, 0xffffff], // gold koi + complementary blue
-  tide: [0xfa6781, 0x52656b, 0x0a1a2e, 0xffffff], // ocean blue + complementary coral
-  mermaid: [0xa41dad, 0xfdcb2a, 0xeb11fa, 0x21c7a3, 0x03ad88], // ocean blue + complementary coral
-  poster: [0x592abf, 0x0d8aa6, 0xf2be5c, 0xbf9663, 0xf23535],
+const ACCENT_COLOR = 0xfa6781;
+const BLACK_COLOR = 0x0a1a2e;
+const WHITE_COLOR = 0xffffff;
+
+const MAIN_COLORS = {
+  koi: 0xff3b77,
+  tide: 0x52656b,
+  mermaid: 0xfdcb2a,
+  poster: 0x0d8aa6,
 };
 
-export const PALETTES_IDX = {
-  koi: 0,
-  tide: 1,
-  mermaid: 2,
-  poster: 3,
-};
+// assemble palette
+export const PALETTES = Object.entries(MAIN_COLORS).reduce(
+  (acc, e) => ({
+    ...acc,
+    ...{ [e[0]]: [ACCENT_COLOR, e[1], BLACK_COLOR, WHITE_COLOR] },
+  }),
+  {},
+);
+
+const LIGHT_IDX = 0;
+const DARK_IDX = 2;
+
+export const LIGHT_PALETTE_SLOT = Object.keys(PALETTES)[
+  LIGHT_IDX
+] as PaletteName;
+export const DARK_PALETTE_SLOT = Object.keys(PALETTES)[DARK_IDX] as PaletteName;
+
+export const PALETTES_IDX = Object.keys(PALETTES).reduce(
+  (acc, k, i) => ({ ...acc, ...{ [k]: i } }),
+  {},
+) as Record<PaletteName, number>;
 
 /**
  * Per-vertex colour-region tag exported from Blender. `prepareGeometry` aliases
@@ -160,18 +183,6 @@ export const BLOCK_SEGMENTS = 12;
  * so every vertex gets this slot.
  */
 export const BLOCK_COLOR_SLOT = 1;
-
-/**
- * Which palette row a pawn of a given `BlockColor` draws with.
- *
- * Gameplay still matches pawns to blocks by `BlockColor` string equality, so
- * this is a purely visual mapping — the fish's hue deliberately does *not* agree
- * with the block's until blocks migrate to the palette too.
- */
-export const PALETTE_FOR_COLOR: Record<string, keyof typeof PALETTES> = {
-  [BLOCK_COLOR_LIGHT]: "poster",
-  [BLOCK_COLOR_DARK]: "mermaid",
-};
 
 /**
  * Instanced draw capacity, fixed per model. Exceeding one is a bug in the game

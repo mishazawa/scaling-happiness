@@ -41,7 +41,8 @@ describe("garbageCollectionSystem", () => {
     const ctx: SystemContext = { scene, pathEntity: createEntity() };
 
     const pawn = spawnPawn(world, {
-      color: "#FFF",
+      flag: "light",
+      palette: "koi",
       position: new Vector3(),
     });
     expect(world.models.has(pawn)).toBe(true);
@@ -52,13 +53,14 @@ describe("garbageCollectionSystem", () => {
     expect(world.models.has(pawn)).toBe(false);
   });
 
-  it("deletes the entity from positions, colors, pathFollowers, ammo, and tags", () => {
+  it("deletes the entity from positions, flags, pathFollowers, ammo, and tags", () => {
     const world = createWorld();
     const scene = new Scene();
     const ctx: SystemContext = { scene, pathEntity: createEntity() };
 
     const pawn = spawnPawn(world, {
-      color: "#000",
+      flag: "dark",
+      palette: "tide",
       position: new Vector3(1, 2, 3),
     });
     const pathEntity = createEntity();
@@ -73,7 +75,7 @@ describe("garbageCollectionSystem", () => {
     garbageCollectionSystem(world, ctx);
 
     expect(world.positions.has(pawn)).toBe(false);
-    expect(world.colors.has(pawn)).toBe(false);
+    expect(world.flags.has(pawn)).toBe(false);
     expect(world.pathFollowers.has(pawn)).toBe(false);
     expect(world.ammo.has(pawn)).toBe(false);
     expect(world.positionTweens.has(pawn)).toBe(false);
@@ -101,7 +103,14 @@ describe("garbageCollectionSystem", () => {
     const scene = new Scene();
     const ctx: SystemContext = { scene, pathEntity: createEntity() };
 
-    const block = spawnBlock(world, "#FFF", 1, 2, 5, new Vector3());
+    const block = spawnBlock(world, {
+      flag: "light",
+      palette: "koi",
+      row: 1,
+      column: 2,
+      totalColumns: 5,
+      position: new Vector3(),
+    });
     expect(world.gridToEntity.size).toBe(1);
 
     addTag(world, block, "destroy");
@@ -118,7 +127,8 @@ describe("garbageCollectionSystem", () => {
 
     const queueId = spawnQueue(world, scene, new Vector3());
     const pawn = spawnPawn(world, {
-      color: "#FFF",
+      flag: "light",
+      palette: "koi",
       position: new Vector3(),
     });
     addPawnToQueue(world, queueId, pawn);

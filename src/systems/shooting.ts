@@ -61,8 +61,11 @@ export function shootingSystem(
         columns,
         rows,
       );
-      if (blockEntity !== undefined && !hasTag(world, blockEntity, "targeted")) {
-        if (checkColor(world, blockEntity, entity)) {
+      if (
+        blockEntity !== undefined &&
+        !hasTag(world, blockEntity, "targeted")
+      ) {
+        if (flagsMatch(world, blockEntity, entity)) {
           addTag(world, blockEntity, "targeted");
 
           const block = world.blocks.get(blockEntity)!;
@@ -124,8 +127,14 @@ function findNearestBlockInLane(
 
   return undefined;
 }
-function checkColor(world: World, blockEntity: Entity, shooterEntity: Entity) {
-  return world.colors.get(blockEntity) === world.colors.get(shooterEntity);
+/**
+ * A shot connects only when both entities carry the same flag. Palettes are
+ * deliberately not consulted: how a pawn or block is drawn is free to change
+ * without changing what it can hit.
+ */
+function flagsMatch(world: World, blockEntity: Entity, shooterEntity: Entity) {
+  const flag = world.flags.get(shooterEntity);
+  return flag !== undefined && world.flags.get(blockEntity) === flag;
 }
 
 // Returns true when the shooter just fired its last round.

@@ -19,8 +19,16 @@ describe("queue", () => {
     const base = new Vector3(0, 0, 0);
     const queueId = spawnQueue(world, scene, base);
 
-    const a = spawnPawn(world, { color: "#FFF", position: base });
-    const b = spawnPawn(world, { color: "#FFF", position: base });
+    const a = spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: base,
+    });
+    const b = spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: base,
+    });
 
     addPawnToQueue(world, queueId, a);
     addPawnToQueue(world, queueId, b);
@@ -47,8 +55,16 @@ describe("queue", () => {
     const base = new Vector3(0, 0, 0);
     const queueId = spawnQueue(world, scene, base);
 
-    const a = spawnPawn(world, { color: "#FFF", position: base });
-    const b = spawnPawn(world, { color: "#FFF", position: base });
+    const a = spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: base,
+    });
+    const b = spawnPawn(world, {
+      flag: "light",
+      palette: "koi",
+      position: base,
+    });
     addPawnToQueue(world, queueId, a);
     addPawnToQueue(world, queueId, b);
 

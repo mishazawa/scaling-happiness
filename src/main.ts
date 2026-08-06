@@ -4,8 +4,10 @@ import {
   BLOCK_CAPACITY,
   BLOCK_MODEL_RADIUS,
   BLOCK_SIZE,
+  DARK_PALETTE_SLOT,
   GRID_COLUMNS,
   GRID_ROWS,
+  LIGHT_PALETTE_SLOT,
   PAWN_CAPACITY,
   PAWN_MODEL_RADIUS,
   TRACK_PADDING,
@@ -37,17 +39,19 @@ import { getAssetById, loadAssets, type AssetId } from "./setup/assets";
 import { registerModel } from "./render/modelRegistry";
 
 import FISH_MESH from "./assets/fish.glb";
+import type { Grid } from "./core/Grid";
 
 export const MANIFEST: Record<AssetId, string> = {
   pawn: FISH_MESH,
 };
 
 async function main() {
-  const GRID_PARAMETERS = {
+  const GRID_PARAMETERS: Grid = {
     columns: GRID_COLUMNS,
     rows: GRID_ROWS,
     cellSize: BLOCK_SIZE,
     center: new Vector3(0, 0, 0),
+    palette: [LIGHT_PALETTE_SLOT, DARK_PALETTE_SLOT],
   };
 
   const container = document.querySelector<HTMLDivElement>("#app")!;

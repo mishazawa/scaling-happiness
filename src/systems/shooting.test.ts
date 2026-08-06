@@ -24,14 +24,37 @@ function makeCtx(): SystemContext {
   return { scene: new Scene(), pathEntity: createEntity() };
 }
 
+/**
+ * A block on the 3x3 test grid. Flag and palette are deliberately unrelated:
+ * every block here matches `makePawn`'s flag, and the palette is fixed so it
+ * cannot be what a passing test is keying off.
+ */
+function makeBlock(
+  world: ReturnType<typeof createWorld>,
+  row: number,
+  column: number,
+  position: Vector3,
+  flag = "light",
+) {
+  return spawnBlock(world, {
+    flag,
+    palette: "koi",
+    row,
+    column,
+    totalColumns: 3,
+    position,
+  });
+}
+
 function makePawn(
   world: ReturnType<typeof createWorld>,
   position: Vector3,
   ammo?: number,
+  flag = "light",
 ) {
   const pawn = createEntity();
   world.positions.set(pawn, Position(position.x, position.y, position.z));
-  world.colors.set(pawn, "#FFF");
+  world.flags.set(pawn, flag);
   const pathEntity = createEntity();
   world.pathFollowers.set(pawn, PathFollower(pathEntity, 1));
   if (ammo !== undefined) world.ammo.set(pawn, ammo);
@@ -43,9 +66,9 @@ describe("shootingSystem", () => {
     const world = createWorld();
     const grid = makeGrid();
     // column 1 (x = 0), rows 0..2 all occupied.
-    spawnBlock(world, "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
-    spawnBlock(world, "#FFF", 1, 1, 3, new Vector3(0, 0, 0));
-    spawnBlock(world, "#FFF", 2, 1, 3, new Vector3(0, 0, 1));
+    makeBlock(world, 0, 1, new Vector3(0, 0, -1));
+    makeBlock(world, 1, 1, new Vector3(0, 0, 0));
+    makeBlock(world, 2, 1, new Vector3(0, 0, 1));
 
     // Below the grid (smaller z), facing inward toward increasing row.
     makePawn(world, new Vector3(0, 0, -2));
@@ -61,7 +84,7 @@ describe("shootingSystem", () => {
   it("stores the target as a flat grid cell index, not the block entity", () => {
     const world = createWorld();
     const grid = makeGrid();
-    const block = spawnBlock(world, "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    const block = makeBlock(world, 0, 1, new Vector3(0, 0, -1));
 
     makePawn(world, new Vector3(0, 0, -2));
     shootingSystem(world, grid, makeCtx());
@@ -75,7 +98,7 @@ describe("shootingSystem", () => {
     const world = createWorld();
     const grid = makeGrid();
     // Only row 2 (farthest from the bottom edge) is occupied in column 1.
-    spawnBlock(world, "#FFF", 2, 1, 3, new Vector3(0, 0, 1));
+    makeBlock(world, 2, 1, new Vector3(0, 0, 1));
 
     makePawn(world, new Vector3(0, 0, -2));
 
@@ -88,8 +111,8 @@ describe("shootingSystem", () => {
   it("fires inward from the top edge, starting at the highest row index", () => {
     const world = createWorld();
     const grid = makeGrid();
-    spawnBlock(world, "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
-    spawnBlock(world, "#FFF", 2, 1, 3, new Vector3(0, 0, 1));
+    makeBlock(world, 0, 1, new Vector3(0, 0, -1));
+    makeBlock(world, 2, 1, new Vector3(0, 0, 1));
 
     makePawn(world, new Vector3(0, 0, 2));
 
@@ -102,8 +125,8 @@ describe("shootingSystem", () => {
   it("fires inward from the left/right edges along the row axis", () => {
     const world = createWorld();
     const grid = makeGrid();
-    spawnBlock(world, "#FFF", 1, 0, 3, new Vector3(-1, 0, 0));
-    spawnBlock(world, "#FFF", 1, 2, 3, new Vector3(1, 0, 0));
+    makeBlock(world, 1, 0, new Vector3(-1, 0, 0));
+    makeBlock(world, 1, 2, new Vector3(1, 0, 0));
 
     makePawn(world, new Vector3(-2, 0, 0));
 
@@ -116,7 +139,7 @@ describe("shootingSystem", () => {
   it("does not fire again while the pawn stays in the same lane", () => {
     const world = createWorld();
     const grid = makeGrid();
-    spawnBlock(world, "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    makeBlock(world, 0, 1, new Vector3(0, 0, -1));
 
     makePawn(world, new Vector3(0, 0, -2));
 
@@ -136,7 +159,7 @@ describe("shootingSystem", () => {
   it("skips a lane whose block is already targeted, without touching ammo", () => {
     const world = createWorld();
     const grid = makeGrid();
-    const block = spawnBlock(world, "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    const block = makeBlock(world, 0, 1, new Vector3(0, 0, -1));
     addTag(world, block, "targeted");
 
     const pawn = makePawn(world, new Vector3(0, 0, -2), 5);
@@ -151,8 +174,8 @@ describe("shootingSystem", () => {
   it("fires again once the pawn moves to a new lane", () => {
     const world = createWorld();
     const grid = makeGrid();
-    spawnBlock(world, "#FFF", 0, 0, 3, new Vector3(-1, 0, -1));
-    spawnBlock(world, "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    makeBlock(world, 0, 0, new Vector3(-1, 0, -1));
+    makeBlock(world, 0, 1, new Vector3(0, 0, -1));
 
     const pawn = makePawn(world, new Vector3(-1, 0, -2));
     shootingSystem(world, grid, makeCtx());
@@ -171,8 +194,8 @@ describe("shootingSystem", () => {
     const grid = makeGrid();
     // Bottom edge, column 2 (x = 1) and right edge, row 2 (z = 1) share the
     // numeric lane index 2 but are different lanes.
-    spawnBlock(world, "#FFF", 0, 2, 3, new Vector3(1, 0, -1));
-    spawnBlock(world, "#FFF", 2, 2, 3, new Vector3(1, 0, 1));
+    makeBlock(world, 0, 2, new Vector3(1, 0, -1));
+    makeBlock(world, 2, 2, new Vector3(1, 0, 1));
 
     const pawn = makePawn(world, new Vector3(1, 0, -2));
     shootingSystem(world, grid, makeCtx());
@@ -185,6 +208,57 @@ describe("shootingSystem", () => {
 
     const secondBlock = world.gridToEntity.get(toFlat(2, 2, 3))!;
     expect(hasTag(world, secondBlock, "targeted")).toBe(true);
+  });
+
+  it("holds fire when the block's flag differs from the pawn's", () => {
+    const world = createWorld();
+    const grid = makeGrid();
+    const target = makeBlock(world, 0, 1, new Vector3(0, 0, -1), "dark");
+
+    const pawn = makePawn(world, new Vector3(0, 0, -2), 5, "light");
+
+    shootingSystem(world, grid, makeCtx());
+
+    expect(hasTag(world, target, "targeted")).toBe(false);
+    expect(world.projectileTargets.size).toBe(0);
+    expect(world.ammo.get(pawn)).toBe(5);
+  });
+
+  it("matches on the flag alone, not on how either side is drawn", () => {
+    // The whole point of the flag: a block and a pawn that share it still
+    // trade fire even when their palettes have nothing to do with each other.
+    const world = createWorld();
+    const grid = makeGrid();
+    const target = spawnBlock(world, {
+      flag: "light",
+      palette: "mermaid",
+      row: 0,
+      column: 1,
+      totalColumns: 3,
+      position: new Vector3(0, 0, -1),
+    });
+
+    makePawn(world, new Vector3(0, 0, -2), 5, "light");
+
+    shootingSystem(world, grid, makeCtx());
+
+    expect(hasTag(world, target, "targeted")).toBe(true);
+  });
+
+  it("holds fire for a pawn carrying no flag at all", () => {
+    // Two entities that are both flagless must not read as a match.
+    const world = createWorld();
+    const grid = makeGrid();
+    const target = makeBlock(world, 0, 1, new Vector3(0, 0, -1));
+    world.flags.delete(target);
+
+    const pawn = makePawn(world, new Vector3(0, 0, -2), 5);
+    world.flags.delete(pawn);
+
+    shootingSystem(world, grid, makeCtx());
+
+    expect(hasTag(world, target, "targeted")).toBe(false);
+    expect(world.projectileTargets.size).toBe(0);
   });
 
   it("does nothing when the lane is empty", () => {
@@ -200,7 +274,7 @@ describe("shootingSystem", () => {
   it("ignores pawns whose path following is done", () => {
     const world = createWorld();
     const grid = makeGrid();
-    const block = spawnBlock(world, "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    const block = makeBlock(world, 0, 1, new Vector3(0, 0, -1));
 
     const pawn = makePawn(world, new Vector3(0, 0, -2));
     world.pathFollowers.get(pawn)!.done = true;
@@ -225,10 +299,10 @@ describe("shootingSystem", () => {
   it("destroys the pawn and emits a depleted pawn-resolved once ammo runs out on a hit", () => {
     const world = createWorld();
     const grid = makeGrid();
-    const block = spawnBlock(world, "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    const block = makeBlock(world, 0, 1, new Vector3(0, 0, -1));
 
     const pawn = makePawn(world, new Vector3(0, 0, -2), 1);
-    world.colors.set(pawn, "#FFF");
+    world.flags.set(pawn, "light");
 
     shootingSystem(world, grid, makeCtx());
 
@@ -244,10 +318,10 @@ describe("shootingSystem", () => {
   it("decrements ammo on a hit without destroying the pawn while rounds remain", () => {
     const world = createWorld();
     const grid = makeGrid();
-    const block = spawnBlock(world, "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    const block = makeBlock(world, 0, 1, new Vector3(0, 0, -1));
 
     const pawn = makePawn(world, new Vector3(0, 0, -2), 2);
-    world.colors.set(pawn, "#FFF");
+    world.flags.set(pawn, "light");
 
     shootingSystem(world, grid, makeCtx());
 
@@ -260,10 +334,10 @@ describe("shootingSystem", () => {
   it("leaves ammo untracked for pawns with no ammo component", () => {
     const world = createWorld();
     const grid = makeGrid();
-    const block = spawnBlock(world, "#FFF", 0, 1, 3, new Vector3(0, 0, -1));
+    const block = makeBlock(world, 0, 1, new Vector3(0, 0, -1));
 
     const pawn = makePawn(world, new Vector3(0, 0, -2));
-    world.colors.set(pawn, "#FFF");
+    world.flags.set(pawn, "light");
 
     shootingSystem(world, grid, makeCtx());
 

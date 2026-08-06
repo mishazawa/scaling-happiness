@@ -22,7 +22,7 @@ import { addTag, removeTag } from "../core/Tag";
 import { dequeue, enqueue, type QueueId } from "../core/Queue";
 import type { World } from "../core/World";
 import { addRenderable } from "../render/renderable";
-import { randomPawnColor, spawnPawn } from "./pawn";
+import { randomPawnKind, spawnPawn } from "./pawn";
 
 const DIRECTION = new Vector3(...QUEUE_DIRECTION);
 
@@ -108,10 +108,7 @@ export function releasePawnFromQueue(
 export function spawnQueuedPawn(world: World, queueId: QueueId): Entity {
   const position = world.positions.get(queueId) ?? new Vector3();
 
-  const pawn = spawnPawn(world, {
-    color: randomPawnColor(),
-    position,
-  });
+  const pawn = spawnPawn(world, { ...randomPawnKind(), position });
 
   addPawnToQueue(world, queueId, pawn);
 

@@ -1,6 +1,7 @@
 import type { Vector3, Object3D } from "three";
 import type { Entity } from "./Entity";
-import type { BlockColor, BlockData } from "./Block";
+import type { BlockData } from "./Block";
+import type { Flag } from "./Flag";
 import type { Tag } from "./Tag";
 import type { PathData, PathFollowerData } from "./Path";
 import type { Event } from "./Event";
@@ -13,7 +14,8 @@ import type { ModelData } from "./Model";
 export type World = {
   positions: Map<Entity, Vector3>;
   blocks: Map<Entity, BlockData>;
-  colors: Map<Entity, BlockColor>;
+  /** Gameplay identity: pawns hit blocks whose flag is the same string. */
+  flags: Map<Entity, Flag>;
   tags: Map<Entity, Set<Tag>>;
   tagIndex: Map<Tag, Set<Entity>>;
   gridToEntity: Map<number, Entity>;
@@ -46,7 +48,7 @@ export function createWorld(): World {
     status: "playing",
     positions: new Map(),
     blocks: new Map(),
-    colors: new Map(),
+    flags: new Map(),
     tags: new Map(),
     tagIndex: new Map(),
     gridToEntity: new Map(),

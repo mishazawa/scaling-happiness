@@ -7,9 +7,10 @@ import {
 } from "three";
 import { PALETTES, PALETTES_IDX } from "../constants";
 
-type PaletteName = keyof typeof PALETTES;
-type Palettes = Record<PaletteName, readonly number[]>;
-type PaletteIndex = Record<PaletteName, number>;
+// Keyed by plain string rather than by `PaletteName`: this is a pure packer, and
+// tests hand it small stand-in palette sets that are not the game's.
+type Palettes = Record<string, readonly number[]>;
+type PaletteIndex = Record<string, number>;
 
 /**
  * Packs the palettes into an RGBA lookup texture, one palette per row.
@@ -33,7 +34,7 @@ export function makePaletteDataTexture(
   palettes: Palettes = PALETTES,
   paletteIdx: PaletteIndex = PALETTES_IDX,
 ): DataTexture {
-  const names = Object.keys(palettes) as PaletteName[];
+  const names = Object.keys(palettes);
   const width = Math.max(...names.map((name) => palettes[name].length));
   const height = Math.max(...names.map((name) => paletteIdx[name])) + 1;
 
