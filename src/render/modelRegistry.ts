@@ -52,8 +52,8 @@ const models = new Map<ModelId, RegisteredModel>();
  */
 function flattenToGeometry(root: Object3D): BufferGeometry {
   root.updateWorldMatrix(true, true);
-
   const geometries: BufferGeometry[] = [];
+
   root.traverse((object) => {
     if (!(object instanceof Mesh)) return;
     // Cloned because instanced attributes live on the geometry — each instanced

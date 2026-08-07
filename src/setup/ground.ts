@@ -6,8 +6,9 @@ export function setupGround(scene: Scene) {
   const material = new MeshStandardMaterial({ color: GROUND_COLOR });
 
   const ground = new Mesh(geometry, material);
+
   ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -BLOCK_SIZE / 2;
+  ground.position.y = -BLOCK_SIZE / 2 - 1;
   ground.receiveShadow = true;
 
   scene.add(ground);
