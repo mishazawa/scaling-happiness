@@ -197,7 +197,7 @@ export const QUEUE_PAWN_SCALE = 1.5;
 export const QUEUE_PAWN_SCALE_TWEEN_DURATION = 0.15;
 
 export const TRACK_START_T = 0.02;
-export const TRACK_END_T = 1 - TRACK_START_T;
+export const TRACK_END_T = 1 - TRACK_START_T * 2; // crutch clipping at the end
 
 // Track corners are rounded (filleted) instead of snapping 90°. The radius is
 // in world units, measured from the sharp corner back along each adjoining
@@ -406,7 +406,7 @@ export const SHADER_BREATH_FREQ = 8.9;
  * `uTime`, i.e. it is a rate, not a distance. GAIN is how much brighter a band
  * gets: 0 is off, 1 doubles the direct light there.
  */
-export const SHADER_CAUSTIC_SCALE = 0.05;
+export const SHADER_CAUSTIC_SCALE = 0.02;
 export const SHADER_CAUSTIC_SPEED = 0.1;
 export const SHADER_CAUSTIC_GAIN = 1;
 
@@ -437,7 +437,7 @@ export const SHADER_CAUSTIC_ANISOTROPY = 8;
 export const PEARL_SCALE = 4;
 export const PEARL_POSITION: [number, number, number] = [
   -TRACK_HALF_SIZE - 0.75,
-  HEIGHT_OFFSET / 2,
+  HEIGHT_OFFSET,
   TRACK_HALF_SIZE - 0.5,
 ];
 
@@ -448,11 +448,10 @@ export const PEARL_POSITION: [number, number, number] = [
  * the same way — one duration, which is the animation's clock (the scale tween
  * carries it), plus speeds that can be tuned without changing how long it takes.
  */
-export const LIFE_PEARL_DURATION = 0.6;
-/** Spin about world +Y, rad/s, into a fixed sweep. Negated for a refund. */
-export const LIFE_PEARL_SPIN_SPEED = Math.PI * 2;
+export const LIFE_PEARL_DURATION = 0.5;
+
 /** Travel along world +Y, units/s. Over the duration, about a shell's height. */
-export const LIFE_PEARL_RISE_SPEED = 4;
+export const LIFE_PEARL_RISE_SPEED = 10;
 /**
  * Size of the flying pearl *relative to the bead standing in the shell*, not in
  * world units: it is drawn from that bead's own geometry, which already has

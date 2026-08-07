@@ -169,6 +169,7 @@ export function registerMesh(
   root: Object3D,
   materialFor: (name: string, mesh: Mesh) => Material | null,
 ): Object3D {
+  console.log(root);
   root.traverse((object) => {
     if (!(object instanceof Mesh)) return;
 

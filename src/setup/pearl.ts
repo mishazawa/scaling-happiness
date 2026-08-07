@@ -1,5 +1,6 @@
 import {
   Mesh,
+  SphereGeometry,
   Vector3,
   type BufferGeometry,
   type Material,
@@ -8,6 +9,8 @@ import {
 import { registerMesh } from "../render/modelRegistry";
 import { reflectiveMaterial } from "../render/materials";
 import {
+  HEIGHT_OFFSET,
+  LIFE_PEARL_SCALE,
   PEARL_COLOR,
   PEARL_METALNESS,
   PEARL_PEARL_PART,
@@ -111,7 +114,7 @@ export function pearlBeadSource(pearl: Object3D): LifePearlSource {
   if (!(bead instanceof Mesh))
     throw new Error(`pearl model is missing its "${PEARL_PEARL_PART}" mesh`);
 
-  const geometry: BufferGeometry = bead.geometry.clone();
+  const geometry: BufferGeometry = new SphereGeometry(LIFE_PEARL_SCALE);
   geometry.applyMatrix4(bead.matrixWorld);
 
   // Read before centring, since centring is what removes it.
@@ -119,6 +122,8 @@ export function pearlBeadSource(pearl: Object3D): LifePearlSource {
   const anchor = new Vector3();
   geometry.boundingBox?.getCenter(anchor);
   geometry.center();
+
+  anchor.add(new Vector3(-HEIGHT_OFFSET / 2, -HEIGHT_OFFSET, 0)); // crutch
 
   const material = Array.isArray(bead.material)
     ? bead.material[0]

@@ -4,10 +4,8 @@ import {
   LIFE_PEARL_END_SCALE,
   LIFE_PEARL_RISE_SPEED,
   LIFE_PEARL_SCALE,
-  LIFE_PEARL_SPIN_SPEED,
 } from "../constants";
 import type { Entity } from "../core/Entity";
-import { Rotation } from "../core/Rotation";
 import { PositionTween, ScalarTween } from "../core/Tween";
 import type { World } from "../core/World";
 import type { LifePearlSource } from "./pearl";
@@ -62,24 +60,15 @@ export function spawnLifePearl(
     { shadows: false },
   );
 
-  // Set alongside the tween, not left to it: the tween is not sampled until the
-  // next timerSystem pass, and a pearl drawn at DEFAULT_SCALE for that one frame
-  // would flash at twice its size.
-  const from = spent ? LIFE_PEARL_SCALE : LIFE_PEARL_END_SCALE;
-  const to = spent ? LIFE_PEARL_END_SCALE : LIFE_PEARL_SCALE;
+  const from = LIFE_PEARL_SCALE;
+  const to = LIFE_PEARL_END_SCALE;
+
   world.scales.set(entity, from);
   world.scaleTweens.set(entity, ScalarTween(from, to, LIFE_PEARL_DURATION));
 
   world.positionTweens.set(
     entity,
     PositionTween(start, end, LIFE_PEARL_DURATION),
-  );
-
-  const sweep = LIFE_PEARL_SPIN_SPEED * LIFE_PEARL_DURATION;
-  world.rotations.set(entity, Rotation(0));
-  world.rotationTweens.set(
-    entity,
-    ScalarTween(0, spent ? sweep : -sweep, LIFE_PEARL_DURATION),
   );
 
   return entity;

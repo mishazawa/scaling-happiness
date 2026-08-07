@@ -17,6 +17,7 @@ export function makeGrid(world: World, config: Grid) {
 
       spawnBlock(world, {
         flag: light ? FLAG_LIGHT : FLAG_DARK,
+        // flag: FLAG_LIGHT, // debug
         palette: light ? config.palette[0] : config.palette[1],
         row,
         column,
