@@ -133,16 +133,18 @@ export const QUEUE_DIRECTION: [number, number, number] = [0, 0, 1];
 // other's tails rather than the camera.
 export const QUEUE_PAWN_YAW = Math.PI;
 // Depth spacing between pawns within a single queue.
-export const QUEUE_SPACING = 2.5;
-export const QUEUE_VERTICAL_SPACING = 1;
+export const QUEUE_SPACING = 3.5;
+const QUEUE_HORIZONTAL_SPACING = 0.75;
 export const QUEUE_INITIAL_SIZE = 5;
 export const NUMBER_OF_QUEUES = 4;
 export const GRID_CLUSTER = 2;
 export const LIFES_COUNT = 5;
 
 // The 4 queues sit side by side, evenly spanning the same width as the grid.
-export const QUEUE_COLUMN_SPACING = GRID_WORLD_SIZE / NUMBER_OF_QUEUES;
-export const QUEUE_OFFSET = -GRID_HALF_SIZE + QUEUE_COLUMN_SPACING / 2;
+export const QUEUE_COLUMN_SPACING =
+  GRID_WORLD_SIZE / NUMBER_OF_QUEUES + QUEUE_HORIZONTAL_SPACING;
+export const QUEUE_OFFSET =
+  -GRID_HALF_SIZE + QUEUE_COLUMN_SPACING / 2 - QUEUE_HORIZONTAL_SPACING * 2;
 
 // A sphere of PAWN_RADIUS projects (orthographically) to a screen-space
 // circle of the same radius, in the same units as CAMERA_HALF_HEIGHT — unlike
@@ -188,7 +190,7 @@ export const QUEUE_ADVANCE_DURATION = 0.15;
 // Pawns read as slightly larger while waiting in a queue, and tween back
 // down to DEFAULT_SCALE the moment they hop onto the track (see
 // setup/queue.ts joinQueue and systems/spawn.ts). 1 disables the effect.
-export const QUEUE_PAWN_SCALE = 1.15;
+export const QUEUE_PAWN_SCALE = 1.5;
 // Duration for both the grow-on-join and shrink-on-arrival tweens above.
 // Kept independent of QUEUE_ADVANCE_DURATION/SPAWN_TRANSIT_DURATION since
 // it animates a different property (scale, not position).
