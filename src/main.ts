@@ -32,7 +32,8 @@ import { clearEventsSystem } from "./systems/clearEvents";
 import { gameStatusSystem } from "./systems/gameStatus";
 import type { SystemContext } from "./systems/context";
 import { makePathAroundTheGrid, makeTrack } from "./setup/track";
-import { makePearl } from "./setup/pearl";
+import { makePearl, pearlBeadSource } from "./setup/pearl";
+import { lifePearlSystem } from "./systems/lifePearl";
 import { DEBUG_pathVisualizer } from "./setup/debugPath";
 import { createQueues } from "./setup/queue";
 import { createCamera, updateCameraFrustum } from "./render/camera";
@@ -95,6 +96,13 @@ async function main() {
   // is a rendering resource shared by every entity of its model, not world
   // state. The render system repacks the slots from zero each frame, so a
   // restart clears them with no teardown.
+  // Scenery too, and for the same reasons as the track. It stands at the mouth
+  // of the track — the point every pawn is spawned onto — which is why the life
+  // count is played out there. Kept in hand, unlike the rest: the pearls that
+  // animate a life change are copies of its bead.
+  const pearl = makePearl(getAssetById("pearl"));
+  const lifePearlSource = pearlBeadSource(pearl);
+
   scene.add(
     registerModel(
       "pawn",
@@ -107,9 +115,7 @@ async function main() {
     // Not instanced: the track exists once, never moves, and its two halves
     // carry two different materials. See `makeTrack`.
     makeTrack(getAssetById("track"), getTextureById("arrow")),
-    // Scenery too, and for the same reasons. It stands at the mouth of the
-    // track — the point every pawn is spawned onto.
-    makePearl(getAssetById("pearl")),
+    pearl,
   );
 
   function handleResize() {
@@ -173,6 +179,9 @@ async function main() {
       deathSystem(world);
       spawnSystem(world, ctx);
       lifeSystem(world);
+      // Straight after the system whose change it shows, and before rendering,
+      // so a life spent is drawn leaving the shell on the frame it was spent.
+      lifePearlSystem(world, ctx, lifePearlSource);
       // After shooting (which sets the aim) and before rendering (which draws
       // the yaw), so a turn is never a frame behind what caused it.
       facingSystem(world, GRID_PARAMETERS, dt);

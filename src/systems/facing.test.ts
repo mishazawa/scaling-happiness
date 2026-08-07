@@ -7,6 +7,7 @@ import type { Grid } from "../core/Grid";
 import { Path, PathFollower } from "../core/Path";
 import { Rotation } from "../core/Rotation";
 import { addTag } from "../core/Tag";
+import { ScalarTween } from "../core/Tween";
 import { facingSystem, snapToPathDirection } from "./facing";
 
 const GRID: Grid = {
@@ -154,6 +155,22 @@ describe("facingSystem", () => {
 });
 
 describe("snapToPathDirection", () => {
+  /**
+   * The loop is over every rotation in the world, not just the pawns' — a life
+   * pearl has one too. A yaw being tweened is that tween's to write, and
+   * stepping it toward a heading here would cancel the spin out.
+   */
+  it("leaves a tweened yaw to its tween", () => {
+    const { world } = makeWorld();
+    const spinner = createEntity();
+    world.rotations.set(spinner, Rotation(0));
+    world.rotationTweens.set(spinner, ScalarTween(0, Math.PI, 1));
+
+    settle(world);
+
+    expect(world.rotations.get(spinner)!.yaw).toBe(0);
+  });
+
   it("aligns with the track with no turn in between", () => {
     const { world, pathEntity, pawn } = makeWorld();
     const rotation = world.rotations.get(pawn)!;

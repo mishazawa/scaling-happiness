@@ -1,4 +1,4 @@
-import { readEvents } from "../core/Event";
+import { pushEvent, readEvents } from "../core/Event";
 import type { World } from "../core/World";
 
 /** Sole writer of `world.lifes`. */
@@ -9,6 +9,7 @@ function applyLifeDelta(world: World, delta: number): void {
 /**
  * Owns `world.lifes`.
  * Reads: pawn-spawned (delta -1), pawn-resolved (delta +1 when depleted).
+ * Emits: life-changed.
  */
 export function lifeSystem(world: World): void {
   let delta = 0;
@@ -21,5 +22,15 @@ export function lifeSystem(world: World): void {
     if (event.depleted) delta += 1;
   }
 
-  if (delta !== 0) applyLifeDelta(world, delta);
+  if (delta === 0) return;
+
+  // The count clamps at zero, so what was asked for and what happened can
+  // differ — spending the last two lifes in one frame only costs one. The event
+  // reports the applied change, since that is what anything showing the count
+  // has to agree with.
+  const before = world.lifes;
+  applyLifeDelta(world, delta);
+  const applied = world.lifes - before;
+
+  if (applied !== 0) pushEvent(world, { type: "life-changed", delta: applied });
 }
