@@ -40,20 +40,25 @@ import { createCamera, updateCameraFrustum } from "./render/camera";
 import { createRenderer } from "./render/renderer";
 import {
   getAssetById,
+  getLUTById,
   getTextureById,
   loadAssets,
+  loadLUTs,
   loadTextures,
   type AssetId,
+  type LutId,
   type TextureId,
 } from "./setup/assets";
 import { registerModel } from "./render/modelRegistry";
 import { setCausticTexture } from "./render/materials";
+import { createPostFX } from "./render/postFX";
 
 import FISH_MESH from "./assets/fish.glb";
 import TRACK_MESH from "./assets/track.glb";
 import PEARL_MESH from "./assets/pearl.glb";
 import ARROW_TEXTURE from "./assets/water.png";
 import CAUSTICS_TEXTURE from "./assets/caustics.png";
+import TEAL_ORANGE_LUT from "./assets/my.cube";
 import type { Grid } from "./core/Grid";
 
 export const MANIFEST: Record<AssetId, string> = {
@@ -65,6 +70,10 @@ export const MANIFEST: Record<AssetId, string> = {
 export const TEXTURE_MANIFEST: Record<TextureId, string> = {
   arrow: ARROW_TEXTURE,
   caustics: CAUSTICS_TEXTURE,
+};
+
+export const LUT_MANIFEST: Record<LutId, string> = {
+  tealOrange: TEAL_ORANGE_LUT,
 };
 
 async function main() {
@@ -84,7 +93,11 @@ async function main() {
   const repeatButton =
     document.querySelector<HTMLButtonElement>("#repeat-game")!;
 
-  await Promise.all([loadAssets(MANIFEST), loadTextures(TEXTURE_MANIFEST)]);
+  await Promise.all([
+    loadAssets(MANIFEST),
+    loadTextures(TEXTURE_MANIFEST),
+    loadLUTs(LUT_MANIFEST),
+  ]);
 
   // Before anything that draws with caustics is built. Materials patched later
   // would pick the tile up anyway — the uniform is shared by reference — but
@@ -100,6 +113,12 @@ async function main() {
   setupGround(scene);
 
   const renderer = createRenderer(container);
+  const postFX = createPostFX(
+    renderer,
+    scene,
+    camera,
+    getLUTById("tealOrange"),
+  );
 
   // Registered and added to the scene once, outside initGame: an instanced mesh
   // is a rendering resource shared by every entity of its model, not world
@@ -130,6 +149,7 @@ async function main() {
   function handleResize() {
     updateCameraFrustum(camera, container);
     renderer.setSize(container.clientWidth, container.clientHeight);
+    postFX.setSize(container.clientWidth, container.clientHeight);
   }
 
   window.addEventListener("resize", handleResize);
@@ -201,7 +221,7 @@ async function main() {
     garbageCollectionSystem(world, ctx);
     gameStatusSystem(world);
     clearEventsSystem(world);
-    renderer.render(scene, camera);
+    postFX.render();
     clock.update();
   }
   animate();

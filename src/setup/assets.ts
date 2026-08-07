@@ -1,6 +1,8 @@
 import { TextureLoader, type Object3D, type Texture } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { LUTCubeLoader } from "three/examples/jsm/loaders/LUTCubeLoader.js";
 import type { ModelId } from "../core/Model";
+import type { LUT } from "../render/postFX";
 
 /**
  * Assets are keyed by the model ids they back — one glTF file per model. Only
@@ -56,4 +58,28 @@ export function getTextureById(id: TextureId): Texture {
   const texture = textureCache.get(id);
   if (!texture) throw new Error(`texture not loaded: ${id}`);
   return texture;
+}
+
+/**
+ * Color-grading LUTs, on their own union for the same reason textures are:
+ * a `.cube` file is neither a model nor an image asset.
+ */
+export type LutId = "tealOrange";
+
+const lutCache = new Map<LutId, LUT>();
+
+export async function loadLUTs(manifest: Record<LutId, string>) {
+  const loader = new LUTCubeLoader();
+  await Promise.all(
+    Object.entries(manifest).map(async ([id, url]) => {
+      const { size, texture3D } = await loader.loadAsync(url);
+      lutCache.set(id as LutId, { size, texture3D });
+    }),
+  );
+}
+
+export function getLUTById(id: LutId): LUT {
+  const lut = lutCache.get(id);
+  if (!lut) throw new Error(`lut not loaded: ${id}`);
+  return lut;
 }
