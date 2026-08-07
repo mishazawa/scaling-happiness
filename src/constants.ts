@@ -381,23 +381,47 @@ export const SHADER_BREATH_AMP = 0.1;
 export const SHADER_BREATH_FREQ = 8.9;
 
 /**
- * The fake caustics laid over the instanced models — the rippling bands a water
- * surface throws onto whatever is under it. Nothing is refracted or traced: a
- * cheap looping noise is sampled in world x/z and used to brighten the light
- * that already landed, so the pattern is stationary in the world and everything
- * that moves through it swims across the bands rather than carrying them along.
+ * The fake caustics laid over the ground and the instanced models — the rippling
+ * bands a water surface throws onto whatever is under it. Nothing is refracted
+ * or traced: a baked tile (`src/assets/caustics.png`, see
+ * `tools/makeCausticTexture.mjs`) is sampled in world x/z and used to brighten
+ * the light that already landed.
  *
- * The pattern repeats on a lattice, and SCALE is how many cells fit in a world
- * unit — one cell spans `1 / SCALE` units, so a small number gives wide, lazy
- * blobs and a large one busy ripples. (For reference: the grid is
- * GRID_COLUMNS * BLOCK_SIZE across, and the ground plane the caustics also land
- * on is GROUND_SIZE.) SPEED multiplies the shared `uTime`, i.e. it is a rate,
- * not a distance. GAIN is how much brighter a band's centre gets: 0 is off, 1
- * doubles the direct light there.
+ * SCALE is tiles per world unit — one tile of the texture covers `1 / SCALE`
+ * units, so a small number gives wide, lazy blobs and a large one busy ripples.
+ * (For reference: the grid is GRID_COLUMNS * BLOCK_SIZE across, and the ground
+ * plane the caustics also land on is GROUND_SIZE.) SPEED multiplies the shared
+ * `uTime`, i.e. it is a rate, not a distance. GAIN is how much brighter a band
+ * gets: 0 is off, 1 doubles the direct light there.
  */
 export const SHADER_CAUSTIC_SCALE = 0.05;
 export const SHADER_CAUSTIC_SPEED = 0.1;
 export const SHADER_CAUSTIC_GAIN = 1;
+
+/**
+ * What keeps a *tiling* texture from reading as a tiled floor: the shader takes
+ * two samples and multiplies them, the second at this fraction of the first's
+ * scale and drifting a different way. Each layer repeats on its own lattice, but
+ * the product only repeats where the two lattices realign — deliberately not a
+ * simple fraction, since a ratio like 0.75 puts that realignment every four
+ * tiles and the grid becomes visible again.
+ *
+ * The two drifts are in tile widths per second, before SPEED scales them —
+ * a drift of 0.3 at SPEED 0.1 crosses a tile every ~33s, which over a tile
+ * spanning `1 / SCALE` = 20 world units is about 0.6 units per second. Nearly
+ * opposed rather than exactly, so the pattern shears as it moves rather than
+ * sliding along as one image.
+ */
+export const SHADER_CAUSTIC_LAYER_RATIO = 0.73;
+export const SHADER_CAUSTIC_DRIFT_A: [number, number] = [0.3, 0.2];
+export const SHADER_CAUSTIC_DRIFT_B: [number, number] = [-0.21, 0.37];
+/**
+ * The ground is the biggest surface these land on and the camera sees the far
+ * end of it at a grazing angle, so the tile's mips are heavily minified there —
+ * the same case TRACK_ARROW_ANISOTROPY exists for. Without it the filaments
+ * crawl and sparkle along the top of the screen.
+ */
+export const SHADER_CAUSTIC_ANISOTROPY = 8;
 export const PEARL_SCALE = 4;
 export const PEARL_POSITION: [number, number, number] = [
   -TRACK_HALF_SIZE - 0.75,

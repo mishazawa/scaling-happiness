@@ -1,11 +1,25 @@
 import { describe, expect, it } from "vitest";
 import {
   MeshStandardMaterial,
+  NoColorSpace,
+  RepeatWrapping,
   ShaderLib,
+  SRGBColorSpace,
+  Texture,
   UniformsUtils,
   type WebGLProgramParametersWithUniforms,
 } from "three";
-import { paletteMaterial, uniforms, withCaustics } from "./materials";
+import {
+  paletteMaterial,
+  setCausticTexture,
+  uniforms,
+  withCaustics,
+} from "./materials";
+import {
+  SHADER_CAUSTIC_DRIFT_A,
+  SHADER_CAUSTIC_DRIFT_B,
+  SHADER_CAUSTIC_LAYER_RATIO,
+} from "../constants";
 
 /**
  * Runs a material's `onBeforeCompile` against three's *real* standard-material
@@ -92,7 +106,7 @@ describe("paletteMaterial", () => {
     expect(shader.fragmentShader).toContain(
       "diffuseColor.rgb = texture2D(uPalette, puv).rgb;",
     );
-    expect(shader.fragmentShader).toContain("float caustic(");
+    expect(shader.fragmentShader).toContain("texture2D(uCaustics,");
     // The idle breathing deforms `transformed`; the world position the caustics
     // are sampled at has to be read after that, or a model would slide through
     // the bands as it inflates.
@@ -114,7 +128,9 @@ describe("withCaustics", () => {
     // Duplicate declarations at global scope are a hard GLSL compile error, and
     // there is no browser here to catch one — a `toContain` would pass with two.
     expect(occurrences(shader.fragmentShader, "uniform float uTime;")).toBe(1);
-    expect(occurrences(shader.fragmentShader, "float caustic(")).toBe(1);
+    expect(
+      occurrences(shader.fragmentShader, "uniform sampler2D uCaustics;"),
+    ).toBe(1);
     expect(
       occurrences(shader.fragmentShader, "varying vec3 vCausticWorld;"),
     ).toBe(1);
@@ -123,17 +139,50 @@ describe("withCaustics", () => {
     ).toBe(1);
   });
 
-  it("spreads one non-repeating field over the world", () => {
+  it("samples the tile twice, at different scales and drifts", () => {
     const shader = compileHook(withCaustics(new MeshStandardMaterial()));
 
-    // Both halves of the line the coverage depends on. Wrapping the sample point
-    // would put the same tile down on a visible lattice; dropping the offset
-    // would collapse the pattern into a single blob at the world origin, since
-    // every term of the sum divides by `p`.
+    // The texture tiles, so one sample would draw a visible grid on the ground.
+    // Two layers beating against each other is the entire defence, and it only
+    // works while they differ in *both* scale and direction — a careless edit
+    // that collapses them into one fetch, or gives them the same scale, brings
+    // the lattice straight back.
+    expect(occurrences(shader.fragmentShader, "texture2D(uCaustics,")).toBe(2);
     expect(shader.fragmentShader).toContain(
-      "vec2 p = uv * 6.28318530718 - 250.0;",
+      `causticUv * ${SHADER_CAUSTIC_LAYER_RATIO.toFixed(6)}`,
     );
-    expect(shader.fragmentShader).not.toContain("mod(uv");
+    expect(SHADER_CAUSTIC_LAYER_RATIO).not.toBe(1);
+    // Opposed in x, so the two layers shear past each other rather than sliding
+    // together as one image.
+    expect(Math.sign(SHADER_CAUSTIC_DRIFT_A[0])).not.toBe(
+      Math.sign(SHADER_CAUSTIC_DRIFT_B[0]),
+    );
+  });
+
+  it("takes the tile by reference, so it reaches shaders already compiled", () => {
+    // The load order this leans on: `paletteMaterial` is built by
+    // `modelRegistry`, which cannot reach the loader, so main.ts pushes the
+    // texture in afterwards and every program built either side must see it.
+    const shader = compileHook(withCaustics(new MeshStandardMaterial()));
+    const previous = uniforms.uCaustics.value;
+
+    const tile = new Texture();
+    // Handed in already marked as colour, so the assertion below has something
+    // to overwrite — `NoColorSpace` is a texture's default, and asserting it on
+    // an untouched one would pass whatever the setter did.
+    tile.colorSpace = SRGBColorSpace;
+    setCausticTexture(tile);
+
+    expect(shader.uniforms.uCaustics.value).toBe(tile);
+    // Repeat wrapping is what makes a tile a tile; without it the texture is
+    // clamped and the caustics smear into streaks past the first tile's edge.
+    expect(tile.wrapS).toBe(RepeatWrapping);
+    expect(tile.wrapT).toBe(RepeatWrapping);
+    // A mask, not colour: an sRGB decode would bend the values the shader
+    // multiplies the light by.
+    expect(tile.colorSpace).toBe(NoColorSpace);
+
+    uniforms.uCaustics.value = previous;
   });
 
   it("runs an existing hook rather than replacing it", () => {
@@ -148,7 +197,7 @@ describe("withCaustics", () => {
     const shader = compileHook(withCaustics(material));
 
     expect(shader.fragmentShader).toContain("// prior patch");
-    expect(shader.fragmentShader).toContain("float caustic(");
+    expect(shader.fragmentShader).toContain("texture2D(uCaustics,");
   });
 
   it("takes the shared clock by reference instead of a uniform of its own", () => {

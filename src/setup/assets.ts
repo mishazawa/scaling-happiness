@@ -39,7 +39,7 @@ export function getAssetById(id: AssetId): Object3D {
  * colour space depend on the surface, not the file. Each one has a single
  * consumer, so that configuration is a mutation nobody else observes.
  */
-export type TextureId = "arrow";
+export type TextureId = "arrow" | "caustics";
 
 const textureCache = new Map<TextureId, Texture>();
 

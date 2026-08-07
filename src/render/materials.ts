@@ -1,6 +1,7 @@
 import {
   ClampToEdgeWrapping,
   MeshStandardMaterial,
+  NoColorSpace,
   RepeatWrapping,
   SRGBColorSpace,
   Vector2,
@@ -10,7 +11,11 @@ import { makePaletteDataTexture } from "../utils/paletteTexture";
 import {
   SHADER_BREATH_AMP,
   SHADER_BREATH_FREQ,
+  SHADER_CAUSTIC_ANISOTROPY,
+  SHADER_CAUSTIC_DRIFT_A,
+  SHADER_CAUSTIC_DRIFT_B,
   SHADER_CAUSTIC_GAIN,
+  SHADER_CAUSTIC_LAYER_RATIO,
   SHADER_CAUSTIC_SCALE,
   SHADER_CAUSTIC_SPEED,
   TRACK_ARROW_ANISOTROPY,
@@ -64,7 +69,35 @@ export const uniforms = {
     value: new Vector2(paletteTexture.image.width, paletteTexture.image.height),
   },
   uTime: { value: 0 },
+  // Filled by `setCausticTexture` once the loader has it; null until then.
+  uCaustics: { value: null as Texture | null },
 };
+
+/**
+ * Hands the baked caustics tile to every material patched by `withCaustics`,
+ * present and future.
+ *
+ * A setter rather than an argument because of the layering: `paletteMaterial` is
+ * built from `render/modelRegistry.ts`, which may not reach `setup/assets.ts` to
+ * ask the loader for a texture. `main.ts` can reach both, so it pushes the
+ * texture down here instead — and since the uniform object is merged into every
+ * compiled program *by reference*, materials built before this call pick it up
+ * just the same.
+ *
+ * The texture is configured here rather than by the loader, per the convention
+ * in `setup/assets.ts`: wrapping, filtering and colour space belong to whoever
+ * draws with it. `RepeatWrapping` is what makes a tile a tile, and
+ * `NoColorSpace` is set rather than left at whatever the loader gave — this is a
+ * mask, not colour, and an sRGB decode would bend the values the light is
+ * multiplied by.
+ */
+export function setCausticTexture(texture: Texture) {
+  texture.wrapS = RepeatWrapping;
+  texture.wrapT = RepeatWrapping;
+  texture.anisotropy = SHADER_CAUSTIC_ANISOTROPY;
+  texture.colorSpace = NoColorSpace;
+  uniforms.uCaustics.value = texture;
+}
 
 const VERT_DECL = /* glsl */ `
   attribute float aID;
@@ -125,43 +158,8 @@ const CAUSTIC_VERT_BODY = /* glsl */ `
 
 const CAUSTIC_FRAG_DECL = /* glsl */ `
   uniform float uTime;
+  uniform sampler2D uCaustics;
   varying vec3 vCausticWorld;
-
-  // A domain warp: \`q\` is fed back through itself five times, each pass turning
-  // at a different rate, and the reciprocal of the warped distance is summed.
-  // The curve at the end (a power, an inversion, then a steep power) is what
-  // crushes the sum down to a dark field with thin bright filaments running
-  // through it. It is a pattern, not a simulation — nothing here refracts
-  // anything.
-  //
-  // Two things about \`p\` carry the whole look and neither is arbitrary:
-  //
-  //   - It is **not wrapped** into a cell. A \`mod\` here is the usual way to keep
-  //     the pattern from dying out with distance, but it lays the same tile down
-  //     over and over on a visible lattice. Without it the field never repeats
-  //     exactly — features recur about every \`1 / SHADER_CAUSTIC_SCALE\` world
-  //     units, but each one is warped differently.
-  //   - The large constant offset is what lets that work. Every term divides by
-  //     \`p\`, so near the origin the brightness would be governed by distance
-  //     from it — one blob in the middle of the screen and darkness everywhere
-  //     else. Pushed far out, \`p\` is effectively constant across the visible
-  //     world and the variation comes entirely from the oscillating divisors,
-  //     which is what spreads the filaments evenly over the whole ground.
-  //
-  // The literals are the shape of the effect and are deliberately not tunable;
-  // SHADER_CAUSTIC_SCALE/SPEED/GAIN are applied outside, on the way in and out.
-  float caustic(vec2 uv, float t) {
-    vec2 p = uv * 6.28318530718 - 250.0;
-    vec2 q = p;
-    float c = 1.0;
-    for (int i = 0; i < 5; i++) {
-      float ti = t * (1.0 - 3.5 / float(i + 1));
-      q = p + vec2(cos(ti - q.x) + sin(ti + q.y), sin(ti - q.y) + cos(ti + q.x));
-      c += 1.0 / length(vec2(p.x / (sin(q.x + ti) / 0.005), p.y / (cos(q.y + ti) / 0.005)));
-    }
-    c = 1.17 - pow(c / 5.0, 1.4);
-    return clamp(pow(abs(c), 8.0), 0.0, 1.0);
-  }
 `;
 
 /**
@@ -183,14 +181,27 @@ const CAUSTIC_FRAG_DECL = /* glsl */ `
  * a surface overhead. That means it is fixed to the world rather than to the
  * model: pawns swim through the bands, and a block keeps whichever band it sits
  * under.
+ *
+ * Two samples of the one tile, at scales in a deliberately awkward ratio and
+ * drifting different ways — that is the whole defence against a tiling texture
+ * reading as a tiled floor, and collapsing it to a single fetch brings the grid
+ * straight back. See SHADER_CAUSTIC_LAYER_RATIO.
+ *
+ * Multiplied rather than added: both layers have to agree for a filament to be
+ * bright, which keeps them thin and moving. Added, they fill in to an even wash.
+ * The `2.0` is because the product of two mostly-dark fields is darker than
+ * either — it brings the combined field back to roughly the brightness one layer
+ * had, leaving GAIN to mean what it says.
  */
 const CAUSTIC_FRAG_BODY = /* glsl */ `
   #include <lights_fragment_end>
 
-  float causticMask = caustic(
-    vCausticWorld.xz * ${SHADER_CAUSTIC_SCALE.toFixed(6)},
-    uTime * ${SHADER_CAUSTIC_SPEED.toFixed(6)}
-  );
+  vec2 causticUv = vCausticWorld.xz * ${SHADER_CAUSTIC_SCALE.toFixed(6)};
+  float causticDrift = uTime * ${SHADER_CAUSTIC_SPEED.toFixed(6)};
+  float causticA = texture2D(uCaustics, causticUv + vec2(${SHADER_CAUSTIC_DRIFT_A[0].toFixed(6)}, ${SHADER_CAUSTIC_DRIFT_A[1].toFixed(6)}) * causticDrift).r;
+  float causticB = texture2D(uCaustics, causticUv * ${SHADER_CAUSTIC_LAYER_RATIO.toFixed(6)} + vec2(${SHADER_CAUSTIC_DRIFT_B[0].toFixed(6)}, ${SHADER_CAUSTIC_DRIFT_B[1].toFixed(6)}) * causticDrift).r;
+  float causticMask = causticA * causticB * 2.0;
+
   reflectedLight.directDiffuse *= 1.0 + causticMask * ${SHADER_CAUSTIC_GAIN.toFixed(6)};
 `;
 
@@ -211,12 +222,14 @@ const CAUSTIC_FRAG_BODY = /* glsl */ `
  *
  * Two consequences worth knowing before calling it:
  *
- *   - It declares `uTime`, `vCausticWorld` and `caustic()` at global scope, so a
+ *   - It declares `uTime`, `uCaustics` and `vCausticWorld` at global scope, so a
  *     material that already declares any of those, or that is patched twice,
  *     fails to compile. The tests count the declarations for exactly this.
  *   - The clock is the shared `uniforms.uTime`, merged by reference, so the
  *     bands stay in step with the fish's breathing and the track's arrows.
- *     Nothing here writes it; `renderSystem` remains the only writer.
+ *     Nothing here writes it; `renderSystem` remains the only writer. The tile
+ *     comes the same way — `setCausticTexture` must have been called, which
+ *     `main.ts` does once the loader returns.
  *
  * `customProgramCacheKey` is extended too, and that part is not optional: three
  * keys its compiled-program cache on the material's parameters and never on
@@ -230,6 +243,7 @@ export function withCaustics<T extends MeshStandardMaterial>(material: T): T {
     decorated(shader, renderer);
 
     shader.uniforms.uTime = uniforms.uTime;
+    shader.uniforms.uCaustics = uniforms.uCaustics;
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", `#include <common>\n${CAUSTIC_VERT_DECL}`)
       .replace(

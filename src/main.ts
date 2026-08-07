@@ -46,11 +46,13 @@ import {
   type TextureId,
 } from "./setup/assets";
 import { registerModel } from "./render/modelRegistry";
+import { setCausticTexture } from "./render/materials";
 
 import FISH_MESH from "./assets/fish.glb";
 import TRACK_MESH from "./assets/track.glb";
 import PEARL_MESH from "./assets/pearl.glb";
 import ARROW_TEXTURE from "./assets/water.png";
+import CAUSTICS_TEXTURE from "./assets/caustics.png";
 import type { Grid } from "./core/Grid";
 
 export const MANIFEST: Record<AssetId, string> = {
@@ -61,6 +63,7 @@ export const MANIFEST: Record<AssetId, string> = {
 
 export const TEXTURE_MANIFEST: Record<TextureId, string> = {
   arrow: ARROW_TEXTURE,
+  caustics: CAUSTICS_TEXTURE,
 };
 
 async function main() {
@@ -81,6 +84,12 @@ async function main() {
     document.querySelector<HTMLButtonElement>("#repeat-game")!;
 
   await Promise.all([loadAssets(MANIFEST), loadTextures(TEXTURE_MANIFEST)]);
+
+  // Before anything that draws with caustics is built. Materials patched later
+  // would pick the tile up anyway — the uniform is shared by reference — but
+  // the ground below is built in the very next lines, and a frame drawn with a
+  // null sampler is a frame with no caustics on it.
+  setCausticTexture(getTextureById("caustics"));
 
   const clock = new Timer();
   const scene = new Scene();
