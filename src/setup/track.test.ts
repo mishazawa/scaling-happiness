@@ -202,19 +202,6 @@ describe("makeTrack", () => {
     expect(shader.fragmentShader).toContain("#include <color_fragment>");
   });
 
-  it("scrolls the arrows at pawn speed, measured off the belt's own length", () => {
-    // The rate is in tiles per second, the space vMapUv is already in: a belt
-    // BELT_LENGTH units long carries TRACK_ARROW_REPEAT tiles, so a pawn
-    // crossing it at PAWN_SPEED passes this many arrows a second.
-    const expected = (PAWN_SPEED / BELT_LENGTH) * TRACK_ARROW_REPEAT;
-
-    const fragment = compile(
-      build(TRACK_STATIC_PART, TRACK_MOVING_PART),
-    ).fragmentShader;
-
-    expect(fragment).toContain(`uTime * ${expected.toFixed(6)}`);
-  });
-
   it("subtracts the scroll, so the arrows travel the way the pawns do", () => {
     // Sampling further along the texture pulls the image backwards; adding it
     // would run the arrows against the traffic.

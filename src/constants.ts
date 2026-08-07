@@ -1,4 +1,35 @@
-export const LIGHT_MAIN_POSITION: [number, number, number] = [5, 10, 10];
+// The scene is lit by one directional light (the sun, and the only shadow
+// caster) plus a flat ambient fill. The directional light's position doubles as
+// the shadow camera's position — Three.js points the shadow camera from the
+// light at its target — so moving LIGHT_MAIN_POSITION moves the shadows with it.
+export const LIGHT_MAIN_POSITION: [number, number, number] = [5, 20, 10];
+export const LIGHT_COLOR = 0xffffff;
+export const LIGHT_MAIN_INTENSITY = 5;
+// Ambient fill, so faces turned away from the light aren't black.
+export const LIGHT_AMBIENT_INTENSITY = 0.4;
+
+// The shadow map is square, and this is one side in texels. Bigger is sharper
+// but costs a bigger render target every frame.
+export const LIGHT_SHADOW_MAP_SIZE = 1024;
+/**
+ * Half-width of the shadow camera's orthographic frustum, in world units,
+ * applied to all four sides.
+ *
+ * It has to cover every shadow caster the camera can see — the grid, the track
+ * ring (TRACK_HALF_SIZE out from the origin) and the on-screen queue pawns,
+ * whose last visible slot sits around z = 21 — while staying as tight as
+ * possible: the frustum's width is divided over LIGHT_SHADOW_MAP_SIZE texels,
+ * so every extra unit of coverage is spent out of shadow sharpness.
+ */
+export const LIGHT_SHADOW_FRUSTUM_HALF_EXTENT = 20;
+/**
+ * How opaque shadows are, 0..1 — Three.js mixes the lit and shadowed result by
+ * this, so 1 is a fully dark shadow and 0 removes shadows entirely while
+ * leaving the shadow pass running. Below 1 the shadow reads as semi
+ * transparent, which suits the game's flat, bright palette.
+ */
+export const LIGHT_SHADOW_INTENSITY = 0.4;
+
 export const BLOCK_SIZE = 0.4;
 export const GRID_COLUMNS = 26;
 export const GRID_ROWS = GRID_COLUMNS;
