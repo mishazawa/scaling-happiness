@@ -10,6 +10,7 @@ import {
   LIGHT_PALETTE_SLOT,
   PAWN_CAPACITY,
   PAWN_MODEL_RADIUS,
+  PIXEL_SCALE,
 } from "./constants";
 import { setupLight } from "./setup/light";
 import { setupGround } from "./setup/ground";
@@ -118,6 +119,7 @@ async function main() {
     scene,
     camera,
     getLUTById("tealOrange"),
+    { pixelSize: PIXEL_SCALE },
   );
 
   // Registered and added to the scene once, outside initGame: an instanced mesh

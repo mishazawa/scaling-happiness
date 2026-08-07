@@ -461,3 +461,11 @@ export const LIFE_PEARL_RISE_SPEED = 10;
 export const LIFE_PEARL_SCALE = 0.5;
 /** What a spent life shrinks to. Zero: gone by the time its clock runs out. */
 export const LIFE_PEARL_END_SCALE = 0;
+
+/**
+ * Mosaic block size, in CSS pixels, for the pixel-art postFX pass — kept in
+ * CSS rather than device pixels so the look doesn't shrink to near-invisible
+ * on high-DPR screens. 1 disables it; higher values chunk the view into
+ * coarser blocks.
+ */
+export const PIXEL_SCALE = 1.5;
