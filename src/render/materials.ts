@@ -10,6 +10,9 @@ import { makePaletteDataTexture } from "../utils/paletteTexture";
 import {
   SHADER_BREATH_AMP,
   SHADER_BREATH_FREQ,
+  SHADER_CAUSTIC_GAIN,
+  SHADER_CAUSTIC_SCALE,
+  SHADER_CAUSTIC_SPEED,
   TRACK_ARROW_ANISOTROPY,
   TRACK_ARROW_REPEAT,
   TRACK_SPEED,
@@ -96,6 +99,154 @@ const FRAG_BODY = /* glsl */ `
   diffuseColor.rgb = texture2D(uPalette, puv).rgb;
 `;
 
+const CAUSTIC_VERT_DECL = /* glsl */ `
+  varying vec3 vCausticWorld;
+`;
+
+/**
+ * Injected after `<project_vertex>` rather than after `<begin_vertex>`, where a
+ * vertex patch normally goes: `transformed` is finished by then — that chunk
+ * only reads it to build `mvPosition` — so the world position picks up every
+ * deformation another patch on the same material may have applied, whichever
+ * order the two hooks happen to run in.
+ *
+ * Three's own `vWorldPosition` cannot be borrowed for this: `<worldpos_vertex>`
+ * is compiled out unless the material has an env map, a shadow or a spot light,
+ * none of which a caller is required to have. This is the same math, minus the
+ * batching branch this project has no batched meshes for.
+ */
+const CAUSTIC_VERT_BODY = /* glsl */ `
+  vec4 causticWorld = vec4(transformed, 1.0);
+  #ifdef USE_INSTANCING
+    causticWorld = instanceMatrix * causticWorld;
+  #endif
+  vCausticWorld = (modelMatrix * causticWorld).xyz;
+`;
+
+const CAUSTIC_FRAG_DECL = /* glsl */ `
+  uniform float uTime;
+  varying vec3 vCausticWorld;
+
+  // A domain warp: \`q\` is fed back through itself five times, each pass turning
+  // at a different rate, and the reciprocal of the warped distance is summed.
+  // The curve at the end (a power, an inversion, then a steep power) is what
+  // crushes the sum down to a dark field with thin bright filaments running
+  // through it. It is a pattern, not a simulation — nothing here refracts
+  // anything.
+  //
+  // Two things about \`p\` carry the whole look and neither is arbitrary:
+  //
+  //   - It is **not wrapped** into a cell. A \`mod\` here is the usual way to keep
+  //     the pattern from dying out with distance, but it lays the same tile down
+  //     over and over on a visible lattice. Without it the field never repeats
+  //     exactly — features recur about every \`1 / SHADER_CAUSTIC_SCALE\` world
+  //     units, but each one is warped differently.
+  //   - The large constant offset is what lets that work. Every term divides by
+  //     \`p\`, so near the origin the brightness would be governed by distance
+  //     from it — one blob in the middle of the screen and darkness everywhere
+  //     else. Pushed far out, \`p\` is effectively constant across the visible
+  //     world and the variation comes entirely from the oscillating divisors,
+  //     which is what spreads the filaments evenly over the whole ground.
+  //
+  // The literals are the shape of the effect and are deliberately not tunable;
+  // SHADER_CAUSTIC_SCALE/SPEED/GAIN are applied outside, on the way in and out.
+  float caustic(vec2 uv, float t) {
+    vec2 p = uv * 6.28318530718 - 250.0;
+    vec2 q = p;
+    float c = 1.0;
+    for (int i = 0; i < 5; i++) {
+      float ti = t * (1.0 - 3.5 / float(i + 1));
+      q = p + vec2(cos(ti - q.x) + sin(ti + q.y), sin(ti - q.y) + cos(ti + q.x));
+      c += 1.0 / length(vec2(p.x / (sin(q.x + ti) / 0.005), p.y / (cos(q.y + ti) / 0.005)));
+    }
+    c = 1.17 - pow(c / 5.0, 1.4);
+    return clamp(pow(abs(c), 8.0), 0.0, 1.0);
+  }
+`;
+
+/**
+ * Appended *after* `<lights_fragment_end>`, and it has to be there rather than
+ * after `<lights_fragment_begin>` where a patch like this is usually shown:
+ * `directLight` is declared inside that chunk and every `RE_Direct` call that
+ * consumes it also happens inside it, so scaling it afterwards changes a value
+ * nothing will read again. By the end of `<lights_fragment_end>` the light has
+ * been accumulated into `reflectedLight`, and `directDiffuse` is still read
+ * after that (into `totalDiffuse`), so this is the last point where brightening
+ * it still shows up on screen.
+ *
+ * Scaling `directDiffuse` alone — not the indirect terms — is also what makes
+ * the caustics behave: shadowing and the N·L falloff are already folded into it,
+ * so the bands stop at a shadow's edge and fade off surfaces turned away from
+ * the light, instead of glowing on the underside of everything.
+ *
+ * Sampled in world x/z, which projects the pattern straight down as if cast from
+ * a surface overhead. That means it is fixed to the world rather than to the
+ * model: pawns swim through the bands, and a block keeps whichever band it sits
+ * under.
+ */
+const CAUSTIC_FRAG_BODY = /* glsl */ `
+  #include <lights_fragment_end>
+
+  float causticMask = caustic(
+    vCausticWorld.xz * ${SHADER_CAUSTIC_SCALE.toFixed(6)},
+    uTime * ${SHADER_CAUSTIC_SPEED.toFixed(6)}
+  );
+  reflectedLight.directDiffuse *= 1.0 + causticMask * ${SHADER_CAUSTIC_GAIN.toFixed(6)};
+`;
+
+/**
+ * Lays the fake caustics over any `MeshStandardMaterial` — the rippling bands a
+ * water surface throws onto what is under it — and hands the same material back.
+ *
+ * Written as a patch rather than a material of its own because the surfaces that
+ * want it have nothing else in common: the instanced models take their colour
+ * from a palette LUT, the ground is a flat colour. Each keeps whatever it
+ * already was and gains the bands on top.
+ *
+ * It **composes** with a hook the material already has, rather than replacing
+ * it: `onBeforeCompile` is a single slot, so a second plain assignment would
+ * silently drop the first patch (for `paletteMaterial`, the palette lookup and
+ * the breathing both). The existing hook runs first, then these replacements are
+ * applied to whatever it produced.
+ *
+ * Two consequences worth knowing before calling it:
+ *
+ *   - It declares `uTime`, `vCausticWorld` and `caustic()` at global scope, so a
+ *     material that already declares any of those, or that is patched twice,
+ *     fails to compile. The tests count the declarations for exactly this.
+ *   - The clock is the shared `uniforms.uTime`, merged by reference, so the
+ *     bands stay in step with the fish's breathing and the track's arrows.
+ *     Nothing here writes it; `renderSystem` remains the only writer.
+ *
+ * `customProgramCacheKey` is extended too, and that part is not optional: three
+ * keys its compiled-program cache on the material's parameters and never on
+ * `onBeforeCompile`, so a patched material would otherwise be handed the cached
+ * program of an unpatched one that happened to be configured identically — the
+ * ground and the track's static half are exactly that pair.
+ */
+export function withCaustics<T extends MeshStandardMaterial>(material: T): T {
+  const decorated = material.onBeforeCompile.bind(material);
+  material.onBeforeCompile = (shader, renderer) => {
+    decorated(shader, renderer);
+
+    shader.uniforms.uTime = uniforms.uTime;
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", `#include <common>\n${CAUSTIC_VERT_DECL}`)
+      .replace(
+        "#include <project_vertex>",
+        `#include <project_vertex>\n${CAUSTIC_VERT_BODY}`,
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", `#include <common>\n${CAUSTIC_FRAG_DECL}`)
+      .replace("#include <lights_fragment_end>", CAUSTIC_FRAG_BODY);
+  };
+
+  const cacheKey = material.customProgramCacheKey.bind(material);
+  material.customProgramCacheKey = () => `${cacheKey()}|caustics`;
+
+  return material;
+}
+
 /**
  * A `MeshStandardMaterial` that reads its base colour out of the palette LUT
  * built by `makePaletteDataTexture`, instead of a single fixed colour.
@@ -127,6 +278,9 @@ const FRAG_BODY = /* glsl */ `
  *
  * Note this replaces `<color_fragment>`, so per-vertex `color` attributes are
  * ignored by this material; the palette is the only colour source.
+ *
+ * The fake caustics go on top, off the same `uTime` — see `withCaustics`, which
+ * composes with the hook set here rather than replacing it.
  */
 export function paletteMaterial(): MeshStandardMaterial {
   const material = new MeshStandardMaterial({
@@ -146,7 +300,7 @@ export function paletteMaterial(): MeshStandardMaterial {
       .replace("#include <color_fragment>", FRAG_BODY);
   };
 
-  return material;
+  return withCaustics(material);
 }
 
 /**

@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  MeshStandardMaterial,
   ShaderLib,
   UniformsUtils,
   type WebGLProgramParametersWithUniforms,
 } from "three";
-import { paletteMaterial, uniforms } from "./materials";
+import { paletteMaterial, uniforms, withCaustics } from "./materials";
 
 /**
  * Runs a material's `onBeforeCompile` against three's *real* standard-material
@@ -12,7 +13,7 @@ import { paletteMaterial, uniforms } from "./materials";
  * which fails silently if the token ever moves or is renamed — the assertions
  * below are what turn that into a test failure instead of an untextured mesh.
  */
-function compileHook(material: ReturnType<typeof paletteMaterial>) {
+function compileHook(material: MeshStandardMaterial) {
   const shader = {
     uniforms: UniformsUtils.clone(ShaderLib.physical.uniforms),
     vertexShader: ShaderLib.physical.vertexShader,
@@ -81,5 +82,122 @@ describe("paletteMaterial", () => {
     );
     // The stock colour path must be gone, or it would overwrite the lookup.
     expect(shader.fragmentShader).not.toContain("#include <color_fragment>");
+  });
+
+  it("keeps the palette patch and the caustics on the one hook", () => {
+    // `onBeforeCompile` is a single slot, so this is the assertion that a second
+    // patch composed with the first rather than overwriting it.
+    const shader = compileHook(paletteMaterial());
+
+    expect(shader.fragmentShader).toContain(
+      "diffuseColor.rgb = texture2D(uPalette, puv).rgb;",
+    );
+    expect(shader.fragmentShader).toContain("float caustic(");
+    // The idle breathing deforms `transformed`; the world position the caustics
+    // are sampled at has to be read after that, or a model would slide through
+    // the bands as it inflates.
+    expect(shader.vertexShader.indexOf("vCausticWorld =")).toBeGreaterThan(
+      shader.vertexShader.indexOf("transformed *= 1.0 + breath"),
+    );
+  });
+});
+
+/** How many times `needle` occurs in `source`. */
+function occurrences(source: string, needle: string): number {
+  return source.split(needle).length - 1;
+}
+
+describe("withCaustics", () => {
+  it("patches a bare standard material, declaring each global exactly once", () => {
+    const shader = compileHook(withCaustics(new MeshStandardMaterial()));
+
+    // Duplicate declarations at global scope are a hard GLSL compile error, and
+    // there is no browser here to catch one — a `toContain` would pass with two.
+    expect(occurrences(shader.fragmentShader, "uniform float uTime;")).toBe(1);
+    expect(occurrences(shader.fragmentShader, "float caustic(")).toBe(1);
+    expect(
+      occurrences(shader.fragmentShader, "varying vec3 vCausticWorld;"),
+    ).toBe(1);
+    expect(
+      occurrences(shader.vertexShader, "varying vec3 vCausticWorld;"),
+    ).toBe(1);
+  });
+
+  it("spreads one non-repeating field over the world", () => {
+    const shader = compileHook(withCaustics(new MeshStandardMaterial()));
+
+    // Both halves of the line the coverage depends on. Wrapping the sample point
+    // would put the same tile down on a visible lattice; dropping the offset
+    // would collapse the pattern into a single blob at the world origin, since
+    // every term of the sum divides by `p`.
+    expect(shader.fragmentShader).toContain(
+      "vec2 p = uv * 6.28318530718 - 250.0;",
+    );
+    expect(shader.fragmentShader).not.toContain("mod(uv");
+  });
+
+  it("runs an existing hook rather than replacing it", () => {
+    const material = new MeshStandardMaterial();
+    material.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <common>",
+        "#include <common>\n// prior patch",
+      );
+    };
+
+    const shader = compileHook(withCaustics(material));
+
+    expect(shader.fragmentShader).toContain("// prior patch");
+    expect(shader.fragmentShader).toContain("float caustic(");
+  });
+
+  it("takes the shared clock by reference instead of a uniform of its own", () => {
+    const shader = compileHook(withCaustics(new MeshStandardMaterial()));
+
+    uniforms.uTime.value = 3.5;
+    expect(shader.uniforms.uTime.value).toBe(3.5);
+    uniforms.uTime.value = 0;
+  });
+
+  it("carries the world position through to the fragment stage itself", () => {
+    const shader = compileHook(withCaustics(new MeshStandardMaterial()));
+
+    // three's own vWorldPosition is compiled out unless the material has an env
+    // map or a shadow, so the varying has to be filled here.
+    expect(shader.vertexShader).toContain(
+      "vCausticWorld = (modelMatrix * causticWorld).xyz;",
+    );
+    // Instanced models carry their placement on instanceMatrix alone, so a
+    // world position that skipped it would put every pawn at the origin's band.
+    expect(shader.vertexShader).toContain("causticWorld = instanceMatrix");
+  });
+
+  it("brightens the accumulated direct light rather than a spent directLight", () => {
+    const shader = compileHook(withCaustics(new MeshStandardMaterial()));
+
+    // Appended, not replaced: the chunk is what accumulates the indirect light
+    // this then leaves alone.
+    expect(shader.fragmentShader).toContain("#include <lights_fragment_end>");
+
+    // The usual form of this patch scales `directLight` after
+    // <lights_fragment_begin>, where every RE_Direct that reads it has already
+    // run, so it changes a value nothing looks at again. Pinned as: the
+    // modulation comes after the last light has been accumulated.
+    expect(
+      shader.fragmentShader.indexOf("reflectedLight.directDiffuse *="),
+    ).toBeGreaterThan(shader.fragmentShader.lastIndexOf("RE_Direct("));
+  });
+
+  it("distinguishes itself in the program cache", () => {
+    // three keys compiled programs on a material's parameters and never on its
+    // onBeforeCompile, so without this a patched material and an identically
+    // configured unpatched one — the ground and the track's static half — would
+    // be handed the same program.
+    const plain = new MeshStandardMaterial();
+    const patched = withCaustics(new MeshStandardMaterial());
+
+    expect(patched.customProgramCacheKey()).not.toBe(
+      plain.customProgramCacheKey(),
+    );
   });
 });

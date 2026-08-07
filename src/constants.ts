@@ -379,6 +379,25 @@ export const PEARL_ROUGHNESS = 0.1;
 export const TRACK_SPEED = 1;
 export const SHADER_BREATH_AMP = 0.1;
 export const SHADER_BREATH_FREQ = 8.9;
+
+/**
+ * The fake caustics laid over the instanced models — the rippling bands a water
+ * surface throws onto whatever is under it. Nothing is refracted or traced: a
+ * cheap looping noise is sampled in world x/z and used to brighten the light
+ * that already landed, so the pattern is stationary in the world and everything
+ * that moves through it swims across the bands rather than carrying them along.
+ *
+ * The pattern repeats on a lattice, and SCALE is how many cells fit in a world
+ * unit — one cell spans `1 / SCALE` units, so a small number gives wide, lazy
+ * blobs and a large one busy ripples. (For reference: the grid is
+ * GRID_COLUMNS * BLOCK_SIZE across, and the ground plane the caustics also land
+ * on is GROUND_SIZE.) SPEED multiplies the shared `uTime`, i.e. it is a rate,
+ * not a distance. GAIN is how much brighter a band's centre gets: 0 is off, 1
+ * doubles the direct light there.
+ */
+export const SHADER_CAUSTIC_SCALE = 0.05;
+export const SHADER_CAUSTIC_SPEED = 0.1;
+export const SHADER_CAUSTIC_GAIN = 1;
 export const PEARL_SCALE = 4;
 export const PEARL_POSITION: [number, number, number] = [
   -TRACK_HALF_SIZE - 0.75,
