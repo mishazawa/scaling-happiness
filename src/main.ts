@@ -10,8 +10,6 @@ import {
   LIGHT_PALETTE_SLOT,
   PAWN_CAPACITY,
   PAWN_MODEL_RADIUS,
-  TRACK_CAPACITY,
-  TRACK_DUMMY_COLOR,
 } from "./constants";
 import { setupLight } from "./setup/light";
 import { setupGround } from "./setup/ground";
@@ -33,26 +31,33 @@ import { deathSystem } from "./systems/death";
 import { clearEventsSystem } from "./systems/clearEvents";
 import { gameStatusSystem } from "./systems/gameStatus";
 import type { SystemContext } from "./systems/context";
-import {
-  makePathAroundTheGrid,
-  prepareTrackModel,
-  spawnTrack,
-} from "./setup/track";
+import { makePathAroundTheGrid, makeTrack } from "./setup/track";
 import { DEBUG_pathVisualizer } from "./setup/debugPath";
 import { createQueues } from "./setup/queue";
 import { createCamera, updateCameraFrustum } from "./render/camera";
 import { createRenderer } from "./render/renderer";
-import { getAssetById, loadAssets, type AssetId } from "./setup/assets";
+import {
+  getAssetById,
+  getTextureById,
+  loadAssets,
+  loadTextures,
+  type AssetId,
+  type TextureId,
+} from "./setup/assets";
 import { registerModel } from "./render/modelRegistry";
-import { standardMaterial } from "./render/materials";
 
 import FISH_MESH from "./assets/fish.glb";
 import TRACK_MESH from "./assets/track.glb";
+import ARROW_TEXTURE from "./assets/water.png";
 import type { Grid } from "./core/Grid";
 
 export const MANIFEST: Record<AssetId, string> = {
   pawn: FISH_MESH,
   track: TRACK_MESH,
+};
+
+export const TEXTURE_MANIFEST: Record<TextureId, string> = {
+  arrow: ARROW_TEXTURE,
 };
 
 async function main() {
@@ -72,7 +77,7 @@ async function main() {
   const repeatButton =
     document.querySelector<HTMLButtonElement>("#repeat-game")!;
 
-  await loadAssets(MANIFEST);
+  await Promise.all([loadAssets(MANIFEST), loadTextures(TEXTURE_MANIFEST)]);
 
   const clock = new Timer();
   const scene = new Scene();
@@ -94,17 +99,9 @@ async function main() {
     ).mesh,
     registerModel("block", makeBubbleMesh(), BLOCK_CAPACITY, BLOCK_MODEL_RADIUS)
       .mesh,
-    // Unnormalized and on a plain material: the track is authored in world
-    // coordinates along the pawns' path, and the palette material's breathing
-    // would make a piece of scenery pulse. Both are placeholders until it has
-    // real materials.
-    registerModel(
-      "track",
-      prepareTrackModel(getAssetById("track")),
-      TRACK_CAPACITY,
-      null,
-      standardMaterial(TRACK_DUMMY_COLOR),
-    ).mesh,
+    // Not instanced: the track exists once, never moves, and its two halves
+    // carry two different materials. See `makeTrack`.
+    makeTrack(getAssetById("track"), getTextureById("arrow")),
   );
 
   const renderer = createRenderer(container);
@@ -133,7 +130,6 @@ async function main() {
     world.paths.set(pathEntity, pd);
 
     DEBUG_pathVisualizer(world, pd, scene);
-    spawnTrack(world);
 
     createQueues(world, scene);
 

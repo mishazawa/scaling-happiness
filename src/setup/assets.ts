@@ -1,4 +1,4 @@
-import type { Object3D } from "three";
+import { TextureLoader, type Object3D, type Texture } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { ModelId } from "../core/Model";
 
@@ -29,4 +29,31 @@ export function getAssetById(id: AssetId): Object3D {
   const p = cache.get(id);
   if (!p) throw new Error(`asset not loaded: ${id}`);
   return p;
+}
+
+/**
+ * Image assets, on their own union rather than sharing `AssetId`: a texture is
+ * not a model and has no `ModelId` to be a subset of.
+ *
+ * Loaded here but *configured* by whoever draws with it — wrapping, repeat and
+ * colour space depend on the surface, not the file. Each one has a single
+ * consumer, so that configuration is a mutation nobody else observes.
+ */
+export type TextureId = "arrow";
+
+const textureCache = new Map<TextureId, Texture>();
+
+export async function loadTextures(manifest: Record<TextureId, string>) {
+  const loader = new TextureLoader();
+  await Promise.all(
+    Object.entries(manifest).map(async ([id, url]) => {
+      textureCache.set(id as TextureId, await loader.loadAsync(url));
+    }),
+  );
+}
+
+export function getTextureById(id: TextureId): Texture {
+  const texture = textureCache.get(id);
+  if (!texture) throw new Error(`texture not loaded: ${id}`);
+  return texture;
 }

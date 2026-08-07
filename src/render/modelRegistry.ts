@@ -84,9 +84,9 @@ function flattenToGeometry(root: Object3D): BufferGeometry {
  * sized once and the render system throws if the game ever tries to exceed them.
  *
  * `targetRadius: null` keeps the authored scale (see `prepareGeometry`), and
- * `material` swaps the palette shader out. Both exist for the track, which is
- * modelled in world coordinates and — being scenery, not a creature — must not
- * pick up the palette material's idle breathing, which would pulse its size.
+ * `material` swaps the palette shader out for geometry that carries no
+ * `_color_id`. Both are extension points with no caller at the moment — the
+ * track used to be the one, before it stopped being instanced.
  */
 export function registerModel(
   id: ModelId,
@@ -125,7 +125,66 @@ export function getModel(id: ModelId): RegisteredModel {
   return model;
 }
 
-/** Every registered model, for the render system's per-frame repack. */
+/**
+ * Every *instanced* model, for the render system's per-frame repack.
+ *
+ * Deliberately excludes the plain meshes below: they have no instance slots to
+ * pack, and the repack loop would zero a `count` they don't have.
+ */
 export function registeredModels(): IterableIterator<RegisteredModel> {
   return models.values();
+}
+
+/**
+ * Plain, un-instanced models — a second registry alongside the instanced one.
+ *
+ * Not everything that comes out of a glTF wants instancing. Scenery exists once,
+ * never moves, and is drawn straight from its own `Object3D`; forcing it through
+ * `InstancedMesh` costs it its per-part materials, since a merged geometry can
+ * only carry one. Registering it here keeps the "one place resolves a `ModelId`
+ * to something drawable" rule while leaving those parts separate.
+ *
+ * Same lifetime as `models`: registered once at startup, never cleared.
+ */
+const meshes = new Map<ModelId, Object3D>();
+
+/**
+ * Registers a loaded model as an ordinary `Object3D`, keeping its node structure
+ * and giving each `Mesh` the material `materialFor` returns for it.
+ *
+ * The mesh comes along with its node name because a material can depend on what
+ * it is being applied to — the track's belt sizes its texture from the uv band
+ * its geometry actually occupies.
+ *
+ * A `null` return means "leave the loader's own material alone". Every mesh is
+ * visited, at any depth, so a name that never turns up is a silent mis-export
+ * rather than a crash — callers that depend on a specific part should assert on
+ * it (see `setup/track.ts`).
+ *
+ * The scene graph is used as loaded, not cloned: assets are loaded once and
+ * registered once, and the cache in `setup/assets.ts` has no other reader.
+ */
+export function registerMesh(
+  id: ModelId,
+  root: Object3D,
+  materialFor: (name: string, mesh: Mesh) => Material | null,
+): Object3D {
+  root.traverse((object) => {
+    if (!(object instanceof Mesh)) return;
+
+    const material = materialFor(object.name, object);
+    if (material) object.material = material;
+
+    object.castShadow = true;
+    object.receiveShadow = true;
+  });
+
+  meshes.set(id, root);
+  return root;
+}
+
+export function getMesh(id: ModelId): Object3D {
+  const mesh = meshes.get(id);
+  if (!mesh) throw new Error(`mesh not registered: ${id}`);
+  return mesh;
 }

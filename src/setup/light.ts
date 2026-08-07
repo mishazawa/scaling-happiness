@@ -2,7 +2,7 @@ import { AmbientLight, DirectionalLight, type Scene } from "three";
 import { LIGHT_MAIN_POSITION } from "../constants";
 
 export function setupLight(scene: Scene) {
-  const ambientLight = new AmbientLight(0xffffff, 0.6); // move to constants
+  const ambientLight = new AmbientLight(0xffffff, 1); // move to constants
 
   const directionalLight = new DirectionalLight(0xffffff, 5); // move to constants
   directionalLight.position.set(...LIGHT_MAIN_POSITION);

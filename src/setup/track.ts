@@ -1,20 +1,18 @@
-import { Mesh, Vector3, type Object3D } from "three";
+import { Mesh, Vector3, type Object3D, type Texture } from "three";
 import { Path, type PathData } from "../core/Path";
-import { createEntity, type Entity } from "../core/Entity";
-import { Model } from "../core/Model";
-import { Position } from "../core/Position";
-import { addTag } from "../core/Tag";
-import type { World } from "../core/World";
-import { tagColorSlot } from "../utils/geometry";
+import { registerMesh } from "../render/modelRegistry";
+import { trackMovingMaterial, trackStaticMaterial } from "../render/materials";
 import { locateSegment, roundCorners } from "../utils/path";
+import { uvBand, uvLengthU } from "../utils/geometry";
 import {
-  LIGHT_PALETTE_SLOT,
   TRACK_CHECKPOINTS,
-  TRACK_COLOR_SLOT,
   TRACK_CORNER_RADIUS,
   TRACK_CORNER_SEGMENTS,
   TRACK_END_T,
+  TRACK_MOVING_PART,
   TRACK_START_T,
+  TRACK_STATIC_COLOR,
+  TRACK_STATIC_PART,
 } from "../constants";
 
 /**
@@ -110,43 +108,52 @@ export function makePathAroundTheGrid(): PathData {
 }
 
 /**
- * Stamps a dummy colour slot across the imported track mesh, so it satisfies
- * `prepareGeometry`'s `_color_id` contract without being authored for the
- * palette yet — the same trick `makeBubbleMesh` plays for a procedural sphere,
- * done here by traversal because the model arrives as a loaded scene graph.
+ * Registers the imported track as a plain, un-instanced mesh, and returns it
+ * ready to be added to the scene.
  *
- * Mutates the cached asset's geometry in place. Safe because the track is
- * registered exactly once, at startup, and nothing else reads that asset.
+ * The track is scenery, not an entity: it exists once, never moves, and is drawn
+ * straight from the loaded scene graph at the origin. That is also why it stays
+ * out of the ECS — a world rebuild on restart would take it with it, and there
+ * is no per-frame state to rebuild.
  *
- * The glTF holds two meshes, `TrackMoving` and `TrackStatic`; registration
- * merges them into one instanced draw. If the moving half ever has to animate
- * separately, that becomes two model ids rather than one.
+ * Its geometry is *not* normalized or merged. The mesh was swept along the very
+ * path `makePathAroundTheGrid` builds, in game coordinates, so it only lands on
+ * the pawns' line at its authored scale; and its two halves need two materials,
+ * which a single merged geometry could not carry:
+ *
+ *   - `Static` — the rails, a flat colour off a palette row.
+ *   - `Moving` — the belt, wearing `arrow` and scrolling it at pawn speed off
+ *     the clock the fish animate on.
+ *
+ * Both of the belt material's geometry-dependent numbers are measured here
+ * rather than assumed: the uv band it occupies (the export gives each half a
+ * slice of one shared layout, and the belt's is a strip a few percent tall) and
+ * the world length one unit of `u` covers, which is what turns a pawn's speed
+ * into a scroll rate.
+ *
+ * Both halves are asserted present: a rename in Blender would otherwise show up
+ * as a track that silently kept the exporter's grey.
  */
-export function prepareTrackModel(root: Object3D): Object3D {
-  root.traverse((object) => {
-    if (object instanceof Mesh) tagColorSlot(object.geometry, TRACK_COLOR_SLOT);
+export function makeTrack(root: Object3D, arrow: Texture): Object3D {
+  const parts = new Set<string>();
+
+  const track = registerMesh("track", root, (name, mesh: Mesh) => {
+    parts.add(name);
+    if (name === TRACK_STATIC_PART)
+      return trackStaticMaterial(TRACK_STATIC_COLOR);
+    if (name === TRACK_MOVING_PART)
+      return trackMovingMaterial(
+        arrow,
+        uvBand(mesh.geometry),
+        uvLengthU(mesh.geometry),
+      );
+    return null;
   });
-  return root;
-}
 
-/**
- * The track mesh as a world entity: one instance, parked at the origin.
- *
- * No position or scale of its own beyond that — the mesh was swept along the
- * very path `makePathAroundTheGrid` builds, in game coordinates, so it lands on
- * the pawns' line only if it is registered unnormalized (`targetRadius: null`)
- * and drawn at the world centre the grid is centred on.
- *
- * Created per game rather than at registration time: `initGame` rebuilds the
- * world, and an entity created outside it would vanish on the first restart.
- * The palette name is inert — the dummy material ignores `aRow`.
- */
-export function spawnTrack(world: World): Entity {
-  const entity = createEntity();
+  for (const part of [TRACK_STATIC_PART, TRACK_MOVING_PART]) {
+    if (!parts.has(part))
+      throw new Error(`track model is missing its "${part}" mesh`);
+  }
 
-  world.positions.set(entity, Position(0, 0, 0));
-  addTag(world, entity, "track");
-  world.models.set(entity, Model("track", LIGHT_PALETTE_SLOT));
-
-  return entity;
+  return track;
 }

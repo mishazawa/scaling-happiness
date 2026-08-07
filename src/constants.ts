@@ -1,8 +1,7 @@
-export const LIGHT_MAIN_POSITION: [number, number, number] = [20, 40, 20];
+export const LIGHT_MAIN_POSITION: [number, number, number] = [5, 10, 10];
 export const BLOCK_SIZE = 0.4;
 export const GRID_COLUMNS = 26;
 export const GRID_ROWS = GRID_COLUMNS;
-export const GROUND_COLOR = "#B8B89F";
 
 // The game's whole matching vocabulary. Blocks alternate between these two flags
 // and pawns are drawn from the same pair; `shootingSystem` compares them as
@@ -199,7 +198,13 @@ const MAIN_COLORS = {
   tide: 0x52656b,
   mermaid: 0xfdcb2a,
   poster: 0x0d8aa6,
+  ocean1: 0x117fd5,
+  ocean2: 0x02938b,
+  ocean3: 0xc6fce8,
+  ocean4: 0x64c6e3,
+  ocean5: 0x54e0ca,
 };
+export const GROUND_COLOR = MAIN_COLORS.ocean1;
 
 /**
  * Palette names, in declaration order. The whole palette system keys off this
@@ -277,19 +282,35 @@ export const BLOCK_COLOR_SLOT = 1;
  */
 export const PAWN_CAPACITY = 256;
 export const BLOCK_CAPACITY = GRID_COLUMNS * GRID_ROWS;
-// The track is scenery: one instance, drawn once, never spawned or despawned.
-export const TRACK_CAPACITY = 1;
 
 /**
- * Placeholder look for the imported track mesh, until it gets real materials.
- *
- * The mesh carries no `_color_id`, so — like the block bubbles — every vertex is
- * stamped with one slot; and it draws with a plain `standardMaterial` rather
- * than the palette one, whose idle breathing would pulse a 13-unit-wide piece of
- * scenery in and out by 10%.
+ * The track is scenery, not an ECS entity: a single un-instanced mesh, drawn
+ * once, never spawned or despawned. It carries no `_color_id`, so instead of
+ * the palette LUT its static half takes a flat colour, and its moving half the
+ * arrow texture.
  */
-export const TRACK_COLOR_SLOT = 0;
-export const TRACK_DUMMY_COLOR = "#6E7A87";
+/** Node names the track's two halves are exported under. */
+export const TRACK_STATIC_PART = "Static";
+export const TRACK_MOVING_PART = "Moving";
+export const TRACK_STATIC_COLOR = MAIN_COLORS.ocean4;
 
+/**
+ * How many arrow tiles fit around the belt.
+ *
+ * The tile is square, so square-looking arrows want the belt's length divided
+ * by its width: measured off the export, that is 58.5 / 1.48 ≈ 40. Raise it for
+ * smaller, denser arrows; the belt's uvs run 0..1 along its length, so this is
+ * the tile count for the whole loop.
+ */
+export const TRACK_ARROW_REPEAT = 20;
+
+/**
+ * The belt is viewed at a grazing angle from a tilted camera and is tiled 40
+ * times along its length, so its mips are heavily minified — the case
+ * anisotropic filtering exists for. Three clamps this to whatever the GPU
+ * supports.
+ */
+export const TRACK_ARROW_ANISOTROPY = 8;
+export const TRACK_SPEED = 1;
 export const SHADER_BREATH_AMP = 0.1;
 export const SHADER_BREATH_FREQ = 8.9;

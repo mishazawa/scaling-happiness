@@ -5,11 +5,18 @@ import {
   Group,
   InstancedBufferAttribute,
   Mesh,
+  MeshStandardMaterial,
   Object3D,
   type BufferGeometry,
 } from "three";
 import { COLOR_ATTRIBUTE, PAWN_MODEL_RADIUS } from "../constants";
-import { getModel, registerModel } from "./modelRegistry";
+import {
+  getMesh,
+  getModel,
+  registerMesh,
+  registerModel,
+  registeredModels,
+} from "./modelRegistry";
 
 function tag(geometry: BufferGeometry) {
   const count = geometry.getAttribute("position").count;
@@ -99,5 +106,44 @@ describe("modelRegistry", () => {
 
   it("throws on an unregistered id rather than returning undefined", () => {
     expect(() => getModel("ghost" as "pawn")).toThrow("ghost");
+  });
+});
+
+describe("registerMesh", () => {
+  it("keeps the node structure and materials the loader gave it", () => {
+    // The opposite of the instanced path: nothing is merged, so each part can
+    // keep its own material.
+    const root = new Group();
+    const rails = new Mesh(new BoxGeometry(1, 1, 1));
+    rails.name = "Static";
+    const belt = new Mesh(new BoxGeometry(1, 1, 1));
+    belt.name = "Moving";
+    root.add(rails, belt);
+    const material = new MeshStandardMaterial();
+
+    registerMesh("track", root, (name) =>
+      name === "Moving" ? material : null,
+    );
+
+    expect(belt.material).toBe(material);
+    expect(rails.material).not.toBe(material);
+    expect(belt.castShadow).toBe(true);
+  });
+
+  it("resolves by id, and stays out of the instanced repack", () => {
+    // registeredModels() zeroes `count` and flags instance attributes — a plain
+    // mesh in that loop would break it.
+    const root = new Mesh(new BoxGeometry(1, 1, 1));
+
+    registerMesh("track", root, () => null);
+
+    expect(getMesh("track")).toBe(root);
+    for (const model of registeredModels()) {
+      expect(model.mesh).not.toBe(root);
+    }
+  });
+
+  it("throws on an unregistered id rather than returning undefined", () => {
+    expect(() => getMesh("ghost" as "track")).toThrow("ghost");
   });
 });
