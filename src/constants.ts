@@ -428,3 +428,25 @@ export const PEARL_POSITION: [number, number, number] = [
   HEIGHT_OFFSET,
   TRACK_HALF_SIZE - 0.5,
 ];
+
+/**
+ * Every change to `world.lifes` plays as a small pearl at the shell above: one
+ * pops out and shrinks away when a life is spent, one falls in and grows when
+ * one is refunded. Same three-tween shape as a pawn's death, and parametrized
+ * the same way — one duration, which is the animation's clock (the scale tween
+ * carries it), plus speeds that can be tuned without changing how long it takes.
+ */
+export const LIFE_PEARL_DURATION = 0.6;
+/** Spin about world +Y, rad/s, into a fixed sweep. Negated for a refund. */
+export const LIFE_PEARL_SPIN_SPEED = Math.PI * 2;
+/** Travel along world +Y, units/s. Over the duration, about a shell's height. */
+export const LIFE_PEARL_RISE_SPEED = 4;
+/**
+ * Size of the flying pearl *relative to the bead standing in the shell*, not in
+ * world units: it is drawn from that bead's own geometry, which already has
+ * PEARL_SCALE baked into it. So this tracks the pearl's size automatically, and
+ * staying under 1 is what hides a refund inside the bead at the moment it lands.
+ */
+export const LIFE_PEARL_SCALE = 0.5;
+/** What a spent life shrinks to. Zero: gone by the time its clock runs out. */
+export const LIFE_PEARL_END_SCALE = 0;

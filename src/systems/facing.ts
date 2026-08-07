@@ -29,8 +29,13 @@ import { samplePathDirection } from "../utils/path";
  */
 export function facingSystem(world: World, grid: Grid, dt: number): void {
   for (const [entity, rotation] of world.rotations) {
-    // A dying pawn's yaw belongs to its death spin (a rotation tween, ticked by
-    // timerSystem); stepping it toward a heading here would cancel the spin out.
+    // A tweened yaw belongs to its tween (ticked by timerSystem); stepping it
+    // toward a heading here would cancel the spin out. The loop is over every
+    // rotation in the world, not just pawns', so this is what keeps the death
+    // spin and the life pearls' out of reach.
+    if (world.rotationTweens.has(entity)) continue;
+    // Held past the tween itself: a death's spin and its shrink end on the same
+    // frame, and the pawn is not torn down until the frame after that.
     if (hasTag(world, entity, "dying")) continue;
 
     if (hasTag(world, entity, "aiming")) {

@@ -4,8 +4,9 @@ import type { World } from "./World";
 /**
  * Tags categorize entities so systems can query "which entities are X"
  * without knowing an entity's full component set. Two kinds share this union:
- *  - kind tags ("block", "pawn", "projectile"): what an entity fundamentally
- *    is, set once.
+ *  - kind tags ("block", "pawn", "projectile", "life-pearl"): what an entity
+ *    fundamentally is, set once ("life-pearl" marks one of the short-lived
+ *    beads the shell throws off when the life count changes).
  *  - state tags ("queued", "spawning", "aiming", "dying", "targeted",
  *    "destroy"): a transient condition, added and removed as state changes
  *    (e.g. "queued" marks an entity as clickable while it waits in a queue;
@@ -22,6 +23,7 @@ export type Tag =
   | "block"
   | "pawn"
   | "projectile"
+  | "life-pearl"
   | "queued"
   | "spawning"
   | "aiming"

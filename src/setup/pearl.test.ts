@@ -7,7 +7,7 @@ import {
   Vector3,
 } from "three";
 import { degToRad } from "three/src/math/MathUtils.js";
-import { makePearl } from "./pearl";
+import { makePearl, pearlBeadSource } from "./pearl";
 import { getMesh } from "../render/modelRegistry";
 import {
   PEARL_COLOR,
@@ -117,5 +117,74 @@ describe("makePearl", () => {
   it("throws when a half is missing rather than silently keeping grey", () => {
     expect(() => build(PEARL_SHELL_PART)).toThrow(PEARL_PEARL_PART);
     expect(() => build(PEARL_PEARL_PART)).toThrow(PEARL_SHELL_PART);
+  });
+});
+
+describe("pearlBeadSource", () => {
+  it("hands back the bead's own material rather than a second one", () => {
+    // reflectiveMaterial mints a fresh instance per call, so asking for the
+    // pearl's colours again would be a whole extra material to keep in step.
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
+
+    expect(pearlBeadSource(root).material).toBe(
+      materialOf(root, PEARL_PEARL_PART),
+    );
+  });
+
+  it("reports where the bead stands", () => {
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
+
+    // The bead sits at its parent's origin in the fixture, so the anchor is the
+    // authored position — the point a spawned pearl leaves from and returns to.
+    const anchor = pearlBeadSource(root).anchor;
+    expect(anchor.x).toBeCloseTo(PEARL_POSITION[0], 6);
+    expect(anchor.y).toBeCloseTo(PEARL_POSITION[1], 6);
+    expect(anchor.z).toBeCloseTo(PEARL_POSITION[2], 6);
+  });
+
+  it("centres the geometry so a position component can place it", () => {
+    // Left on the bead's own offset, every copy would be pinned there and the
+    // position tween would move it relative to that rather than to the shell.
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
+
+    const { geometry } = pearlBeadSource(root);
+    geometry.computeBoundingBox();
+    const center = new Vector3();
+    geometry.boundingBox!.getCenter(center);
+
+    expect(center.length()).toBeLessThan(1e-6);
+  });
+
+  /**
+   * The bead is a child under the parent's turns, PEARL_POSITION and
+   * PEARL_SCALE; a clone that inherited none of that would draw at raw export
+   * size. Baking it in is also what makes LIFE_PEARL_SCALE a fraction of the
+   * pearl on screen rather than a size in world units.
+   */
+  it("bakes the pearl's scale into the geometry", () => {
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
+
+    const { geometry } = pearlBeadSource(root);
+    geometry.computeBoundingSphere();
+
+    // The fixture's bead is a unit sphere, so its radius is the scale itself.
+    expect(geometry.boundingSphere!.radius).toBeCloseTo(PEARL_SCALE, 6);
+  });
+
+  it("leaves the pearl it read from alone", () => {
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
+    const bead = root.getObjectByName(PEARL_PEARL_PART) as Mesh;
+    const before = bead.geometry;
+
+    pearlBeadSource(root);
+
+    expect(bead.geometry).toBe(before);
+    expect(bead.position.length()).toBe(0);
+  });
+
+  it("throws when there is no bead to copy", () => {
+    const root = new Object3D();
+
+    expect(() => pearlBeadSource(root)).toThrow(PEARL_PEARL_PART);
   });
 });

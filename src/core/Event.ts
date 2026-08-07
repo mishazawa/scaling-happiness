@@ -16,7 +16,10 @@ export type Event =
   | { type: "pawn-spawned"; entity: Entity }
   | { type: "pawn-resolved"; entity: Entity; depleted: boolean }
   | { type: "position-tween-complete"; entity: Entity }
-  | { type: "scale-tween-complete"; entity: Entity };
+  | { type: "scale-tween-complete"; entity: Entity }
+  // `delta` is the change lifeSystem actually applied, which is not always the
+  // one it was asked for — the count is clamped at zero.
+  | { type: "life-changed"; delta: number };
 
 export function pushEvent(world: World, event: Event): void {
   world.events.push(event);
@@ -41,5 +44,6 @@ export const EVENT_CONSUMERS = {
   "pawn-spawned": "lifeSystem",
   "pawn-resolved": "lifeSystem, deathSystem",
   "position-tween-complete": "spawnSystem, destructionSystem",
-  "scale-tween-complete": "deathSystem",
+  "scale-tween-complete": "deathSystem, lifePearlSystem",
+  "life-changed": "lifePearlSystem",
 } satisfies Record<Event["type"], string>;
