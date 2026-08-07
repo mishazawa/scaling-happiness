@@ -1,46 +1,49 @@
 import { describe, expect, it } from "vitest";
-import { Scene, Vector3 } from "three";
+import { MeshStandardMaterial, Scene, SphereGeometry, Vector3 } from "three";
 import {
   LIFE_PEARL_DURATION,
   LIFE_PEARL_END_SCALE,
   LIFE_PEARL_SCALE,
   LIFE_PEARL_SPIN_SPEED,
-  PEARL_POSITION,
 } from "../constants";
 import { createWorld } from "../core/World";
 import { hasTag } from "../core/Tag";
 import { LIFE_PEARL_TRAVEL, spawnLifePearl } from "./lifePearl";
-import { PEARL_GEOMETRY, PEARL_MATERIAL } from "./pearl";
+import type { LifePearlSource } from "./pearl";
 
-/** Where the standing pearl is, which is where these leave from and return to. */
-const ANCHOR = new Vector3(...PEARL_POSITION);
+const ANCHOR = new Vector3(-5, 2, 3);
+
+function source(): LifePearlSource {
+  return {
+    geometry: new SphereGeometry(1, 4, 2),
+    material: new MeshStandardMaterial(),
+    anchor: ANCHOR.clone(),
+  };
+}
 
 function spawn(change: "spent" | "refunded") {
   const world = createWorld();
   const scene = new Scene();
-  const entity = spawnLifePearl(world, scene, change);
+  const src = source();
+  const entity = spawnLifePearl(world, scene, src, change);
 
-  return { world, scene, entity };
+  return { world, scene, src, entity };
 }
 
 describe("spawnLifePearl", () => {
-  it("draws the same sphere the standing pearl is drawn from", () => {
-    const { world, scene, entity } = spawn("spent");
+  it("draws the pearl from the bead it was given", () => {
+    const { world, scene, src, entity } = spawn("spent");
 
     const mesh = world.renderables.get(entity)!;
     expect(scene.children).toContain(mesh);
-    // Shared, not copied: one geometry and one material serve every pearl a
-    // life change throws, however many are in the air at once.
-    expect((mesh as never as { geometry: unknown }).geometry).toBe(
-      PEARL_GEOMETRY,
-    );
-    expect((mesh as never as { material: unknown }).material).toBe(
-      PEARL_MATERIAL,
-    );
+    // Shared, not copied: one geometry and one material serve every pearl the
+    // shell ever throws, however many are in the air at once.
+    expect((mesh as never as { geometry: unknown }).geometry).toBe(src.geometry);
+    expect((mesh as never as { material: unknown }).material).toBe(src.material);
     expect(hasTag(world, entity, "life-pearl")).toBe(true);
   });
 
-  it("starts a spent life at the standing pearl and lifts it clear", () => {
+  it("starts a spent life at the shell and lifts it clear", () => {
     const { world, entity } = spawn("spent");
 
     expect(world.positions.get(entity)!.toArray()).toEqual(ANCHOR.toArray());
@@ -48,7 +51,7 @@ describe("spawnLifePearl", () => {
     const tween = world.positionTweens.get(entity)!;
     expect(tween.from.y).toBe(ANCHOR.y);
     expect(tween.to.y).toBe(ANCHOR.y + LIFE_PEARL_TRAVEL);
-    // It only ever moves straight up — the anchor is what places it laterally.
+    // It only ever moves straight up — the shell is what places it laterally.
     expect(tween.to.x).toBe(ANCHOR.x);
     expect(tween.to.z).toBe(ANCHOR.z);
   });
@@ -66,15 +69,15 @@ describe("spawnLifePearl", () => {
     expect(tween.duration).toBe(LIFE_PEARL_DURATION);
   });
 
-  it("runs a refund the other way, from above and back down", () => {
+  it("runs a refund the other way, from above and back into the shell", () => {
     const { world, entity } = spawn("refunded");
 
     expect(world.positions.get(entity)!.y).toBe(ANCHOR.y + LIFE_PEARL_TRAVEL);
 
     const tween = world.positionTweens.get(entity)!;
     expect(tween.from.y).toBe(ANCHOR.y + LIFE_PEARL_TRAVEL);
-    // Onto the anchor exactly: there it is the standing pearl's own sphere drawn
-    // smaller and concentric with it, so the standing one hides its removal.
+    // Onto the anchor exactly: there it is a smaller copy of the bead standing
+    // in the shell, concentric with it, so the bead hides it being removed.
     expect(tween.to.toArray()).toEqual(ANCHOR.toArray());
   });
 
@@ -88,9 +91,8 @@ describe("spawnLifePearl", () => {
     expect(tween.to).toBe(LIFE_PEARL_SCALE);
   });
 
-  it("is small enough for the standing pearl to hide it when it lands", () => {
-    // The whole reason a refund can end on the anchor without a pop: same
-    // sphere, same centre, strictly inside.
+  it("is small enough for the bead to hide it when it lands", () => {
+    // The whole reason a refund can end on the anchor without a pop.
     expect(LIFE_PEARL_SCALE).toBeLessThan(1);
   });
 
@@ -118,16 +120,13 @@ describe("spawnLifePearl", () => {
     );
   });
 
-  it("does not alias the anchor between pearls", () => {
-    // Every pearl starts from one shared vector; handing it out rather than a
-    // clone would let the first one moved drag all the later ones with it.
-    const first = spawn("spent");
-    first.world.positions.get(first.entity)!.set(99, 99, 99);
+  it("does not alias the anchor it was given", () => {
+    // Every pearl shares one source; writing through to it would drag the
+    // shell's own position around behind them.
+    const { world, src, entity } = spawn("spent");
 
-    const second = spawn("spent");
+    world.positions.get(entity)!.set(99, 99, 99);
 
-    expect(second.world.positions.get(second.entity)!.toArray()).toEqual(
-      ANCHOR.toArray(),
-    );
+    expect(src.anchor.toArray()).toEqual(ANCHOR.toArray());
   });
 });

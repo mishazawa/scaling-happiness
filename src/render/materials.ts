@@ -161,8 +161,7 @@ export function trackStaticMaterial(color: ColorSpec): MeshStandardMaterial {
 
 /**
  * A plain PBR material for surfaces whose whole look *is* their reflectance —
- * the pearl standing at the mouth of the track, and every one a life change
- * throws off it.
+ * the pearl's gold shell and its glossy bead.
  *
  * Its own instance every call, never out of the colour-keyed cache above: the
  * cache is keyed by colour alone and its entries are shared, so a `metalness` or

@@ -11,7 +11,7 @@ import type { ModelId } from "../core/Model";
  * Rendering resources are built from these by `render/modelRegistry.ts`; this
  * module only loads and caches the raw scene graphs.
  */
-export type AssetId = Extract<ModelId, "pawn" | "track">;
+export type AssetId = Extract<ModelId, "pawn" | "track" | "pearl">;
 
 const cache = new Map<AssetId, Object3D>();
 

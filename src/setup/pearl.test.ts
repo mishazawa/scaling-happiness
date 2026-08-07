@@ -1,70 +1,190 @@
 import { describe, it, expect } from "vitest";
-import { Mesh, MeshStandardMaterial } from "three";
-import { makePearl, PEARL_GEOMETRY, PEARL_MATERIAL } from "./pearl";
 import {
-  HEIGHT_OFFSET,
+  Mesh,
+  MeshStandardMaterial,
+  Object3D,
+  SphereGeometry,
+  Vector3,
+} from "three";
+import { degToRad } from "three/src/math/MathUtils.js";
+import { makePearl, pearlBeadSource } from "./pearl";
+import { getMesh } from "../render/modelRegistry";
+import {
   PEARL_COLOR,
   PEARL_METALNESS,
+  PEARL_PEARL_PART,
   PEARL_POSITION,
-  PEARL_RADIUS,
   PEARL_ROUGHNESS,
+  PEARL_SCALE,
+  PEARL_SHELL_COLOR,
+  PEARL_SHELL_METALNESS,
+  PEARL_SHELL_PART,
+  PEARL_SHELL_ROUGHNESS,
 } from "../constants";
 
+function pearlModel(...names: string[]): Object3D {
+  const root = new Object3D();
+  for (const name of names) {
+    const mesh = new Mesh(new SphereGeometry(1, 4, 2));
+    mesh.name = name;
+    root.add(mesh);
+  }
+  return root;
+}
+
+function build(...names: string[]) {
+  return makePearl(pearlModel(...names));
+}
+
+function materialOf(root: Object3D, name: string): MeshStandardMaterial {
+  return (root.getObjectByName(name) as Mesh).material as MeshStandardMaterial;
+}
+
 describe("makePearl", () => {
-  it("is a glossy dielectric rather than a metal", () => {
-    // The low roughness is the gloss; a pearl reflects, it does not shine like
-    // the metal it would be at a high metalness with no environment to mirror.
-    const material = PEARL_MATERIAL as MeshStandardMaterial;
+  it("gives the shell a metallic gold and the bead a glossy bright colour", () => {
+    // Two materials is the whole reason the pearl is not instanced: a merged
+    // instanced geometry could only carry one.
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
 
-    expect(material.color.getHex()).toBe(PEARL_COLOR);
-    expect(material.metalness).toBe(PEARL_METALNESS);
-    expect(material.roughness).toBe(PEARL_ROUGHNESS);
-    expect(material.roughness).toBeLessThan(0.2);
+    const shell = materialOf(root, PEARL_SHELL_PART);
+    const bead = materialOf(root, PEARL_PEARL_PART);
+
+    expect(shell).not.toBe(bead);
+
+    expect(shell.color.getHex()).toBe(PEARL_SHELL_COLOR);
+    expect(shell.metalness).toBe(PEARL_SHELL_METALNESS);
+    expect(shell.roughness).toBe(PEARL_SHELL_ROUGHNESS);
+
+    expect(bead.color.getHex()).toBe(PEARL_COLOR);
+    expect(bead.metalness).toBe(PEARL_METALNESS);
+    expect(bead.roughness).toBe(PEARL_ROUGHNESS);
+    // The gloss is the low roughness, and it is only gloss while it stays low.
+    expect(bead.roughness).toBeLessThan(0.2);
   });
 
-  it("stands where the track's mouth was authored", () => {
-    const pearl = makePearl();
+  it("builds its materials fresh, not out of the shared colour cache", () => {
+    // Entries there are keyed by colour alone and shared, so a roughness set on
+    // one would follow that colour onto everything else drawn in it.
+    const first = materialOf(
+      build(PEARL_SHELL_PART, PEARL_PEARL_PART),
+      PEARL_SHELL_PART,
+    );
+    const second = materialOf(
+      build(PEARL_SHELL_PART, PEARL_PEARL_PART),
+      PEARL_SHELL_PART,
+    );
 
-    expect(pearl.position.toArray()).toEqual(PEARL_POSITION);
+    expect(first).not.toBe(second);
   });
 
-  it("rests on the static scenery's plane rather than sinking into it", () => {
-    // The position is the sphere's centre, so a radius of clearance is what
-    // puts its underside on HEIGHT_OFFSET, where the track sits.
-    const pearl = makePearl();
+  it("stands on its authored transform", () => {
+    // Position and scale are placed by eye against the track's entrance, so
+    // this only pins that the constants are what reaches the object — their
+    // values are a judgement no test can make.
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
 
-    expect(pearl.position.y - PEARL_RADIUS).toBeCloseTo(HEIGHT_OFFSET, 6);
+    expect(root.position.equals(new Vector3(...PEARL_POSITION))).toBe(true);
+    expect(
+      root.scale.equals(new Vector3(PEARL_SCALE, PEARL_SCALE, PEARL_SCALE)),
+    ).toBe(true);
+  });
+
+  it("turns the shell's mouth away from the camera and tips it back", () => {
+    // The model is authored facing +z with its opening down its long axis; left
+    // as exported it would present its back and sit flat. Asserted as the
+    // direction its own forward ends up pointing, rather than as the two
+    // rotations that got it there.
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
+
+    const forward = new Vector3(0, 0, 1).applyQuaternion(root.quaternion);
+
+    // Half a turn about y: forward now runs back up the screen...
+    expect(forward.z).toBeLessThan(0);
+    // ...and the tip about x pitches it downward, so the shell leans toward
+    // the camera instead of lying flat. The sign is the whole content of the
+    // tilt, so it is pinned rather than merely asserted nonzero.
+    expect(forward.y).toBeCloseTo(-Math.sin(degToRad(25)));
+    // Neither turn rolls it: its forward stays in the y/z plane.
+    expect(Math.abs(forward.x)).toBeLessThan(1e-6);
+  });
+
+  it("registers the result so it resolves by model id", () => {
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
+
+    expect(getMesh("pearl")).toBe(root);
+  });
+
+  it("throws when a half is missing rather than silently keeping grey", () => {
+    expect(() => build(PEARL_SHELL_PART)).toThrow(PEARL_PEARL_PART);
+    expect(() => build(PEARL_PEARL_PART)).toThrow(PEARL_SHELL_PART);
+  });
+});
+
+describe("pearlBeadSource", () => {
+  it("hands back the bead's own material rather than a second one", () => {
+    // reflectiveMaterial mints a fresh instance per call, so asking for the
+    // pearl's colours again would be a whole extra material to keep in step.
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
+
+    expect(pearlBeadSource(root).material).toBe(
+      materialOf(root, PEARL_PEARL_PART),
+    );
+  });
+
+  it("reports where the bead stands", () => {
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
+
+    // The bead sits at its parent's origin in the fixture, so the anchor is the
+    // authored position — the point a spawned pearl leaves from and returns to.
+    const anchor = pearlBeadSource(root).anchor;
+    expect(anchor.x).toBeCloseTo(PEARL_POSITION[0], 6);
+    expect(anchor.y).toBeCloseTo(PEARL_POSITION[1], 6);
+    expect(anchor.z).toBeCloseTo(PEARL_POSITION[2], 6);
+  });
+
+  it("centres the geometry so a position component can place it", () => {
+    // Left on the bead's own offset, every copy would be pinned there and the
+    // position tween would move it relative to that rather than to the shell.
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
+
+    const { geometry } = pearlBeadSource(root);
+    geometry.computeBoundingBox();
+    const center = new Vector3();
+    geometry.boundingBox!.getCenter(center);
+
+    expect(center.length()).toBeLessThan(1e-6);
   });
 
   /**
-   * Its size lives in the geometry, not in a scale on the mesh: the pearls a
-   * life change throws are this same sphere drawn smaller, and LIFE_PEARL_SCALE
-   * is only a fraction of *this* one so long as this one is drawn at 1.
+   * The bead is a child under the parent's turns, PEARL_POSITION and
+   * PEARL_SCALE; a clone that inherited none of that would draw at raw export
+   * size. Baking it in is also what makes LIFE_PEARL_SCALE a fraction of the
+   * pearl on screen rather than a size in world units.
    */
-  it("carries its size in the geometry, drawn unscaled", () => {
-    const pearl = makePearl();
+  it("bakes the pearl's scale into the geometry", () => {
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
 
-    PEARL_GEOMETRY.computeBoundingSphere();
-    expect(PEARL_GEOMETRY.boundingSphere!.radius).toBeCloseTo(PEARL_RADIUS, 6);
-    expect(pearl.scale.toArray()).toEqual([1, 1, 1]);
+    const { geometry } = pearlBeadSource(root);
+    geometry.computeBoundingSphere();
+
+    // The fixture's bead is a unit sphere, so its radius is the scale itself.
+    expect(geometry.boundingSphere!.radius).toBeCloseTo(PEARL_SCALE, 6);
   });
 
-  it("shares one geometry and one material with every pearl drawn from them", () => {
-    // reflectiveMaterial mints a fresh instance per call, so a pearl built per
-    // spawn would be a new material every time the life count moved.
-    const first = makePearl() as Mesh;
-    const second = makePearl() as Mesh;
+  it("leaves the pearl it read from alone", () => {
+    const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
+    const bead = root.getObjectByName(PEARL_PEARL_PART) as Mesh;
+    const before = bead.geometry;
 
-    expect(first.geometry).toBe(PEARL_GEOMETRY);
-    expect(first.material).toBe(PEARL_MATERIAL);
-    expect(second.geometry).toBe(first.geometry);
-    expect(second.material).toBe(first.material);
+    pearlBeadSource(root);
+
+    expect(bead.geometry).toBe(before);
+    expect(bead.position.length()).toBe(0);
   });
 
-  it("takes part in the scene's lighting", () => {
-    const pearl = makePearl();
+  it("throws when there is no bead to copy", () => {
+    const root = new Object3D();
 
-    expect(pearl.castShadow).toBe(true);
-    expect(pearl.receiveShadow).toBe(true);
+    expect(() => pearlBeadSource(root)).toThrow(PEARL_PEARL_PART);
   });
 });
