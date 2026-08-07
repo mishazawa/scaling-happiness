@@ -184,6 +184,16 @@ export const SPAWN_COOLDOWN = 0.25;
 // constraint. A zero (or negative) duration would complete on the tween's first
 // tick, i.e. teleport, which is the behaviour this exists to replace.
 export const QUEUE_ADVANCE_DURATION = 0.15;
+
+// Pawns read as slightly larger while waiting in a queue, and tween back
+// down to DEFAULT_SCALE the moment they hop onto the track (see
+// setup/queue.ts joinQueue and systems/spawn.ts). 1 disables the effect.
+export const QUEUE_PAWN_SCALE = 1.15;
+// Duration for both the grow-on-join and shrink-on-arrival tweens above.
+// Kept independent of QUEUE_ADVANCE_DURATION/SPAWN_TRANSIT_DURATION since
+// it animates a different property (scale, not position).
+export const QUEUE_PAWN_SCALE_TWEEN_DURATION = 0.15;
+
 export const TRACK_START_T = 0.02;
 export const TRACK_END_T = 1 - TRACK_START_T;
 

@@ -1,11 +1,17 @@
 import { PathFollower } from "../core/Path";
-import { PositionTween } from "../core/Tween";
+import { PositionTween, ScalarTween } from "../core/Tween";
 import { Countdown } from "../core/Countdown";
 import { pushEvent, readEvents } from "../core/Event";
 import { addTag, getEntitiesByTag, hasTag, removeTag } from "../core/Tag";
+import { DEFAULT_SCALE } from "../core/Scale";
 import type { World } from "../core/World";
 import { advanceQueue, releasePawnFromQueue } from "../setup/queue";
-import { SPAWN_COOLDOWN, SPAWN_TRANSIT_DURATION } from "../constants";
+import {
+  QUEUE_PAWN_SCALE,
+  QUEUE_PAWN_SCALE_TWEEN_DURATION,
+  SPAWN_COOLDOWN,
+  SPAWN_TRANSIT_DURATION,
+} from "../constants";
 import type { SystemContext } from "./context";
 import { snapToPathDirection } from "./facing";
 
@@ -52,6 +58,14 @@ export function spawnSystem(world: World, ctx: SystemContext): void {
 
     removeTag(world, event.entity, "spawning");
     world.pathFollowers.set(event.entity, PathFollower(ctx.pathEntity));
+    world.scaleTweens.set(
+      event.entity,
+      ScalarTween(
+        world.scales.get(event.entity) ?? QUEUE_PAWN_SCALE,
+        DEFAULT_SCALE,
+        QUEUE_PAWN_SCALE_TWEEN_DURATION,
+      ),
+    );
 
     const path = world.paths.get(ctx.pathEntity);
     if (path) snapToPathDirection(world, event.entity, path, 0);

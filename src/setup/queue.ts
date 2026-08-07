@@ -13,15 +13,18 @@ import {
   QUEUE_DIRECTION,
   QUEUE_INITIAL_SIZE,
   QUEUE_OFFSET,
+  QUEUE_PAWN_SCALE,
+  QUEUE_PAWN_SCALE_TWEEN_DURATION,
   QUEUE_POSITION,
   QUEUE_SPACING,
   QUEUE_VISIBLE_SLOTS,
 } from "../constants";
+import { DEFAULT_SCALE } from "../core/Scale";
 import { createEntity, type Entity } from "../core/Entity";
 import { Position } from "../core/Position";
 import { addTag, removeTag } from "../core/Tag";
 import { dequeue, enqueue, type QueueId } from "../core/Queue";
-import { PositionTween } from "../core/Tween";
+import { PositionTween, ScalarTween } from "../core/Tween";
 import type { World } from "../core/World";
 import { addRenderable } from "../render/renderable";
 import { randomPawnKind, spawnPawn } from "./pawn";
@@ -85,6 +88,10 @@ function slotPosition(base: Vector3, index: number, out = new Vector3()) {
 function joinQueue(world: World, queueId: QueueId, pawn: Entity): void {
   enqueue(world, queueId, pawn);
   addTag(world, pawn, "queued");
+  world.scaleTweens.set(
+    pawn,
+    ScalarTween(DEFAULT_SCALE, QUEUE_PAWN_SCALE, QUEUE_PAWN_SCALE_TWEEN_DURATION),
+  );
 }
 
 /** Snaps every member onto its slot. For building a queue, not for moving one. */
