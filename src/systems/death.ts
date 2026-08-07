@@ -59,7 +59,12 @@ function beginDeath(world: World, entity: Entity): void {
   world.scales.set(entity, DEFAULT_SCALE);
   world.scaleTweens.set(
     entity,
-    ScalarTween(DEFAULT_SCALE, PAWN_DEATH_END_SCALE, PAWN_DEATH_DURATION),
+    ScalarTween(
+      DEFAULT_SCALE,
+      PAWN_DEATH_END_SCALE,
+      PAWN_DEATH_DURATION,
+      "easeOutQuad",
+    ),
   );
 
   const rotation = world.rotations.get(entity);
@@ -70,6 +75,7 @@ function beginDeath(world: World, entity: Entity): void {
         rotation.yaw,
         rotation.yaw + PAWN_DEATH_SPIN_SPEED * PAWN_DEATH_DURATION,
         PAWN_DEATH_DURATION,
+        "easeOutQuad",
       ),
     );
   }
@@ -80,7 +86,7 @@ function beginDeath(world: World, entity: Entity): void {
     risen.y += PAWN_DEATH_RISE_SPEED * PAWN_DEATH_DURATION;
     world.positionTweens.set(
       entity,
-      PositionTween(position, risen, PAWN_DEATH_DURATION),
+      PositionTween(position, risen, PAWN_DEATH_DURATION, "easeInQuad"),
     );
   }
 }

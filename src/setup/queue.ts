@@ -90,7 +90,12 @@ function joinQueue(world: World, queueId: QueueId, pawn: Entity): void {
   addTag(world, pawn, "queued");
   world.scaleTweens.set(
     pawn,
-    ScalarTween(DEFAULT_SCALE, QUEUE_PAWN_SCALE, QUEUE_PAWN_SCALE_TWEEN_DURATION),
+    ScalarTween(
+      DEFAULT_SCALE,
+      QUEUE_PAWN_SCALE,
+      QUEUE_PAWN_SCALE_TWEEN_DURATION,
+      "easeOutQuad",
+    ),
   );
 }
 
@@ -124,7 +129,12 @@ function tweenQueueIntoLayout(world: World, queueId: QueueId): void {
 
     world.positionTweens.set(
       member,
-      PositionTween(pos, slotPosition(base, index), QUEUE_ADVANCE_DURATION),
+      PositionTween(
+        pos,
+        slotPosition(base, index),
+        QUEUE_ADVANCE_DURATION,
+        "easeInOutQuad",
+      ),
     );
   });
 }

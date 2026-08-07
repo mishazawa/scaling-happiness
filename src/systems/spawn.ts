@@ -45,7 +45,12 @@ export function spawnSystem(world: World, ctx: SystemContext): void {
     const pawnStartPos = world.positions.get(released)!;
     world.positionTweens.set(
       released,
-      PositionTween(pawnStartPos, path.points[0], SPAWN_TRANSIT_DURATION),
+      PositionTween(
+        pawnStartPos,
+        path.points[0],
+        SPAWN_TRANSIT_DURATION,
+        "easeInOutQuad",
+      ),
     );
     addTag(world, released, "spawning");
     world.spawnOrigins.set(released, event.queue);
@@ -64,6 +69,7 @@ export function spawnSystem(world: World, ctx: SystemContext): void {
         world.scales.get(event.entity) ?? QUEUE_PAWN_SCALE,
         DEFAULT_SCALE,
         QUEUE_PAWN_SCALE_TWEEN_DURATION,
+        "easeOutQuad",
       ),
     );
 

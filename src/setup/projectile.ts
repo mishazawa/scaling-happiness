@@ -33,7 +33,7 @@ export function spawnProjectile(
 
   world.positionTweens.set(
     entity,
-    PositionTween(from, to, PROJECTILE_DURATION),
+    PositionTween(from, to, PROJECTILE_DURATION, "easeOutCubic"),
   );
   world.projectileTargets.set(entity, targetCell);
 

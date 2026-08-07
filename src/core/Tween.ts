@@ -16,24 +16,51 @@ export type PositionTweenData = {
   to: Vector3;
   elapsed: number;
   duration: number;
+  easing: keyof typeof Easing;
 };
 
 export const PositionTween = (
   from: Vector3,
   to: Vector3,
   duration: number,
+  easing: keyof typeof Easing,
 ): PositionTweenData => ({
   from: from.clone(),
   to: to.clone(),
   elapsed: 0,
   duration,
+  easing,
 });
 
 const _tempVec = new Vector3();
 
 export function samplePositionTween(tween: PositionTweenData): Vector3 {
-  return _tempVec.copy(tween.from).lerp(tween.to, progress(tween));
+  const t = progress(tween);
+  const easedT = Easing[tween.easing](t);
+
+  return _tempVec.copy(tween.from).lerp(tween.to, easedT);
 }
+
+export type EasingFunction = (t: number) => number;
+
+// A collection of common easing functions.
+// You can add more (like Elastic, Bounce, etc.) as needed.
+const Easing = {
+  linear: (t: number) => t,
+
+  easeInQuad: (t: number) => t * t,
+  easeOutQuad: (t: number) => t * (2 - t),
+  easeInOutQuad: (t: number) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
+
+  easeInCubic: (t: number) => t * t * t,
+  easeOutCubic: (t: number) => 1 - Math.pow(1 - t, 3),
+  easeInOutCubic: (t: number) =>
+    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+
+  easeInSine: (t: number) => 1 - Math.cos((t * Math.PI) / 2),
+  easeOutSine: (t: number) => Math.sin((t * Math.PI) / 2),
+  easeInOutSine: (t: number) => -(Math.cos(Math.PI * t) - 1) / 2,
+};
 
 /**
  * A number-valued tween, shared by every scalar property (scale, yaw). Which
@@ -45,17 +72,20 @@ export type ScalarTweenData = {
   to: number;
   elapsed: number;
   duration: number;
+  easing: keyof typeof Easing;
 };
 
 export const ScalarTween = (
   from: number,
   to: number,
   duration: number,
-): ScalarTweenData => ({ from, to, elapsed: 0, duration });
+  easing: keyof typeof Easing,
+): ScalarTweenData => ({ from, to, elapsed: 0, duration, easing });
 
 export function sampleScalarTween(tween: ScalarTweenData): number {
   const t = progress(tween);
-  return tween.from + (tween.to - tween.from) * t;
+  const easedT = Easing[tween.easing](t);
+  return tween.from + (tween.to - tween.from) * easedT;
 }
 
 /** Clamped 0..1 position through a tween. A zero duration is already over. */

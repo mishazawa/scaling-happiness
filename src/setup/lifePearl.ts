@@ -64,11 +64,14 @@ export function spawnLifePearl(
   const to = LIFE_PEARL_END_SCALE;
 
   world.scales.set(entity, from);
-  world.scaleTweens.set(entity, ScalarTween(from, to, LIFE_PEARL_DURATION));
+  world.scaleTweens.set(
+    entity,
+    ScalarTween(from, to, LIFE_PEARL_DURATION, "easeOutQuad"),
+  );
 
   world.positionTweens.set(
     entity,
-    PositionTween(start, end, LIFE_PEARL_DURATION),
+    PositionTween(start, end, LIFE_PEARL_DURATION, "easeInOutQuad"),
   );
 
   return entity;

@@ -185,7 +185,7 @@ export const SPAWN_COOLDOWN = 0.25;
 // the next click becomes legal, which is a nice place to be but not a
 // constraint. A zero (or negative) duration would complete on the tween's first
 // tick, i.e. teleport, which is the behaviour this exists to replace.
-export const QUEUE_ADVANCE_DURATION = 0.15;
+export const QUEUE_ADVANCE_DURATION = 0.4;
 
 // Pawns read as slightly larger while waiting in a queue, and tween back
 // down to DEFAULT_SCALE the moment they hop onto the track (see
@@ -390,7 +390,7 @@ export const PEARL_METALNESS = 0;
 export const PEARL_ROUGHNESS = 0.1;
 export const TRACK_SPEED = 1;
 export const SHADER_BREATH_AMP = 0.1;
-export const SHADER_BREATH_FREQ = 8.9;
+export const SHADER_BREATH_FREQ = 3.4;
 
 /**
  * The fake caustics laid over the ground and the instanced models — the rippling
