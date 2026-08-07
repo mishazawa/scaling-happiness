@@ -176,11 +176,11 @@ async function main() {
   function animate() {
     requestAnimationFrame(animate);
     const dt = clock.getDelta();
+    timerSystem(world, dt);
 
     if (world.status === "playing") {
       pathFollowSystem(world, dt);
       shootingSystem(world, GRID_PARAMETERS, ctx);
-      timerSystem(world, dt);
       destructionSystem(world);
       // Paired with destructionSystem: both turn a finished tween into a
       // teardown. After the two systems that resolve pawns and after
@@ -194,14 +194,12 @@ async function main() {
       // After shooting (which sets the aim) and before rendering (which draws
       // the yaw), so a turn is never a frame behind what caused it.
       facingSystem(world, GRID_PARAMETERS, dt);
-
-      renderSystem(world, dt);
-      garbageCollectionSystem(world, ctx);
-      gameStatusSystem(world);
-
-      if (world.status !== "playing") showEndScreen();
     }
+    if (world.status !== "playing") showEndScreen();
 
+    renderSystem(world, dt);
+    garbageCollectionSystem(world, ctx);
+    gameStatusSystem(world);
     clearEventsSystem(world);
     renderer.render(scene, camera);
     clock.update();
