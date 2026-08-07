@@ -30,3 +30,5 @@ __pycache__/
 models/out/
 
 *.blend1
+
+ai_logs/
