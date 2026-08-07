@@ -84,7 +84,7 @@ const CAMERA_DEPTH_TO_SCREEN_Y = CAMERA_TILT_Y / CAMERA_TILT_LENGTH;
 // Frustum width is sized to fit the grid + its track padding exactly; height
 // follows from the locked aspect ratio, so the play field is always fully
 // visible with no wasted horizontal space.
-const CAMERA_HALF_WIDTH = TRACK_HALF_SIZE + TRACK_PADDING / 2;
+const CAMERA_HALF_WIDTH = TRACK_HALF_SIZE + TRACK_PADDING;
 const CAMERA_HALF_HEIGHT = CAMERA_HALF_WIDTH / ASPECT_RATIO;
 export const CAMERA_FRUSTUM_SIZE = CAMERA_HALF_HEIGHT * 2;
 
@@ -159,7 +159,7 @@ const firstHiddenPawnZ = screenBottomZ + PAWN_RADIUS_AS_Z_DISTANCE;
 // before lastVisiblePawnZ (to be fully visible) while the next one lands at or
 // after firstHiddenPawnZ (to be fully hidden); centering it between those two
 // requirements splits the margin evenly. Also sizes the queue's click box.
-export const QUEUE_VISIBLE_SLOTS = 3;
+export const QUEUE_VISIBLE_SLOTS = 4;
 const lastSlotZ = (lastVisiblePawnZ + (firstHiddenPawnZ - QUEUE_SPACING)) / 2;
 export const QUEUE_POSITION: [number, number, number] = [
   0,
@@ -219,6 +219,9 @@ const ACCENT_COLOR = 0xfa6781;
 const BLACK_COLOR = 0x0a1a2e;
 const WHITE_COLOR = 0xffffff;
 
+// fish floating over track, copying position from path. because of this -
+// we move all static stuff slightly down Y.
+export const HEIGHT_OFFSET = -1;
 /**
  * One palette per entry: the three shared colours plus this palette's own main
  * one. Adding a key here adds a palette everywhere — the texture grows a row,
@@ -342,6 +345,43 @@ export const TRACK_ARROW_REPEAT = 20;
  * supports.
  */
 export const TRACK_ARROW_ANISOTROPY = 8;
+
+/**
+ * The pearl: scenery like the track, marking the mouth of the track where pawns
+ * enter it. Also un-instanced, and for the same reason — its two halves want two
+ * different materials, which one merged geometry could not carry.
+ */
+/** Node names the pearl's two halves are exported under. */
+export const PEARL_SHELL_PART = "shell";
+export const PEARL_PEARL_PART = "pearl";
+
+/**
+ * Gold, off the palette's own yellow rather than a new colour, so the pearl
+ * belongs to the same set as everything else on screen.
+ *
+ * Metalness is not a full 1: a metal's diffuse term is zero and its colour comes
+ * entirely out of specular reflection, and this scene has no environment map to
+ * reflect — a pure metal would read as a dark shape with one hot highlight. Just
+ * under 1 keeps a trace of diffuse gold under the sheen.
+ */
+export const PEARL_SHELL_COLOR = MAIN_COLORS.mermaid;
+export const PEARL_SHELL_METALNESS = 0.9;
+export const PEARL_SHELL_ROUGHNESS = 0.25;
+
+/**
+ * The pearl itself: the palette's brightest colour, glossy rather than metallic
+ * — a dielectric, so it keeps its diffuse colour and adds a tight highlight on
+ * top. The low roughness *is* the gloss.
+ */
+export const PEARL_COLOR = MAIN_COLORS.ocean3;
+export const PEARL_METALNESS = 0;
+export const PEARL_ROUGHNESS = 0.1;
 export const TRACK_SPEED = 1;
 export const SHADER_BREATH_AMP = 0.1;
 export const SHADER_BREATH_FREQ = 8.9;
+export const PEARL_SCALE = 4;
+export const PEARL_POSITION: [number, number, number] = [
+  -TRACK_HALF_SIZE - 0.75,
+  HEIGHT_OFFSET,
+  TRACK_HALF_SIZE - 0.5,
+];

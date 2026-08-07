@@ -8,7 +8,6 @@ import {
 } from "three";
 import { makePaletteDataTexture } from "../utils/paletteTexture";
 import {
-  PAWN_SPEED,
   SHADER_BREATH_AMP,
   SHADER_BREATH_FREQ,
   TRACK_ARROW_ANISOTROPY,
@@ -158,6 +157,28 @@ export function paletteMaterial(): MeshStandardMaterial {
  */
 export function trackStaticMaterial(color: ColorSpec): MeshStandardMaterial {
   return new MeshStandardMaterial({ color });
+}
+
+/**
+ * A plain PBR material for surfaces whose whole look *is* their reflectance —
+ * the pearl's gold shell and its glossy bead.
+ *
+ * Its own instance every call, never out of the colour-keyed cache above: the
+ * cache is keyed by colour alone and its entries are shared, so a `metalness` or
+ * `roughness` set on one of them would follow that colour onto everything else
+ * drawn in it.
+ *
+ * There is no environment map, here or on the scene: the light is one
+ * directional plus an ambient fill, so these two numbers are judged against a
+ * single specular highlight rather than a reflection. That is what keeps the
+ * metalness below a full 1 — see PEARL_SHELL_METALNESS.
+ */
+export function reflectiveMaterial(
+  color: ColorSpec,
+  metalness: number,
+  roughness: number,
+): MeshStandardMaterial {
+  return new MeshStandardMaterial({ color, metalness, roughness });
 }
 
 const TRACK_FRAG_DECL = /* glsl */ `

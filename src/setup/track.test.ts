@@ -15,7 +15,6 @@ import { uniforms } from "../render/materials";
 import {
   TRACK_CHECKPOINTS,
   TRACK_CORNER_RADIUS,
-  PAWN_SPEED,
   TRACK_ARROW_REPEAT,
   TRACK_END_T,
   TRACK_MOVING_PART,

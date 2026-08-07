@@ -32,6 +32,7 @@ import { clearEventsSystem } from "./systems/clearEvents";
 import { gameStatusSystem } from "./systems/gameStatus";
 import type { SystemContext } from "./systems/context";
 import { makePathAroundTheGrid, makeTrack } from "./setup/track";
+import { makePearl } from "./setup/pearl";
 import { DEBUG_pathVisualizer } from "./setup/debugPath";
 import { createQueues } from "./setup/queue";
 import { createCamera, updateCameraFrustum } from "./render/camera";
@@ -48,12 +49,14 @@ import { registerModel } from "./render/modelRegistry";
 
 import FISH_MESH from "./assets/fish.glb";
 import TRACK_MESH from "./assets/track.glb";
+import PEARL_MESH from "./assets/pearl.glb";
 import ARROW_TEXTURE from "./assets/water.png";
 import type { Grid } from "./core/Grid";
 
 export const MANIFEST: Record<AssetId, string> = {
   pawn: FISH_MESH,
   track: TRACK_MESH,
+  pearl: PEARL_MESH,
 };
 
 export const TEXTURE_MANIFEST: Record<TextureId, string> = {
@@ -86,6 +89,8 @@ async function main() {
   setupLight(scene);
   setupGround(scene);
 
+  const renderer = createRenderer(container);
+
   // Registered and added to the scene once, outside initGame: an instanced mesh
   // is a rendering resource shared by every entity of its model, not world
   // state. The render system repacks the slots from zero each frame, so a
@@ -102,9 +107,10 @@ async function main() {
     // Not instanced: the track exists once, never moves, and its two halves
     // carry two different materials. See `makeTrack`.
     makeTrack(getAssetById("track"), getTextureById("arrow")),
+    // Scenery too, and for the same reasons. It stands at the mouth of the
+    // track — the point every pawn is spawned onto.
+    makePearl(getAssetById("pearl")),
   );
-
-  const renderer = createRenderer(container);
 
   function handleResize() {
     updateCameraFrustum(camera, container);

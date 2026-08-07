@@ -4,7 +4,12 @@ import { createWorld } from "../core/World";
 import { toFlat, toRowColumn } from "../utils/gridMath";
 import { makeGrid } from "./grid";
 import type { PaletteName } from "../core/Model";
-import { FLAG_DARK, FLAG_LIGHT, GRID_CLUSTER } from "../constants";
+import {
+  FLAG_DARK,
+  FLAG_LIGHT,
+  GRID_CLUSTER,
+  HEIGHT_OFFSET,
+} from "../constants";
 
 /**
  * The two palettes the checkerboard alternates between. Distinct from each
@@ -59,7 +64,7 @@ describe("makeGrid", () => {
     }
   });
 
-  it("centers the grid around config.center", () => {
+  it("centers the grid around config.center, sunk by HEIGHT_OFFSET", () => {
     const world = createWorld();
     const center = new Vector3(10, 5, -2);
     const cellSize = 2;
@@ -76,7 +81,10 @@ describe("makeGrid", () => {
     const middlePosition = world.positions.get(middleEntity!)!;
 
     expect(middlePosition.x).toBeCloseTo(center.x);
-    expect(middlePosition.y).toBeCloseTo(center.y);
+    // Centred in x and z, but not in y: `cellToWorld` drops every block by
+    // HEIGHT_OFFSET, seating the bubbles into the ground rather than resting
+    // them on it.
+    expect(middlePosition.y).toBeCloseTo(center.y + HEIGHT_OFFSET);
     expect(middlePosition.z).toBeCloseTo(center.z);
   });
 

@@ -1,5 +1,6 @@
 import { Vector3 } from "three";
 import type { Grid } from "../core/Grid";
+import { HEIGHT_OFFSET } from "../constants";
 
 export const toFlat = (
   row: number,
@@ -27,14 +28,10 @@ export const gridOriginZ = (grid: Grid): number =>
   grid.center.z - ((grid.rows - 1) * grid.cellSize) / 2;
 
 /** Centre of cell (`row`, `column`). Returns a fresh Vector3 — callers keep it. */
-export function cellToWorld(
-  grid: Grid,
-  row: number,
-  column: number,
-): Vector3 {
+export function cellToWorld(grid: Grid, row: number, column: number): Vector3 {
   return new Vector3(
     gridOriginX(grid) + column * grid.cellSize,
-    grid.center.y,
+    grid.center.y + HEIGHT_OFFSET,
     gridOriginZ(grid) + row * grid.cellSize,
   );
 }

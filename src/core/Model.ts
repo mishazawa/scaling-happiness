@@ -9,7 +9,7 @@ import type { PALETTES } from "../constants";
  * rendering resource shared by many entities, not per-entity state, and storing
  * one here would make the world unserializable.
  */
-export type ModelId = "pawn" | "block" | "track";
+export type ModelId = "pawn" | "block" | "track" | "pearl";
 
 export type PaletteName = keyof typeof PALETTES;
 
