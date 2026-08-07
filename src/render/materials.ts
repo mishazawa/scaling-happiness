@@ -324,7 +324,7 @@ export function paletteMaterial(): MeshStandardMaterial {
  * drawn in it.
  */
 export function trackStaticMaterial(color: ColorSpec): MeshStandardMaterial {
-  return new MeshStandardMaterial({ color });
+  return withCaustics(new MeshStandardMaterial({ color }));
 }
 
 /**
@@ -346,7 +346,9 @@ export function reflectiveMaterial(
   metalness: number,
   roughness: number,
 ): MeshStandardMaterial {
-  return new MeshStandardMaterial({ color, metalness, roughness });
+  return withCaustics(
+    new MeshStandardMaterial({ color, metalness, roughness }),
+  );
 }
 
 const TRACK_FRAG_DECL = /* glsl */ `

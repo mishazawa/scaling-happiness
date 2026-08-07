@@ -2,7 +2,7 @@
 // caster) plus a flat ambient fill. The directional light's position doubles as
 // the shadow camera's position — Three.js points the shadow camera from the
 // light at its target — so moving LIGHT_MAIN_POSITION moves the shadows with it.
-export const LIGHT_MAIN_POSITION: [number, number, number] = [5, 20, 10];
+export const LIGHT_MAIN_POSITION: [number, number, number] = [10, 20, 15];
 export const LIGHT_COLOR = 0xffffff;
 export const LIGHT_MAIN_INTENSITY = 5;
 // Ambient fill, so faces turned away from the light aren't black.
@@ -437,7 +437,7 @@ export const SHADER_CAUSTIC_ANISOTROPY = 8;
 export const PEARL_SCALE = 4;
 export const PEARL_POSITION: [number, number, number] = [
   -TRACK_HALF_SIZE - 0.75,
-  HEIGHT_OFFSET,
+  HEIGHT_OFFSET / 2,
   TRACK_HALF_SIZE - 0.5,
 ];
 

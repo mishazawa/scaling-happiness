@@ -34,7 +34,7 @@ import type { SystemContext } from "./systems/context";
 import { makePathAroundTheGrid, makeTrack } from "./setup/track";
 import { makePearl, pearlBeadSource } from "./setup/pearl";
 import { lifePearlSystem } from "./systems/lifePearl";
-import { DEBUG_pathVisualizer } from "./setup/debugPath";
+// import { DEBUG_pathVisualizer } from "./setup/debugPath";
 import { createQueues } from "./setup/queue";
 import { createCamera, updateCameraFrustum } from "./render/camera";
 import { createRenderer } from "./render/renderer";
@@ -150,7 +150,7 @@ async function main() {
     const pathEntity = createEntity();
     world.paths.set(pathEntity, pd);
 
-    DEBUG_pathVisualizer(world, pd, scene);
+    // DEBUG_pathVisualizer(world, pd, scene);
 
     createQueues(world, scene);
 
