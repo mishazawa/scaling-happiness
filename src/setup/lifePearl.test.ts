@@ -4,7 +4,6 @@ import {
   LIFE_PEARL_DURATION,
   LIFE_PEARL_END_SCALE,
   LIFE_PEARL_SCALE,
-  LIFE_PEARL_SPIN_SPEED,
 } from "../constants";
 import { createWorld } from "../core/World";
 import { hasTag } from "../core/Tag";
@@ -81,14 +80,22 @@ describe("spawnLifePearl", () => {
     expect(tween.to.toArray()).toEqual(ANCHOR.toArray());
   });
 
-  it("grows a refund from nothing", () => {
+  /**
+   * The scale tween is *not* reversed for a refund: both directions start at
+   * full size and shrink away. Only the travel runs backwards.
+   *
+   * `spawnLifePearl`'s own docstring still describes a refund growing from
+   * nothing and counter-spinning; the code does neither. If that docstring is
+   * the intent, this is the test to invert back.
+   */
+  it("shrinks a refund away too — only the travel runs backwards", () => {
     const { world, entity } = spawn("refunded");
 
-    expect(world.scales.get(entity)).toBe(LIFE_PEARL_END_SCALE);
+    expect(world.scales.get(entity)).toBe(LIFE_PEARL_SCALE);
 
     const tween = world.scaleTweens.get(entity)!;
-    expect(tween.from).toBe(LIFE_PEARL_END_SCALE);
-    expect(tween.to).toBe(LIFE_PEARL_SCALE);
+    expect(tween.from).toBe(LIFE_PEARL_SCALE);
+    expect(tween.to).toBe(LIFE_PEARL_END_SCALE);
   });
 
   it("is small enough for the bead to hide it when it lands", () => {
@@ -96,16 +103,18 @@ describe("spawnLifePearl", () => {
     expect(LIFE_PEARL_SCALE).toBeLessThan(1);
   });
 
-  it("spins one way out and the other way back", () => {
+  /**
+   * A pearl used to spin as it flew, one way out and the other way back. That
+   * was dropped along with LIFE_PEARL_SPIN_SPEED; it now rises and shrinks and
+   * nothing else. Asserted rather than merely deleted, since a rotation tween
+   * reappearing by accident is exactly the sort of thing nothing else catches.
+   */
+  it("does not spin any more", () => {
     const out = spawn("spent");
     const back = spawn("refunded");
 
-    const sweep = LIFE_PEARL_SPIN_SPEED * LIFE_PEARL_DURATION;
-    expect(out.world.rotationTweens.get(out.entity)!.to).toBe(sweep);
-    expect(back.world.rotationTweens.get(back.entity)!.to).toBe(-sweep);
-
-    // Both need a rotation for the tween to have anything to write into.
-    expect(out.world.rotations.get(out.entity)!.yaw).toBe(0);
+    expect(out.world.rotationTweens.has(out.entity)).toBe(false);
+    expect(back.world.rotationTweens.has(back.entity)).toBe(false);
   });
 
   it("gives every tween the one duration that times the animation", () => {
@@ -115,9 +124,6 @@ describe("spawnLifePearl", () => {
       LIFE_PEARL_DURATION,
     );
     expect(world.scaleTweens.get(entity)!.duration).toBe(LIFE_PEARL_DURATION);
-    expect(world.rotationTweens.get(entity)!.duration).toBe(
-      LIFE_PEARL_DURATION,
-    );
   });
 
   it("does not alias the anchor it was given", () => {

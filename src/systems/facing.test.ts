@@ -164,7 +164,7 @@ describe("snapToPathDirection", () => {
     const { world } = makeWorld();
     const spinner = createEntity();
     world.rotations.set(spinner, Rotation(0));
-    world.rotationTweens.set(spinner, ScalarTween(0, Math.PI, 1));
+    world.rotationTweens.set(spinner, ScalarTween(0, Math.PI, 1, "linear"));
 
     settle(world);
 

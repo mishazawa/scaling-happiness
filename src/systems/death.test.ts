@@ -56,6 +56,7 @@ describe("deathSystem", () => {
       to: PAWN_DEATH_END_SCALE,
       elapsed: 0,
       duration: PAWN_DEATH_DURATION,
+      easing: "easeOutQuad",
     });
 
     // A fixed sweep at the configured rate, off whatever yaw the pawn died on.
@@ -64,6 +65,7 @@ describe("deathSystem", () => {
       to: 0.25 + PAWN_DEATH_SPIN_SPEED * PAWN_DEATH_DURATION,
       elapsed: 0,
       duration: PAWN_DEATH_DURATION,
+      easing: "easeOutQuad",
     });
 
     const rise = world.positionTweens.get(pawn)!;
@@ -90,25 +92,26 @@ describe("deathSystem", () => {
 
     resolve(world, pawn);
 
+    const spin = PAWN_DEATH_SPIN_SPEED * PAWN_DEATH_DURATION;
+    const rise = PAWN_DEATH_RISE_SPEED * PAWN_DEATH_DURATION;
+
+    // Partway through, all three are underway and none has arrived. The exact
+    // values are the easing curves' business (see core/Tween.test.ts) and are
+    // deliberately not pinned here — retuning a curve must not fail this test.
     timerSystem(world, PAWN_DEATH_DURATION / 2);
-    expect(world.scales.get(pawn)).toBeCloseTo(DEFAULT_SCALE / 2);
-    expect(world.rotations.get(pawn)!.yaw).toBeCloseTo(
-      (PAWN_DEATH_SPIN_SPEED * PAWN_DEATH_DURATION) / 2,
-    );
-    expect(world.positions.get(pawn)!.y).toBeCloseTo(
-      (PAWN_DEATH_RISE_SPEED * PAWN_DEATH_DURATION) / 2,
-    );
+    expect(world.scales.get(pawn)!).toBeLessThan(DEFAULT_SCALE);
+    expect(world.scales.get(pawn)!).toBeGreaterThan(PAWN_DEATH_END_SCALE);
+    expect(world.rotations.get(pawn)!.yaw).toBeGreaterThan(0);
+    expect(world.rotations.get(pawn)!.yaw).toBeLessThan(spin);
+    expect(world.positions.get(pawn)!.y).toBeGreaterThan(0);
+    expect(world.positions.get(pawn)!.y).toBeLessThan(rise);
     // Halfway through is still mid-animation: nothing torn down yet.
     expect(hasTag(world, pawn, "destroy")).toBe(false);
 
     timerSystem(world, PAWN_DEATH_DURATION / 2);
     expect(world.scales.get(pawn)).toBe(PAWN_DEATH_END_SCALE);
-    expect(world.rotations.get(pawn)!.yaw).toBeCloseTo(
-      PAWN_DEATH_SPIN_SPEED * PAWN_DEATH_DURATION,
-    );
-    expect(world.positions.get(pawn)!.y).toBeCloseTo(
-      PAWN_DEATH_RISE_SPEED * PAWN_DEATH_DURATION,
-    );
+    expect(world.rotations.get(pawn)!.yaw).toBeCloseTo(spin);
+    expect(world.positions.get(pawn)!.y).toBeCloseTo(rise);
 
     deathSystem(world);
     expect(hasTag(world, pawn, "destroy")).toBe(true);

@@ -10,6 +10,8 @@ import { degToRad } from "three/src/math/MathUtils.js";
 import { makePearl, pearlBeadSource } from "./pearl";
 import { getMesh } from "../render/modelRegistry";
 import {
+  HEIGHT_OFFSET,
+  LIFE_PEARL_SCALE,
   PEARL_COLOR,
   PEARL_METALNESS,
   PEARL_PEARL_PART,
@@ -131,15 +133,19 @@ describe("pearlBeadSource", () => {
     );
   });
 
-  it("reports where the bead stands", () => {
+  it("reports where the bead stands, plus the crutch offset", () => {
     const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
 
     // The bead sits at its parent's origin in the fixture, so the anchor is the
-    // authored position — the point a spawned pearl leaves from and returns to.
+    // authored position — the point a spawned pearl leaves from and returns to —
+    // shifted by the hand-tuned nudge marked `// crutch` in pearl.ts. Written
+    // out here rather than folded into a number, so the hack stays visible.
+    const CRUTCH = new Vector3(-HEIGHT_OFFSET / 2, -HEIGHT_OFFSET, 0);
+
     const anchor = pearlBeadSource(root).anchor;
-    expect(anchor.x).toBeCloseTo(PEARL_POSITION[0], 6);
-    expect(anchor.y).toBeCloseTo(PEARL_POSITION[1], 6);
-    expect(anchor.z).toBeCloseTo(PEARL_POSITION[2], 6);
+    expect(anchor.x).toBeCloseTo(PEARL_POSITION[0] + CRUTCH.x, 5);
+    expect(anchor.y).toBeCloseTo(PEARL_POSITION[1] + CRUTCH.y, 5);
+    expect(anchor.z).toBeCloseTo(PEARL_POSITION[2] + CRUTCH.z, 5);
   });
 
   it("centres the geometry so a position component can place it", () => {
@@ -156,10 +162,12 @@ describe("pearlBeadSource", () => {
   });
 
   /**
-   * The bead is a child under the parent's turns, PEARL_POSITION and
-   * PEARL_SCALE; a clone that inherited none of that would draw at raw export
-   * size. Baking it in is also what makes LIFE_PEARL_SCALE a fraction of the
-   * pearl on screen rather than a size in world units.
+   * The flying pearl is its own sphere of LIFE_PEARL_SCALE put through the
+   * bead's world matrix, not a clone of the bead's geometry. The matrix is what
+   * matters: the bead is a child under the parent's turns, PEARL_POSITION and
+   * PEARL_SCALE, and a copy that inherited none of that would draw at raw
+   * export size. Baking it in is also what makes LIFE_PEARL_SCALE a fraction of
+   * the pearl on screen rather than a size in world units.
    */
   it("bakes the pearl's scale into the geometry", () => {
     const root = build(PEARL_SHELL_PART, PEARL_PEARL_PART);
@@ -167,8 +175,10 @@ describe("pearlBeadSource", () => {
     const { geometry } = pearlBeadSource(root);
     geometry.computeBoundingSphere();
 
-    // The fixture's bead is a unit sphere, so its radius is the scale itself.
-    expect(geometry.boundingSphere!.radius).toBeCloseTo(PEARL_SCALE, 6);
+    expect(geometry.boundingSphere!.radius).toBeCloseTo(
+      LIFE_PEARL_SCALE * PEARL_SCALE,
+      5,
+    );
   });
 
   it("leaves the pearl it read from alone", () => {

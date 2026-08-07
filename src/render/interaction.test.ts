@@ -14,8 +14,12 @@ import { handlePointerClick } from "./interaction";
  * unplayable with nothing else failing.
  */
 function setup() {
-  const camera = new OrthographicCamera(-10, 10, 10, -10, 0.1, 100);
-  camera.position.set(0, 0, 10);
+  // Stood well back, not at z = 10: the pick box runs QUEUE_VISIBLE_SLOTS deep
+  // along +z from the queue's base, and a camera inside it sees only backfaces,
+  // which `Mesh.raycast` culls. The real camera clears the box by height; this
+  // one has to clear it by distance.
+  const camera = new OrthographicCamera(-10, 10, 10, -10, 0.1, 200);
+  camera.position.set(0, 0, 100);
   camera.lookAt(0, 0, 0);
   camera.updateMatrixWorld();
 

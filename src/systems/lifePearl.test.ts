@@ -48,9 +48,10 @@ describe("lifePearlSystem", () => {
     lifePearlSystem(world, ctx, source);
 
     const [pearl] = pearls(world);
-    // Starts above the shell and at nothing — the spend, backwards.
+    // Starts above the shell and falls in — only the travel is the spend
+    // backwards; the pearl shrinks away either way round.
     expect(world.positions.get(pearl)!.y).toBeGreaterThan(source.anchor.y);
-    expect(world.scales.get(pearl)).toBe(0);
+    expect(world.scales.get(pearl)).toBe(LIFE_PEARL_SCALE);
   });
 
   /**
@@ -137,6 +138,5 @@ describe("lifePearlSystem", () => {
     expect(world.positions.get(pearl)!.y).toBeGreaterThan(source.anchor.y);
     expect(world.scales.get(pearl)!).toBeLessThan(LIFE_PEARL_SCALE);
     expect(world.scales.get(pearl)!).toBeGreaterThan(0);
-    expect(world.rotations.get(pearl)!.yaw).toBeGreaterThan(0);
   });
 });

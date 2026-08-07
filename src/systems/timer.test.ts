@@ -15,7 +15,7 @@ describe("timerSystem", () => {
     world.positions.set(entity, new Vector3(0, 0, 0));
     world.positionTweens.set(
       entity,
-      PositionTween(new Vector3(0, 0, 0), new Vector3(10, 0, 0), 2),
+      PositionTween(new Vector3(0, 0, 0), new Vector3(10, 0, 0), 2, "linear"),
     );
 
     timerSystem(world, 1);
@@ -31,7 +31,7 @@ describe("timerSystem", () => {
     world.positions.set(entity, new Vector3(0, 0, 0));
     world.positionTweens.set(
       entity,
-      PositionTween(new Vector3(0, 0, 0), new Vector3(10, 0, 0), 1),
+      PositionTween(new Vector3(0, 0, 0), new Vector3(10, 0, 0), 1, "linear"),
     );
 
     timerSystem(world, 1);
@@ -53,7 +53,7 @@ describe("timerSystem", () => {
     world.positions.set(entity, new Vector3(0, 0, 0));
     world.positionTweens.set(
       entity,
-      PositionTween(new Vector3(0, 0, 0), new Vector3(10, 0, 0), 1),
+      PositionTween(new Vector3(0, 0, 0), new Vector3(10, 0, 0), 1, "linear"),
     );
 
     timerSystem(world, 100);
@@ -64,7 +64,7 @@ describe("timerSystem", () => {
   it("advances a scale tween and writes the interpolated scale", () => {
     const world = createWorld();
     const entity = createEntity();
-    world.scaleTweens.set(entity, ScalarTween(1, 0, 2));
+    world.scaleTweens.set(entity, ScalarTween(1, 0, 2, "linear"));
 
     timerSystem(world, 1);
 
@@ -76,7 +76,7 @@ describe("timerSystem", () => {
   it("completes a scale tween exactly once: removes it and emits scale-tween-complete", () => {
     const world = createWorld();
     const entity = createEntity();
-    world.scaleTweens.set(entity, ScalarTween(1, 0, 1));
+    world.scaleTweens.set(entity, ScalarTween(1, 0, 1, "linear"));
 
     timerSystem(world, 1);
 
@@ -95,7 +95,7 @@ describe("timerSystem", () => {
     const world = createWorld();
     const entity = createEntity();
     world.rotations.set(entity, Rotation(0));
-    world.rotationTweens.set(entity, ScalarTween(0, 4, 2));
+    world.rotationTweens.set(entity, ScalarTween(0, 4, 2, "linear"));
 
     timerSystem(world, 1);
 
@@ -107,7 +107,7 @@ describe("timerSystem", () => {
     const world = createWorld();
     const entity = createEntity();
     world.rotations.set(entity, Rotation(0));
-    world.rotationTweens.set(entity, ScalarTween(0, 4, 1));
+    world.rotationTweens.set(entity, ScalarTween(0, 4, 1, "linear"));
 
     timerSystem(world, 1);
 
@@ -119,7 +119,7 @@ describe("timerSystem", () => {
   it("does not throw when a rotation tween's entity has no rotation component", () => {
     const world = createWorld();
     const entity = createEntity();
-    world.rotationTweens.set(entity, ScalarTween(0, 4, 1));
+    world.rotationTweens.set(entity, ScalarTween(0, 4, 1, "linear"));
 
     expect(() => timerSystem(world, 1)).not.toThrow();
   });

@@ -67,7 +67,7 @@ describe("garbageCollectionSystem", () => {
     world.pathFollowers.set(pawn, PathFollower(pathEntity, 1));
     world.positionTweens.set(
       pawn,
-      PositionTween(new Vector3(), new Vector3(1, 0, 0), 1),
+      PositionTween(new Vector3(), new Vector3(1, 0, 0), 1, "linear"),
     );
     expect(world.ammo.has(pawn)).toBe(true);
 
