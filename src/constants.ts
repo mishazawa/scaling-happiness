@@ -346,63 +346,56 @@ export const TRACK_ARROW_REPEAT = 20;
  */
 export const TRACK_ARROW_ANISOTROPY = 8;
 
+export const TRACK_SPEED = 1;
+export const SHADER_BREATH_AMP = 0.1;
+export const SHADER_BREATH_FREQ = 8.9;
+
 /**
  * The pearl: scenery like the track, marking the mouth of the track where pawns
- * enter it. Also un-instanced, and for the same reason — its two halves want two
- * different materials, which one merged geometry could not carry.
- */
-/** Node names the pearl's two halves are exported under. */
-export const PEARL_SHELL_PART = "shell";
-export const PEARL_PEARL_PART = "pearl";
-
-/**
- * Gold, off the palette's own yellow rather than a new colour, so the pearl
- * belongs to the same set as everything else on screen.
+ * enter it. A sphere built in code — a pearl is a sphere, so there is nothing an
+ * authored model would carry that these four numbers do not.
  *
- * Metalness is not a full 1: a metal's diffuse term is zero and its colour comes
- * entirely out of specular reflection, and this scene has no environment map to
- * reflect — a pure metal would read as a dark shape with one hot highlight. Just
- * under 1 keeps a trace of diffuse gold under the sheen.
- */
-export const PEARL_SHELL_COLOR = MAIN_COLORS.mermaid;
-export const PEARL_SHELL_METALNESS = 0.9;
-export const PEARL_SHELL_ROUGHNESS = 0.25;
-
-/**
- * The pearl itself: the palette's brightest colour, glossy rather than metallic
- * — a dielectric, so it keeps its diffuse colour and adds a tight highlight on
- * top. The low roughness *is* the gloss.
+ * The palette's brightest colour, glossy rather than metallic — a dielectric, so
+ * it keeps its diffuse colour and adds a tight highlight on top. The low
+ * roughness *is* the gloss.
  */
 export const PEARL_COLOR = MAIN_COLORS.ocean3;
 export const PEARL_METALNESS = 0;
 export const PEARL_ROUGHNESS = 0.1;
-export const TRACK_SPEED = 1;
-export const SHADER_BREATH_AMP = 0.1;
-export const SHADER_BREATH_FREQ = 8.9;
-export const PEARL_SCALE = 4;
+
+/**
+ * Size in world units, carried by the geometry rather than by a scale on the
+ * mesh: the pearls the life count throws are the same sphere drawn smaller, and
+ * a radius baked in is what makes LIFE_PEARL_SCALE a fraction of this one.
+ */
+export const PEARL_RADIUS = 0.6;
+/** Segments around and over. A pearl is small on screen and reads round early. */
+export const PEARL_SEGMENTS = 24;
+
 export const PEARL_POSITION: [number, number, number] = [
   -TRACK_HALF_SIZE - 0.75,
-  HEIGHT_OFFSET,
+  HEIGHT_OFFSET + PEARL_RADIUS,
   TRACK_HALF_SIZE - 0.5,
 ];
 
 /**
- * Every change to `world.lifes` plays as a small pearl at the shell above: one
- * pops out and shrinks away when a life is spent, one falls in and grows when
- * one is refunded. Same three-tween shape as a pawn's death, and parametrized
- * the same way — one duration, which is the animation's clock (the scale tween
- * carries it), plus speeds that can be tuned without changing how long it takes.
+ * Every change to `world.lifes` plays as a small pearl at the one above: it
+ * peels off and shrinks away when a life is spent, and falls back in and grows
+ * when one is refunded. Same three-tween shape as a pawn's death, and
+ * parametrized the same way — one duration, which is the animation's clock (the
+ * scale tween carries it), plus speeds that can be tuned without changing how
+ * long it takes.
  */
 export const LIFE_PEARL_DURATION = 0.6;
 /** Spin about world +Y, rad/s, into a fixed sweep. Negated for a refund. */
 export const LIFE_PEARL_SPIN_SPEED = Math.PI * 2;
-/** Travel along world +Y, units/s. Over the duration, about a shell's height. */
+/** Travel along world +Y, units/s. Over the duration, a couple of diameters. */
 export const LIFE_PEARL_RISE_SPEED = 4;
 /**
- * Size of the flying pearl *relative to the bead standing in the shell*, not in
- * world units: it is drawn from that bead's own geometry, which already has
- * PEARL_SCALE baked into it. So this tracks the pearl's size automatically, and
- * staying under 1 is what hides a refund inside the bead at the moment it lands.
+ * Size of a flying pearl *relative to the one standing at the track*, not in
+ * world units: both are drawn from one sphere of PEARL_RADIUS, so this tracks
+ * that radius automatically. Staying under 1 is what hides a refund inside the
+ * standing pearl at the moment it lands.
  */
 export const LIFE_PEARL_SCALE = 0.5;
 /** What a spent life shrinks to. Zero: gone by the time its clock runs out. */

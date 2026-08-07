@@ -32,7 +32,7 @@ import { clearEventsSystem } from "./systems/clearEvents";
 import { gameStatusSystem } from "./systems/gameStatus";
 import type { SystemContext } from "./systems/context";
 import { makePathAroundTheGrid, makeTrack } from "./setup/track";
-import { makePearl, pearlBeadSource } from "./setup/pearl";
+import { makePearl } from "./setup/pearl";
 import { lifePearlSystem } from "./systems/lifePearl";
 import { DEBUG_pathVisualizer } from "./setup/debugPath";
 import { createQueues } from "./setup/queue";
@@ -50,14 +50,12 @@ import { registerModel } from "./render/modelRegistry";
 
 import FISH_MESH from "./assets/fish.glb";
 import TRACK_MESH from "./assets/track.glb";
-import PEARL_MESH from "./assets/pearl.glb";
 import ARROW_TEXTURE from "./assets/water.png";
 import type { Grid } from "./core/Grid";
 
 export const MANIFEST: Record<AssetId, string> = {
   pawn: FISH_MESH,
   track: TRACK_MESH,
-  pearl: PEARL_MESH,
 };
 
 export const TEXTURE_MANIFEST: Record<TextureId, string> = {
@@ -96,13 +94,6 @@ async function main() {
   // is a rendering resource shared by every entity of its model, not world
   // state. The render system repacks the slots from zero each frame, so a
   // restart clears them with no teardown.
-  // Scenery too, and for the same reasons as the track. It stands at the mouth
-  // of the track — the point every pawn is spawned onto — which is why the life
-  // count is played out there. Kept in hand, unlike the rest: the pearls that
-  // animate a life change are copies of its bead.
-  const pearl = makePearl(getAssetById("pearl"));
-  const lifePearlSource = pearlBeadSource(pearl);
-
   scene.add(
     registerModel(
       "pawn",
@@ -115,7 +106,10 @@ async function main() {
     // Not instanced: the track exists once, never moves, and its two halves
     // carry two different materials. See `makeTrack`.
     makeTrack(getAssetById("track"), getTextureById("arrow")),
-    pearl,
+    // Scenery too, and for the same reasons as the track. It stands at the mouth
+    // of the track — the point every pawn is spawned onto — which is why the
+    // life count is played out there.
+    makePearl(),
   );
 
   function handleResize() {
@@ -180,8 +174,8 @@ async function main() {
       spawnSystem(world, ctx);
       lifeSystem(world);
       // Straight after the system whose change it shows, and before rendering,
-      // so a life spent is drawn leaving the shell on the frame it was spent.
-      lifePearlSystem(world, ctx, lifePearlSource);
+      // so a life spent is drawn leaving the pearl on the frame it was spent.
+      lifePearlSystem(world, ctx);
       // After shooting (which sets the aim) and before rendering (which draws
       // the yaw), so a turn is never a frame behind what caused it.
       facingSystem(world, GRID_PARAMETERS, dt);
